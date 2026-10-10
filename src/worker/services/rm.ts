@@ -3,7 +3,7 @@ import type { FamilyImpactResult } from '../../engine/apply'
 import { allowedFromResult, checkText, templateInterpretation } from '../../engine/numbercheck'
 import { fmtPct, fmtVndShort } from '../../shared/format'
 import { ASSET_CLASS_LABELS } from '../../shared/catalog'
-import { mentionsRestricted } from '../../compliance/controls'
+import { mentionsRestricted, redactRestricted } from '../../compliance/controls'
 import { callJson } from '../../agents/llm'
 import { wrapData, type ModelSet, type PromptSet } from '../../agents/prompts'
 import { MOCK } from '../../data/mock'
@@ -80,7 +80,7 @@ export async function interpretation(ctx: AppCtx, runId: string, familyId: strin
   const restrictedEntries = activeRestricted(cfg, ctx.now())
   const restricted = new Set(restrictedEntries.flatMap(e => e.instruments))
   let text: string, model: string
-  if (ctx.agentMode === 'mock') { text = mockInterpretation(fam.name, familyId, r, run.view_body.summary, restricted); model = 'mock' }
+  if (ctx.agentMode === 'mock') { text = mockInterpretation(fam.name, familyId, r, redactRestricted(run.view_body.summary, restrictedEntries), restricted); model = 'mock' }
   else {
     const models = await activeConfig<ModelSet>(ctx, 'MODEL'); const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
     const pkg = { family_name: fam.name, result: { ...r, top_instruments: r.top_instruments.filter(t => !restricted.has(t.instrument_id)), positions: undefined }, view: { summary: run.view_body.summary, impacts: run.view_body.impacts.filter(l => l.level !== 0) } }
@@ -90,7 +90,8 @@ export async function interpretation(ctx: AppCtx, runId: string, familyId: strin
   const check = checkText(text, allowedFromResult(r, run.view_body), cfg.banned)
   const restrictedHits = mentionsRestricted(text, restrictedEntries)
   const blocked = !check.ok || restrictedHits.length > 0 || !text
-  const shown = blocked ? templateInterpretation(fam.name, r, run.view_body, restricted) : text
+  const safeView = { ...run.view_body, summary: redactRestricted(run.view_body.summary, restrictedEntries) }
+  const shown = blocked ? templateInterpretation(fam.name, r, safeView, restricted) : text
   const now = ctx.now()
   const u = ctx.uow()
   if (blocked) u.audit({ actor: 'SYSTEM:numbercheck', action: 'interpretation.blocked', object: `${runId}|${familyId}`, data: { violations: check.violations, restricted: restrictedHits, model, llm_text: text } })

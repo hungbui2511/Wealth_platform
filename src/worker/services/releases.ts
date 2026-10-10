@@ -1,7 +1,7 @@
 // Bản tin CIO (FR-1008): nội dung chung, hai mốc phát hành (Private sớm hơn đại chúng), Tuân thủ duyệt; MVP1 không gửi.
 import { ASSET_CLASS_LABELS, SECTOR_LABELS } from '../../shared/catalog'
 import { checkText, extractNumbers } from '../../engine/numbercheck'
-import { mentionsRestricted } from '../../compliance/controls'
+import { mentionsRestricted, redactRestricted, type RestrictedEntry } from '../../compliance/controls'
 import { actor, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
 import { activeRestricted, loadConfigs } from './config'
 import { getView, type ViewRec } from './views'
@@ -15,13 +15,13 @@ export interface ReleaseRec {
 const label = (t: string) => (ASSET_CLASS_LABELS as Record<string, string>)[t] ?? (SECTOR_LABELS as Record<string, string>)[t] ?? t
 const dirWord = (lv: number) => lv > 0 ? 'tích cực' : 'tiêu cực'
 
-export function draftContent(v: ViewRec): string {
-  const lines = v.body.impacts.filter(l => l.level !== 0)
-  return [
+export function draftContent(v: ViewRec, restricted: RestrictedEntry[] = []): string {
+  const lines = v.body.impacts.filter(l => l.level !== 0 && !(l.scope === 'instrument' && restricted.some(r => r.instruments.includes(l.target))))
+  return redactRestricted([
     `Quan điểm CIO: ${v.body.summary}.`,
     ...lines.map(l => `- ${l.scope === 'sector' ? `${label(l.asset_class!)} – ngành ${label(l.target)}` : l.scope === 'fx' ? `Tỷ giá ${l.target}/VND` : l.scope === 'instrument' ? `Mã ${l.target}` : label(l.target)}: tác động ${dirWord(l.level)} (mức ${l.level}), ${l.horizon ?? ''}. ${l.rationale}.`),
     'Nội dung mang tính thông tin chung về thị trường, không phải khuyến nghị đầu tư cho cá nhân.',
-  ].join('\n')
+  ].join('\n'), restricted)
 }
 
 // Bản tin qua BR-13 (số chỉ từ nhận định đã duyệt), BR-14 (cụm từ cấm), BR-27 (không nhắc mã hạn chế); không chứa dữ liệu gia đình
@@ -47,7 +47,7 @@ export async function createRelease(ctx: AppCtx, body: { view_id: string; releas
   if (!['APPROVED', 'SUPERSEDED'].includes(v.status)) throw new HttpError(409, 'Chỉ tạo bản tin từ nhận định đã duyệt')
   checkTimes(v, body.release_private_at, body.release_public_at)
   const n = (await ctx.repo.list('research_releases', 'view_id = ?', [v.id])).length
-  const content = body.content ?? draftContent(v)
+  const content = body.content ?? draftContent(v, activeRestricted(await loadConfigs(ctx), ctx.now()))
   const r: ReleaseRec = { id: `RR-${v.event_id.slice(-4)}-v${v.version}${n ? `-${n + 1}` : ''}`, view_id: v.id, status: 'DRAFT', content, release_private_at: new Date(body.release_private_at).toISOString(), release_public_at: new Date(body.release_public_at).toISOString(), created_by: actor(ctx), created_at: ctx.now() }
   r.checks = await releaseChecks(ctx, v, content)
   const u = ctx.uow(); u.put('research_releases', r as never); u.audit({ actor: actor(ctx), action: 'release.created', object: r.id, data: { view_id: v.id, release_private_at: r.release_private_at, release_public_at: r.release_public_at, checks: r.checks } }); await u.commit()

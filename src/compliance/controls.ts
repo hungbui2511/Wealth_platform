@@ -54,3 +54,11 @@ export function checkTimestamp(ts: Partial<Record<TimestampField, string>>, fiel
 export function reactionMs(ts: Partial<Record<TimestampField, string>>): number | null {
   return ts.published_at && ts.effective_at ? Date.parse(ts.effective_at) - Date.parse(ts.published_at) : null
 }
+
+// BR-27 (3): che tên tổ chức và mã hạn chế trong nội dung cho RM và bản tin
+export function redactRestricted(text: string, entries: RestrictedEntry[]): string {
+  let out = text
+  const terms = entries.flatMap(e => [e.issuer, ...e.keywords, ...e.instruments]).filter(Boolean).sort((a, b) => b.length - a.length)
+  for (const t of terms) out = out.split(t).join('[tổ chức trong danh sách hạn chế]')
+  return out
+}

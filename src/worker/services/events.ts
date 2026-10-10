@@ -31,11 +31,13 @@ export async function createEvent(ctx: AppCtx, input: { type: string; title?: st
     throw new HttpError(422, 'Không tạo được sự kiện: tin không qua kiểm soát nguồn công khai (BR-26)', problems)
   }
   const year = now.slice(0, 4)
-  const id = input.id ?? `EV-${year}-${String(await ctx.repo.nextSeq(`EV-${year}`)).padStart(4, '0')}`
+  let id = input.id ?? ''
+  while (!id || (!input.id && await ctx.repo.get('events', id))) id = `EV-${year}-${String(await ctx.repo.nextSeq(`EV-${year}`)).padStart(4, '0')}`
   if (await ctx.repo.get('events', id)) throw new HttpError(409, `Sự kiện ${id} đã tồn tại`)
   const news: NewsItem[] = []
   for (const [i, it] of input.items.entries()) {
-    const nid = input.newsIds?.[i] ?? `NW-${String(await ctx.repo.nextSeq('NW')).padStart(4, '0')}`
+    let nid = input.newsIds?.[i] ?? ''
+    while (!nid || (!input.newsIds && await ctx.repo.get('news_items', nid))) nid = `NW-${String(await ctx.repo.nextSeq('NW')).padStart(4, '0')}`
     news.push({ id: nid, event_id: id, title: it.title, source: it.source ?? new URL(it.url!).hostname, url: it.url!, published_at: it.published_at!, ingested_at: now, summary: it.summary, language: it.language ?? 'vi', simulated: it.simulated ?? false, ...(it.policy_change ? { policy_change: it.policy_change } : {}) })
   }
   const published = news.map(n => n.published_at).sort((a, b) => Date.parse(a) - Date.parse(b))[0]
