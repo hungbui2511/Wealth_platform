@@ -43,6 +43,13 @@ export class Repo {
     return (r.results ?? []).map(x => JSON.parse(x.data) as T)
   }
 
+  // Mã tiếp theo theo số lớn nhất đang có (tránh trùng với mã cố định của gói mẫu); một truy vấn
+  async nextId(table: string, prefix: string, width: number): Promise<string> {
+    const r = await this.db.prepare(`SELECT id FROM ${table} WHERE id LIKE ? ORDER BY id DESC LIMIT 1`).bind(prefix + '%').first<{ id: string }>()
+    const n = r ? Number(r.id.slice(prefix.length)) + 1 : 1
+    return prefix + String(n).padStart(width, '0')
+  }
+
   async nextSeq(name: string): Promise<number> {
     const r = await this.db.prepare('INSERT INTO counters (name, value) VALUES (?, 1) ON CONFLICT(name) DO UPDATE SET value = value + 1 RETURNING value').bind(name).first<{ value: number }>()
     return r!.value

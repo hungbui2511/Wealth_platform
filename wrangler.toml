@@ -1,0 +1,25 @@
+# Wealth Platform 2036 – MVP1 demo trên Cloudflare (BRD Mục 11.7). Phương án B: TypeScript (Hono + D1).
+name = "wealth-mvp1"
+main = "src/worker/index.ts"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+AGENT_MODE = "mock"   # mock | live (live cần ANTHROPIC_API_KEY qua `wrangler secret put`)
+PRICE_MODE = "sample" # sample | live (live cần thỏa thuận dữ liệu và thông tin truy cập nguồn)
+
+[[d1_databases]]
+binding = "DB"
+database_name = "wealth-mvp1"
+# Thay bằng database_id do `wrangler d1 create wealth-mvp1` trả về trước khi deploy
+database_id = "00000000-0000-0000-0000-000000000000"
+migrations_dir = "migrations"
+
+[assets]
+directory = "./frontend/dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+run_worker_first = ["/api/*"]
+
+[observability]
+enabled = true

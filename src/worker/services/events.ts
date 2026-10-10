@@ -4,7 +4,7 @@ import { SEED } from '../../data/seed'
 import { checkPublicSource, checkTimestamp, restrictedHits, type TimestampField } from '../../compliance/controls'
 import { actor, HttpError, requireRole, type AppCtx } from '../ctx'
 import type { UnitOfWork } from '../db'
-import { activeRestricted, loadConfigs } from './config'
+import { activeRestricted, loadConfigs, type Configs } from './config'
 
 export interface NewsItem { id: string; event_id: string; title: string; source: string; url: string; published_at: string; ingested_at: string; summary: string; language: string; simulated: boolean; policy_change?: unknown }
 export interface EventRec {
@@ -16,11 +16,11 @@ export interface EventRec {
 
 export interface NewsInput { title: string; source?: string; url?: string; published_at?: string; summary: string; language?: string; simulated?: boolean; policy_change?: unknown }
 
-export async function createEvent(ctx: AppCtx, input: { type: string; title?: string; items: NewsInput[]; id?: string; newsIds?: string[]; policy_doc_id?: string }, opts: { uow?: UnitOfWork; skipRole?: boolean } = {}): Promise<{ event: EventRec; news: NewsItem[] }> {
+export async function createEvent(ctx: AppCtx, input: { type: string; title?: string; items: NewsInput[]; id?: string; newsIds?: string[]; policy_doc_id?: string }, opts: { uow?: UnitOfWork; skipRole?: boolean; cfg?: Configs; fixedId?: string } = {}): Promise<{ event: EventRec; news: NewsItem[] }> {
   if (!opts.skipRole) requireRole(ctx, 'ADMIN')
   if (!EVENT_TYPES.includes(input.type as never)) throw new HttpError(422, `Loại sự kiện không hợp lệ: ${input.type}`)
   if (!input.items?.length) throw new HttpError(422, 'Cần ít nhất một tin')
-  const cfg = await loadConfigs(ctx)
+  const cfg = opts.cfg ?? await loadConfigs(ctx)
   const now = ctx.now()
   // BR-26: thiếu đường dẫn công khai hoặc thời điểm công bố thì không tạo được sự kiện, kể cả tin dán tay
   const problems = input.items.map((it, i) => ({ i, title: it.title, errors: checkPublicSource(it, cfg.whitelist, now) })).filter(p => p.errors.length)
@@ -31,13 +31,12 @@ export async function createEvent(ctx: AppCtx, input: { type: string; title?: st
     throw new HttpError(422, 'Không tạo được sự kiện: tin không qua kiểm soát nguồn công khai (BR-26)', problems)
   }
   const year = now.slice(0, 4)
-  let id = input.id ?? ''
-  while (!id || (!input.id && await ctx.repo.get('events', id))) id = `EV-${year}-${String(await ctx.repo.nextSeq(`EV-${year}`)).padStart(4, '0')}`
-  if (await ctx.repo.get('events', id)) throw new HttpError(409, `Sự kiện ${id} đã tồn tại`)
+  const id = opts.fixedId ?? input.id ?? await ctx.repo.nextId('events', `EV-${year}-`, 4)
+  if (input.id && await ctx.repo.get('events', id)) throw new HttpError(409, `Sự kiện ${id} đã tồn tại`)
   const news: NewsItem[] = []
+  const firstNw = input.newsIds ? 0 : Number((await ctx.repo.nextId('news_items', 'NW-', 4)).slice(3))
   for (const [i, it] of input.items.entries()) {
-    let nid = input.newsIds?.[i] ?? ''
-    while (!nid || (!input.newsIds && await ctx.repo.get('news_items', nid))) nid = `NW-${String(await ctx.repo.nextSeq('NW')).padStart(4, '0')}`
+    const nid = input.newsIds?.[i] ?? `NW-${String(firstNw + i).padStart(4, '0')}`
     news.push({ id: nid, event_id: id, title: it.title, source: it.source ?? new URL(it.url!).hostname, url: it.url!, published_at: it.published_at!, ingested_at: now, summary: it.summary, language: it.language ?? 'vi', simulated: it.simulated ?? false, ...(it.policy_change ? { policy_change: it.policy_change } : {}) })
   }
   const published = news.map(n => n.published_at).sort((a, b) => Date.parse(a) - Date.parse(b))[0]
@@ -60,13 +59,18 @@ export async function createEvent(ctx: AppCtx, input: { type: string; title?: st
 // Gói sự kiện mẫu (FR-201): tạo sự kiện với mã cố định của gói
 export async function loadSampleEvents(ctx: AppCtx) {
   requireRole(ctx, 'ADMIN')
-  const created: string[] = [], skipped: string[] = []
-  for (const e of SEED.events) {
-    if (await ctx.repo.get('events', e.id)) { skipped.push(e.id); continue }
+  const created: string[] = []
+  const existing = new Set((await ctx.repo.list<EventRec>('events')).map(e => e.id))
+  const skipped = SEED.events.filter(e => existing.has(e.id)).map(e => e.id)
+  const cfg = await loadConfigs(ctx)
+  const uow = ctx.uow()
+  // Một lô ghi cho cả gói (NFR-22)
+  for (const e of SEED.events.filter(e => !existing.has(e.id))) {
     const items = e.news.map(nid => SEED.news.find(n => n.id === nid)!)
-    await createEvent(ctx, { id: e.id, type: e.type, title: e.title, items, newsIds: e.news }, { skipRole: true })
+    await createEvent(ctx, { type: e.type, title: e.title, items, newsIds: e.news }, { skipRole: true, uow, cfg, fixedId: e.id })
     created.push(e.id)
   }
+  await uow.commit()
   return { created, skipped }
 }
 

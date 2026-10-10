@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+/* Token theo design-system/MASTER.md */
+@theme {
+  --color-bg: #020617;
+  --color-card: #0E1223;
+  --color-muted: #1A1E2F;
+  --color-border: #334155;
+  --color-fg: #F8FAFC;
+  --color-fgm: #94A3B8;
+  --color-primary: #818CF8;
+  --color-red: #EF4444;
+  --color-amber: #F59E0B;
+  --color-green: #22C55E;
+  --color-positive: #38BDF8;
+  --color-low: #94A3B8;
+  --font-sans: "IBM Plex Sans", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+}
+
+html, body { background: var(--color-bg); color: var(--color-fg); font-family: var(--font-sans); font-size: 14px; }
+.num { font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
+.mono { font-family: var(--font-mono); font-size: 12px; }
+button, a, [role="button"], summary, select { cursor: pointer; }
+button:disabled { cursor: not-allowed; }
+:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+table.t { width: 100%; border-collapse: collapse; font-size: 13px; }
+table.t th { position: sticky; top: 0; background: var(--color-muted); color: var(--color-fgm); font-weight: 500; text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--color-border); z-index: 1; }
+table.t td { padding: 6px 8px; border-bottom: 1px solid #1e2537; vertical-align: top; }
+table.t tr:hover td { background: #121831; }
+input, select, textarea { background: var(--color-muted); border: 1px solid var(--color-border); border-radius: 6px; padding: 5px 8px; color: var(--color-fg); }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }

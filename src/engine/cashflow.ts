@@ -66,10 +66,10 @@ export function schedule(f: Family, instruments: Record<string, Instrument>, boo
     for (let k = 1; k <= nMonths && bal.gt(0); k++) {
       const idx = base + k
       if (idx > mi) break
-      out.push({ item_id: `AUTO-INT-${l.id}`, label: `Lãi vay ${l.name}`, category: 'loan_interest', direction: 'out', k, amount: bal.times(rate).times(eff).times(fx), expected: false, origin: 'auto', once: false })
+      out.push({ item_id: `AUTO-INT-${l.id}`, label: `Lãi vay – ${l.name}`, category: 'loan_interest', direction: 'out', k, amount: bal.times(rate).times(eff).times(fx), expected: false, origin: 'auto', once: false })
       let principal = l.repayment === 'amortizing' ? Decimal.min(D(l.principal_per_month), bal) : ZERO
       if (idx === mi) principal = bal
-      if (principal.gt(0)) out.push({ item_id: `AUTO-PRN-${l.id}`, label: `Gốc vay ${l.name}`, category: 'loan_principal', direction: 'out', k, amount: principal.times(eff).times(fx), expected: false, origin: 'auto', once: idx === mi && l.repayment === 'bullet' })
+      if (principal.gt(0)) out.push({ item_id: `AUTO-PRN-${l.id}`, label: `Gốc vay – ${l.name}`, category: 'loan_principal', direction: 'out', k, amount: principal.times(eff).times(fx), expected: false, origin: 'auto', once: idx === mi && l.repayment === 'bullet' })
       bal = bal.minus(principal)
     }
   }
