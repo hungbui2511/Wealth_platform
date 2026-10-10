@@ -2,7 +2,8 @@
 // Cùng SQL migration (kể cả trigger nhật ký) được áp dụng như trên D1.
 import { DatabaseSync } from 'node:sqlite'
 import { readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
 
 class Stmt {
   constructor(private db: DatabaseSync, public sql: string, public params: unknown[] = []) {}
@@ -25,7 +26,7 @@ class Stmt {
 
 export function createD1(): D1Database {
   const db = new DatabaseSync(':memory:')
-  db.exec(readFileSync(join(__dirname, '..', '..', 'migrations', '0001_schema.sql'), 'utf8'))
+  db.exec(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'migrations', '0001_schema.sql'), 'utf8'))
   const api = {
     prepare: (sql: string) => new Stmt(db, sql),
     async batch(stmts: Stmt[]) {

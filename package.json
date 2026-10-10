@@ -4,9 +4,19 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "seed:gen": "tsx scripts/gen-seed.ts && tsx scripts/gen-mock.ts",
+    "seed:gen": "tsx scripts/gen-seed.ts && tsx scripts/gen-mock.ts && tsx scripts/collect-policies.ts && tsx scripts/build-seed-sql.ts",
+    "build": "tsx scripts/collect-policies.ts && vite build",
+    "db:migrate:local": "wrangler d1 migrations apply wealth-mvp1 --local",
+    "db:migrate:remote": "wrangler d1 migrations apply wealth-mvp1 --remote",
+    "seed:local": "tsx scripts/build-seed-sql.ts && wrangler d1 execute wealth-mvp1 --local --file data/seed.sql",
+    "seed:remote": "tsx scripts/build-seed-sql.ts && wrangler d1 execute wealth-mvp1 --remote --file data/seed.sql",
+    "dev": "npm run build && npm run db:migrate:local && wrangler dev",
+    "dev:ui": "vite",
+    "deploy": "npm run build && npm run db:migrate:remote && wrangler deploy",
+    "demo:delete": "wrangler delete --name wealth-mvp1 && wrangler d1 delete wealth-mvp1",
+    "smoke": "tsx scripts/smoke.ts",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc -p frontend/tsconfig.json"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.133.0",

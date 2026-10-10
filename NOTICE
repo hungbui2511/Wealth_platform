@@ -1,0 +1,22 @@
+Wealth Platform 2036 – MVP1 (bản demo, dữ liệu giả lập)
+
+Mã nguồn tái sử dụng hoặc tham chiếu (NFR-18)
+
+1. TradingAgents – TauricResearch (https://github.com/TauricResearch/TradingAgents)
+   Giấy phép: Apache License 2.0
+   Cách dùng: chỉ tham khảo kiến trúc (đội phân tích, tranh luận tăng/giảm, bước tổng hợp) cho
+   đồ thị Agent CIO tại src/agents/cioGraph.ts. Không sao chép mã nguồn; mã được viết lại trong
+   dự án và bỏ các thành phần giao dịch (trader, quản lý danh mục ra lệnh, sàn mô phỏng, nguồn dữ liệu Mỹ).
+
+2. UI UX Pro Max Skill – Next Level Builder (https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)
+   Giấy phép: MIT, Copyright (c) 2024 Next Level Builder
+   Cách dùng: sinh hệ thống thiết kế ban đầu, lưu tại design-system/GENERATED-ui-ux-pro-max.md;
+   design-system/MASTER.md ghi đè theo BRD.
+
+Thư viện phụ thuộc chính (đều là giấy phép cho phép dùng thương mại)
+
+- hono (MIT), decimal.js (MIT), zod (MIT), @langchain/langgraph và @langchain/core (MIT),
+  @anthropic-ai/sdk (MIT), react, react-dom, react-router-dom (MIT), recharts (MIT),
+  vite, @vitejs/plugin-react (MIT), tailwindcss, @tailwindcss/vite (MIT), wrangler (MIT OR Apache-2.0),
+  vitest (MIT), lucide-react (ISC – tương đương MIT/BSD-2).
+- Phông chữ IBM Plex Sans, IBM Plex Mono (SIL Open Font License 1.1) tải từ Google Fonts.
