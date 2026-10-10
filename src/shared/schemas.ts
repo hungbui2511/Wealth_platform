@@ -48,7 +48,7 @@ export const PolicyChangeSchema = z.object({
 })
 export const PolicySummarySchema = z.object({ changes: z.array(PolicyChangeSchema).min(1) })
 
-export const lineKey = (l: Pick<ImpactLine, 'scope' | 'asset_class' | 'target'>) => `${l.scope}|${l.asset_class ?? ''}|${l.target}`
+export const lineKey = (l: Pick<ImpactLine, 'scope' | 'asset_class' | 'target'>) => `${l.scope}:${l.asset_class ?? ''}:${l.target}`
 
 export interface ViewContext { newsIds: Set<string>; instruments: Record<string, Instrument>; restricted: Set<string> }
 

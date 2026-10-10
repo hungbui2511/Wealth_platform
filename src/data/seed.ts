@@ -9,6 +9,7 @@ import whitelist from '../../data/seed/compliance/sources_whitelist.json'
 import restricted from '../../data/seed/compliance/restricted_list.json'
 import pd1 from '../../data/seed/policies/sample/PD-2026-001.json'
 import pd2 from '../../data/seed/policies/sample/PD-2026-002.json'
+import provided from '../../data/seed/policies/provided/index.json'
 import tcbsStocks from '../../data/seed/prices/tcbs_sample/stocks.json'
 import tcbsBonds from '../../data/seed/prices/tcbs_sample/bonds.json'
 import onemount from '../../data/seed/prices/onemount_sample/valuations.json'
@@ -29,6 +30,8 @@ export const SEED = {
 }
 
 export interface PolicyDocSeed { id: string; title: string; agency: string; kind: 'draft' | 'final'; status: string; published_at: string; effective_expected?: string; url: string; topics: string[]; content: string; simulated: boolean }
+
+export const PROVIDED_POLICIES = provided as unknown as PolicyDocSeed[]
 
 export const SAMPLE_STORE = { tcbsStocks, tcbsBonds, onemount, sample } as unknown as SampleStore
 
