@@ -1,0 +1,1515 @@
+{
+  "_note": "DỮ LIỆU MẪU – không phải giá thật. Cấu trúc đặt theo dữ liệu của nguồn tương ứng; mã là hư cấu.",
+  "data": {
+    "DMBDA": [
+      {
+        "tradingDate": "2026-07-20",
+        "cleanPrice": 98940,
+        "dirtyPrice": 99740
+      },
+      {
+        "tradingDate": "2026-07-21",
+        "cleanPrice": 98749,
+        "dirtyPrice": 99549
+      },
+      {
+        "tradingDate": "2026-07-22",
+        "cleanPrice": 98584,
+        "dirtyPrice": 99384
+      },
+      {
+        "tradingDate": "2026-07-23",
+        "cleanPrice": 98623,
+        "dirtyPrice": 99423
+      },
+      {
+        "tradingDate": "2026-07-24",
+        "cleanPrice": 98707,
+        "dirtyPrice": 99507
+      },
+      {
+        "tradingDate": "2026-07-27",
+        "cleanPrice": 98774,
+        "dirtyPrice": 99574
+      },
+      {
+        "tradingDate": "2026-07-28",
+        "cleanPrice": 98725,
+        "dirtyPrice": 99525
+      },
+      {
+        "tradingDate": "2026-07-29",
+        "cleanPrice": 98860,
+        "dirtyPrice": 99660
+      },
+      {
+        "tradingDate": "2026-07-30",
+        "cleanPrice": 98810,
+        "dirtyPrice": 99610
+      },
+      {
+        "tradingDate": "2026-07-31",
+        "cleanPrice": 98621,
+        "dirtyPrice": 99421
+      },
+      {
+        "tradingDate": "2026-08-03",
+        "cleanPrice": 98795,
+        "dirtyPrice": 99595
+      },
+      {
+        "tradingDate": "2026-08-04",
+        "cleanPrice": 98841,
+        "dirtyPrice": 99641
+      },
+      {
+        "tradingDate": "2026-08-05",
+        "cleanPrice": 98994,
+        "dirtyPrice": 99794
+      },
+      {
+        "tradingDate": "2026-08-06",
+        "cleanPrice": 98839,
+        "dirtyPrice": 99639
+      },
+      {
+        "tradingDate": "2026-08-07",
+        "cleanPrice": 98906,
+        "dirtyPrice": 99706
+      },
+      {
+        "tradingDate": "2026-08-10",
+        "cleanPrice": 99083,
+        "dirtyPrice": 99883
+      },
+      {
+        "tradingDate": "2026-08-11",
+        "cleanPrice": 99037,
+        "dirtyPrice": 99837
+      },
+      {
+        "tradingDate": "2026-08-12",
+        "cleanPrice": 98941,
+        "dirtyPrice": 99741
+      },
+      {
+        "tradingDate": "2026-08-13",
+        "cleanPrice": 98885,
+        "dirtyPrice": 99685
+      },
+      {
+        "tradingDate": "2026-08-14",
+        "cleanPrice": 98844,
+        "dirtyPrice": 99644
+      },
+      {
+        "tradingDate": "2026-08-17",
+        "cleanPrice": 98948,
+        "dirtyPrice": 99748
+      },
+      {
+        "tradingDate": "2026-08-18",
+        "cleanPrice": 98845,
+        "dirtyPrice": 99645
+      },
+      {
+        "tradingDate": "2026-08-19",
+        "cleanPrice": 98764,
+        "dirtyPrice": 99564
+      },
+      {
+        "tradingDate": "2026-08-20",
+        "cleanPrice": 98943,
+        "dirtyPrice": 99743
+      },
+      {
+        "tradingDate": "2026-08-21",
+        "cleanPrice": 99098,
+        "dirtyPrice": 99898
+      },
+      {
+        "tradingDate": "2026-08-24",
+        "cleanPrice": 99246,
+        "dirtyPrice": 100046
+      },
+      {
+        "tradingDate": "2026-08-25",
+        "cleanPrice": 99191,
+        "dirtyPrice": 99991
+      },
+      {
+        "tradingDate": "2026-08-26",
+        "cleanPrice": 99005,
+        "dirtyPrice": 99805
+      },
+      {
+        "tradingDate": "2026-08-27",
+        "cleanPrice": 98819,
+        "dirtyPrice": 99619
+      },
+      {
+        "tradingDate": "2026-08-28",
+        "cleanPrice": 98806,
+        "dirtyPrice": 99606
+      },
+      {
+        "tradingDate": "2026-08-31",
+        "cleanPrice": 98830,
+        "dirtyPrice": 99630
+      },
+      {
+        "tradingDate": "2026-09-01",
+        "cleanPrice": 98864,
+        "dirtyPrice": 99664
+      },
+      {
+        "tradingDate": "2026-09-02",
+        "cleanPrice": 98855,
+        "dirtyPrice": 99655
+      },
+      {
+        "tradingDate": "2026-09-03",
+        "cleanPrice": 98992,
+        "dirtyPrice": 99792
+      },
+      {
+        "tradingDate": "2026-09-04",
+        "cleanPrice": 99168,
+        "dirtyPrice": 99968
+      },
+      {
+        "tradingDate": "2026-09-07",
+        "cleanPrice": 99353,
+        "dirtyPrice": 100153
+      },
+      {
+        "tradingDate": "2026-09-08",
+        "cleanPrice": 99364,
+        "dirtyPrice": 100164
+      },
+      {
+        "tradingDate": "2026-09-09",
+        "cleanPrice": 99437,
+        "dirtyPrice": 100237
+      },
+      {
+        "tradingDate": "2026-09-10",
+        "cleanPrice": 99512,
+        "dirtyPrice": 100312
+      },
+      {
+        "tradingDate": "2026-09-11",
+        "cleanPrice": 99517,
+        "dirtyPrice": 100317
+      },
+      {
+        "tradingDate": "2026-09-14",
+        "cleanPrice": 99710,
+        "dirtyPrice": 100510
+      },
+      {
+        "tradingDate": "2026-09-15",
+        "cleanPrice": 99607,
+        "dirtyPrice": 100407
+      },
+      {
+        "tradingDate": "2026-09-16",
+        "cleanPrice": 99786,
+        "dirtyPrice": 100586
+      },
+      {
+        "tradingDate": "2026-09-17",
+        "cleanPrice": 99977,
+        "dirtyPrice": 100777
+      },
+      {
+        "tradingDate": "2026-09-18",
+        "cleanPrice": 100096,
+        "dirtyPrice": 100896
+      },
+      {
+        "tradingDate": "2026-09-21",
+        "cleanPrice": 100008,
+        "dirtyPrice": 100808
+      },
+      {
+        "tradingDate": "2026-09-22",
+        "cleanPrice": 99862,
+        "dirtyPrice": 100662
+      },
+      {
+        "tradingDate": "2026-09-23",
+        "cleanPrice": 100055,
+        "dirtyPrice": 100855
+      },
+      {
+        "tradingDate": "2026-09-24",
+        "cleanPrice": 100166,
+        "dirtyPrice": 100966
+      },
+      {
+        "tradingDate": "2026-09-25",
+        "cleanPrice": 100099,
+        "dirtyPrice": 100899
+      },
+      {
+        "tradingDate": "2026-09-28",
+        "cleanPrice": 100278,
+        "dirtyPrice": 101078
+      },
+      {
+        "tradingDate": "2026-09-29",
+        "cleanPrice": 100477,
+        "dirtyPrice": 101277
+      },
+      {
+        "tradingDate": "2026-09-30",
+        "cleanPrice": 100466,
+        "dirtyPrice": 101266
+      },
+      {
+        "tradingDate": "2026-10-01",
+        "cleanPrice": 100272,
+        "dirtyPrice": 101072
+      },
+      {
+        "tradingDate": "2026-10-02",
+        "cleanPrice": 100222,
+        "dirtyPrice": 101022
+      },
+      {
+        "tradingDate": "2026-10-05",
+        "cleanPrice": 100131,
+        "dirtyPrice": 100931
+      },
+      {
+        "tradingDate": "2026-10-06",
+        "cleanPrice": 100116,
+        "dirtyPrice": 100916
+      },
+      {
+        "tradingDate": "2026-10-07",
+        "cleanPrice": 100164,
+        "dirtyPrice": 100964
+      },
+      {
+        "tradingDate": "2026-10-08",
+        "cleanPrice": 100112,
+        "dirtyPrice": 100912
+      },
+      {
+        "tradingDate": "2026-10-09",
+        "cleanPrice": 100000,
+        "dirtyPrice": 100800
+      }
+    ],
+    "DMBNB": [
+      {
+        "tradingDate": "2026-07-20",
+        "cleanPrice": 102435,
+        "dirtyPrice": 103235
+      },
+      {
+        "tradingDate": "2026-07-21",
+        "cleanPrice": 102431,
+        "dirtyPrice": 103231
+      },
+      {
+        "tradingDate": "2026-07-22",
+        "cleanPrice": 102473,
+        "dirtyPrice": 103273
+      },
+      {
+        "tradingDate": "2026-07-23",
+        "cleanPrice": 102374,
+        "dirtyPrice": 103174
+      },
+      {
+        "tradingDate": "2026-07-24",
+        "cleanPrice": 102354,
+        "dirtyPrice": 103154
+      },
+      {
+        "tradingDate": "2026-07-27",
+        "cleanPrice": 102318,
+        "dirtyPrice": 103118
+      },
+      {
+        "tradingDate": "2026-07-28",
+        "cleanPrice": 102228,
+        "dirtyPrice": 103028
+      },
+      {
+        "tradingDate": "2026-07-29",
+        "cleanPrice": 102033,
+        "dirtyPrice": 102833
+      },
+      {
+        "tradingDate": "2026-07-30",
+        "cleanPrice": 102198,
+        "dirtyPrice": 102998
+      },
+      {
+        "tradingDate": "2026-07-31",
+        "cleanPrice": 102296,
+        "dirtyPrice": 103096
+      },
+      {
+        "tradingDate": "2026-08-03",
+        "cleanPrice": 102326,
+        "dirtyPrice": 103126
+      },
+      {
+        "tradingDate": "2026-08-04",
+        "cleanPrice": 102276,
+        "dirtyPrice": 103076
+      },
+      {
+        "tradingDate": "2026-08-05",
+        "cleanPrice": 102091,
+        "dirtyPrice": 102891
+      },
+      {
+        "tradingDate": "2026-08-06",
+        "cleanPrice": 102073,
+        "dirtyPrice": 102873
+      },
+      {
+        "tradingDate": "2026-08-07",
+        "cleanPrice": 102190,
+        "dirtyPrice": 102990
+      },
+      {
+        "tradingDate": "2026-08-10",
+        "cleanPrice": 102090,
+        "dirtyPrice": 102890
+      },
+      {
+        "tradingDate": "2026-08-11",
+        "cleanPrice": 102215,
+        "dirtyPrice": 103015
+      },
+      {
+        "tradingDate": "2026-08-12",
+        "cleanPrice": 102228,
+        "dirtyPrice": 103028
+      },
+      {
+        "tradingDate": "2026-08-13",
+        "cleanPrice": 102061,
+        "dirtyPrice": 102861
+      },
+      {
+        "tradingDate": "2026-08-14",
+        "cleanPrice": 101914,
+        "dirtyPrice": 102714
+      },
+      {
+        "tradingDate": "2026-08-17",
+        "cleanPrice": 101903,
+        "dirtyPrice": 102703
+      },
+      {
+        "tradingDate": "2026-08-18",
+        "cleanPrice": 101959,
+        "dirtyPrice": 102759
+      },
+      {
+        "tradingDate": "2026-08-19",
+        "cleanPrice": 102099,
+        "dirtyPrice": 102899
+      },
+      {
+        "tradingDate": "2026-08-20",
+        "cleanPrice": 101960,
+        "dirtyPrice": 102760
+      },
+      {
+        "tradingDate": "2026-08-21",
+        "cleanPrice": 101829,
+        "dirtyPrice": 102629
+      },
+      {
+        "tradingDate": "2026-08-24",
+        "cleanPrice": 101997,
+        "dirtyPrice": 102797
+      },
+      {
+        "tradingDate": "2026-08-25",
+        "cleanPrice": 101901,
+        "dirtyPrice": 102701
+      },
+      {
+        "tradingDate": "2026-08-26",
+        "cleanPrice": 101966,
+        "dirtyPrice": 102766
+      },
+      {
+        "tradingDate": "2026-08-27",
+        "cleanPrice": 101851,
+        "dirtyPrice": 102651
+      },
+      {
+        "tradingDate": "2026-08-28",
+        "cleanPrice": 102044,
+        "dirtyPrice": 102844
+      },
+      {
+        "tradingDate": "2026-08-31",
+        "cleanPrice": 102208,
+        "dirtyPrice": 103008
+      },
+      {
+        "tradingDate": "2026-09-01",
+        "cleanPrice": 102216,
+        "dirtyPrice": 103016
+      },
+      {
+        "tradingDate": "2026-09-02",
+        "cleanPrice": 102041,
+        "dirtyPrice": 102841
+      },
+      {
+        "tradingDate": "2026-09-03",
+        "cleanPrice": 101846,
+        "dirtyPrice": 102646
+      },
+      {
+        "tradingDate": "2026-09-04",
+        "cleanPrice": 101954,
+        "dirtyPrice": 102754
+      },
+      {
+        "tradingDate": "2026-09-07",
+        "cleanPrice": 101773,
+        "dirtyPrice": 102573
+      },
+      {
+        "tradingDate": "2026-09-08",
+        "cleanPrice": 101969,
+        "dirtyPrice": 102769
+      },
+      {
+        "tradingDate": "2026-09-09",
+        "cleanPrice": 101930,
+        "dirtyPrice": 102730
+      },
+      {
+        "tradingDate": "2026-09-10",
+        "cleanPrice": 102114,
+        "dirtyPrice": 102914
+      },
+      {
+        "tradingDate": "2026-09-11",
+        "cleanPrice": 101939,
+        "dirtyPrice": 102739
+      },
+      {
+        "tradingDate": "2026-09-14",
+        "cleanPrice": 101814,
+        "dirtyPrice": 102614
+      },
+      {
+        "tradingDate": "2026-09-15",
+        "cleanPrice": 101752,
+        "dirtyPrice": 102552
+      },
+      {
+        "tradingDate": "2026-09-16",
+        "cleanPrice": 101638,
+        "dirtyPrice": 102438
+      },
+      {
+        "tradingDate": "2026-09-17",
+        "cleanPrice": 101466,
+        "dirtyPrice": 102266
+      },
+      {
+        "tradingDate": "2026-09-18",
+        "cleanPrice": 101459,
+        "dirtyPrice": 102259
+      },
+      {
+        "tradingDate": "2026-09-21",
+        "cleanPrice": 101257,
+        "dirtyPrice": 102057
+      },
+      {
+        "tradingDate": "2026-09-22",
+        "cleanPrice": 101406,
+        "dirtyPrice": 102206
+      },
+      {
+        "tradingDate": "2026-09-23",
+        "cleanPrice": 101446,
+        "dirtyPrice": 102246
+      },
+      {
+        "tradingDate": "2026-09-24",
+        "cleanPrice": 101270,
+        "dirtyPrice": 102070
+      },
+      {
+        "tradingDate": "2026-09-25",
+        "cleanPrice": 101182,
+        "dirtyPrice": 101982
+      },
+      {
+        "tradingDate": "2026-09-28",
+        "cleanPrice": 101378,
+        "dirtyPrice": 102178
+      },
+      {
+        "tradingDate": "2026-09-29",
+        "cleanPrice": 101452,
+        "dirtyPrice": 102252
+      },
+      {
+        "tradingDate": "2026-09-30",
+        "cleanPrice": 101254,
+        "dirtyPrice": 102054
+      },
+      {
+        "tradingDate": "2026-10-01",
+        "cleanPrice": 101375,
+        "dirtyPrice": 102175
+      },
+      {
+        "tradingDate": "2026-10-02",
+        "cleanPrice": 101308,
+        "dirtyPrice": 102108
+      },
+      {
+        "tradingDate": "2026-10-05",
+        "cleanPrice": 101202,
+        "dirtyPrice": 102002
+      },
+      {
+        "tradingDate": "2026-10-06",
+        "cleanPrice": 101191,
+        "dirtyPrice": 101991
+      },
+      {
+        "tradingDate": "2026-10-07",
+        "cleanPrice": 101083,
+        "dirtyPrice": 101883
+      },
+      {
+        "tradingDate": "2026-10-08",
+        "cleanPrice": 101035,
+        "dirtyPrice": 101835
+      },
+      {
+        "tradingDate": "2026-10-09",
+        "cleanPrice": 101000,
+        "dirtyPrice": 101800
+      }
+    ],
+    "DMBNC": [
+      {
+        "tradingDate": "2026-07-20",
+        "cleanPrice": 98705,
+        "dirtyPrice": 99505
+      },
+      {
+        "tradingDate": "2026-07-21",
+        "cleanPrice": 98837,
+        "dirtyPrice": 99637
+      },
+      {
+        "tradingDate": "2026-07-22",
+        "cleanPrice": 99002,
+        "dirtyPrice": 99802
+      },
+      {
+        "tradingDate": "2026-07-23",
+        "cleanPrice": 99009,
+        "dirtyPrice": 99809
+      },
+      {
+        "tradingDate": "2026-07-24",
+        "cleanPrice": 98910,
+        "dirtyPrice": 99710
+      },
+      {
+        "tradingDate": "2026-07-27",
+        "cleanPrice": 98928,
+        "dirtyPrice": 99728
+      },
+      {
+        "tradingDate": "2026-07-28",
+        "cleanPrice": 98750,
+        "dirtyPrice": 99550
+      },
+      {
+        "tradingDate": "2026-07-29",
+        "cleanPrice": 98563,
+        "dirtyPrice": 99363
+      },
+      {
+        "tradingDate": "2026-07-30",
+        "cleanPrice": 98740,
+        "dirtyPrice": 99540
+      },
+      {
+        "tradingDate": "2026-07-31",
+        "cleanPrice": 98590,
+        "dirtyPrice": 99390
+      },
+      {
+        "tradingDate": "2026-08-03",
+        "cleanPrice": 98690,
+        "dirtyPrice": 99490
+      },
+      {
+        "tradingDate": "2026-08-04",
+        "cleanPrice": 98579,
+        "dirtyPrice": 99379
+      },
+      {
+        "tradingDate": "2026-08-05",
+        "cleanPrice": 98425,
+        "dirtyPrice": 99225
+      },
+      {
+        "tradingDate": "2026-08-06",
+        "cleanPrice": 98465,
+        "dirtyPrice": 99265
+      },
+      {
+        "tradingDate": "2026-08-07",
+        "cleanPrice": 98403,
+        "dirtyPrice": 99203
+      },
+      {
+        "tradingDate": "2026-08-10",
+        "cleanPrice": 98514,
+        "dirtyPrice": 99314
+      },
+      {
+        "tradingDate": "2026-08-11",
+        "cleanPrice": 98596,
+        "dirtyPrice": 99396
+      },
+      {
+        "tradingDate": "2026-08-12",
+        "cleanPrice": 98755,
+        "dirtyPrice": 99555
+      },
+      {
+        "tradingDate": "2026-08-13",
+        "cleanPrice": 98614,
+        "dirtyPrice": 99414
+      },
+      {
+        "tradingDate": "2026-08-14",
+        "cleanPrice": 98638,
+        "dirtyPrice": 99438
+      },
+      {
+        "tradingDate": "2026-08-17",
+        "cleanPrice": 98708,
+        "dirtyPrice": 99508
+      },
+      {
+        "tradingDate": "2026-08-18",
+        "cleanPrice": 98550,
+        "dirtyPrice": 99350
+      },
+      {
+        "tradingDate": "2026-08-19",
+        "cleanPrice": 98473,
+        "dirtyPrice": 99273
+      },
+      {
+        "tradingDate": "2026-08-20",
+        "cleanPrice": 98570,
+        "dirtyPrice": 99370
+      },
+      {
+        "tradingDate": "2026-08-21",
+        "cleanPrice": 98549,
+        "dirtyPrice": 99349
+      },
+      {
+        "tradingDate": "2026-08-24",
+        "cleanPrice": 98496,
+        "dirtyPrice": 99296
+      },
+      {
+        "tradingDate": "2026-08-25",
+        "cleanPrice": 98516,
+        "dirtyPrice": 99316
+      },
+      {
+        "tradingDate": "2026-08-26",
+        "cleanPrice": 98696,
+        "dirtyPrice": 99496
+      },
+      {
+        "tradingDate": "2026-08-27",
+        "cleanPrice": 98763,
+        "dirtyPrice": 99563
+      },
+      {
+        "tradingDate": "2026-08-28",
+        "cleanPrice": 98931,
+        "dirtyPrice": 99731
+      },
+      {
+        "tradingDate": "2026-08-31",
+        "cleanPrice": 99045,
+        "dirtyPrice": 99845
+      },
+      {
+        "tradingDate": "2026-09-01",
+        "cleanPrice": 99153,
+        "dirtyPrice": 99953
+      },
+      {
+        "tradingDate": "2026-09-02",
+        "cleanPrice": 99131,
+        "dirtyPrice": 99931
+      },
+      {
+        "tradingDate": "2026-09-03",
+        "cleanPrice": 98993,
+        "dirtyPrice": 99793
+      },
+      {
+        "tradingDate": "2026-09-04",
+        "cleanPrice": 98989,
+        "dirtyPrice": 99789
+      },
+      {
+        "tradingDate": "2026-09-07",
+        "cleanPrice": 99175,
+        "dirtyPrice": 99975
+      },
+      {
+        "tradingDate": "2026-09-08",
+        "cleanPrice": 99121,
+        "dirtyPrice": 99921
+      },
+      {
+        "tradingDate": "2026-09-09",
+        "cleanPrice": 99163,
+        "dirtyPrice": 99963
+      },
+      {
+        "tradingDate": "2026-09-10",
+        "cleanPrice": 99078,
+        "dirtyPrice": 99878
+      },
+      {
+        "tradingDate": "2026-09-11",
+        "cleanPrice": 99240,
+        "dirtyPrice": 100040
+      },
+      {
+        "tradingDate": "2026-09-14",
+        "cleanPrice": 99227,
+        "dirtyPrice": 100027
+      },
+      {
+        "tradingDate": "2026-09-15",
+        "cleanPrice": 99362,
+        "dirtyPrice": 100162
+      },
+      {
+        "tradingDate": "2026-09-16",
+        "cleanPrice": 99542,
+        "dirtyPrice": 100342
+      },
+      {
+        "tradingDate": "2026-09-17",
+        "cleanPrice": 99707,
+        "dirtyPrice": 100507
+      },
+      {
+        "tradingDate": "2026-09-18",
+        "cleanPrice": 99509,
+        "dirtyPrice": 100309
+      },
+      {
+        "tradingDate": "2026-09-21",
+        "cleanPrice": 99666,
+        "dirtyPrice": 100466
+      },
+      {
+        "tradingDate": "2026-09-22",
+        "cleanPrice": 99682,
+        "dirtyPrice": 100482
+      },
+      {
+        "tradingDate": "2026-09-23",
+        "cleanPrice": 99659,
+        "dirtyPrice": 100459
+      },
+      {
+        "tradingDate": "2026-09-24",
+        "cleanPrice": 99668,
+        "dirtyPrice": 100468
+      },
+      {
+        "tradingDate": "2026-09-25",
+        "cleanPrice": 99560,
+        "dirtyPrice": 100360
+      },
+      {
+        "tradingDate": "2026-09-28",
+        "cleanPrice": 99562,
+        "dirtyPrice": 100362
+      },
+      {
+        "tradingDate": "2026-09-29",
+        "cleanPrice": 99673,
+        "dirtyPrice": 100473
+      },
+      {
+        "tradingDate": "2026-09-30",
+        "cleanPrice": 99784,
+        "dirtyPrice": 100584
+      },
+      {
+        "tradingDate": "2026-10-01",
+        "cleanPrice": 99597,
+        "dirtyPrice": 100397
+      },
+      {
+        "tradingDate": "2026-10-02",
+        "cleanPrice": 99566,
+        "dirtyPrice": 100366
+      },
+      {
+        "tradingDate": "2026-10-05",
+        "cleanPrice": 99721,
+        "dirtyPrice": 100521
+      },
+      {
+        "tradingDate": "2026-10-06",
+        "cleanPrice": 99630,
+        "dirtyPrice": 100430
+      },
+      {
+        "tradingDate": "2026-10-07",
+        "cleanPrice": 99450,
+        "dirtyPrice": 100250
+      },
+      {
+        "tradingDate": "2026-10-08",
+        "cleanPrice": 99477,
+        "dirtyPrice": 100277
+      },
+      {
+        "tradingDate": "2026-10-09",
+        "cleanPrice": 99500,
+        "dirtyPrice": 100300
+      }
+    ],
+    "DMCPN": [
+      {
+        "tradingDate": "2026-07-20",
+        "cleanPrice": 102568,
+        "dirtyPrice": 103368
+      },
+      {
+        "tradingDate": "2026-07-21",
+        "cleanPrice": 102551,
+        "dirtyPrice": 103351
+      },
+      {
+        "tradingDate": "2026-07-22",
+        "cleanPrice": 102688,
+        "dirtyPrice": 103488
+      },
+      {
+        "tradingDate": "2026-07-23",
+        "cleanPrice": 102628,
+        "dirtyPrice": 103428
+      },
+      {
+        "tradingDate": "2026-07-24",
+        "cleanPrice": 102627,
+        "dirtyPrice": 103427
+      },
+      {
+        "tradingDate": "2026-07-27",
+        "cleanPrice": 102688,
+        "dirtyPrice": 103488
+      },
+      {
+        "tradingDate": "2026-07-28",
+        "cleanPrice": 102677,
+        "dirtyPrice": 103477
+      },
+      {
+        "tradingDate": "2026-07-29",
+        "cleanPrice": 102873,
+        "dirtyPrice": 103673
+      },
+      {
+        "tradingDate": "2026-07-30",
+        "cleanPrice": 102963,
+        "dirtyPrice": 103763
+      },
+      {
+        "tradingDate": "2026-07-31",
+        "cleanPrice": 103070,
+        "dirtyPrice": 103870
+      },
+      {
+        "tradingDate": "2026-08-03",
+        "cleanPrice": 103154,
+        "dirtyPrice": 103954
+      },
+      {
+        "tradingDate": "2026-08-04",
+        "cleanPrice": 103172,
+        "dirtyPrice": 103972
+      },
+      {
+        "tradingDate": "2026-08-05",
+        "cleanPrice": 103335,
+        "dirtyPrice": 104135
+      },
+      {
+        "tradingDate": "2026-08-06",
+        "cleanPrice": 103289,
+        "dirtyPrice": 104089
+      },
+      {
+        "tradingDate": "2026-08-07",
+        "cleanPrice": 103199,
+        "dirtyPrice": 103999
+      },
+      {
+        "tradingDate": "2026-08-10",
+        "cleanPrice": 103282,
+        "dirtyPrice": 104082
+      },
+      {
+        "tradingDate": "2026-08-11",
+        "cleanPrice": 103114,
+        "dirtyPrice": 103914
+      },
+      {
+        "tradingDate": "2026-08-12",
+        "cleanPrice": 102966,
+        "dirtyPrice": 103766
+      },
+      {
+        "tradingDate": "2026-08-13",
+        "cleanPrice": 103127,
+        "dirtyPrice": 103927
+      },
+      {
+        "tradingDate": "2026-08-14",
+        "cleanPrice": 102971,
+        "dirtyPrice": 103771
+      },
+      {
+        "tradingDate": "2026-08-17",
+        "cleanPrice": 103011,
+        "dirtyPrice": 103811
+      },
+      {
+        "tradingDate": "2026-08-18",
+        "cleanPrice": 102812,
+        "dirtyPrice": 103612
+      },
+      {
+        "tradingDate": "2026-08-19",
+        "cleanPrice": 102919,
+        "dirtyPrice": 103719
+      },
+      {
+        "tradingDate": "2026-08-20",
+        "cleanPrice": 103028,
+        "dirtyPrice": 103828
+      },
+      {
+        "tradingDate": "2026-08-21",
+        "cleanPrice": 102986,
+        "dirtyPrice": 103786
+      },
+      {
+        "tradingDate": "2026-08-24",
+        "cleanPrice": 102949,
+        "dirtyPrice": 103749
+      },
+      {
+        "tradingDate": "2026-08-25",
+        "cleanPrice": 102778,
+        "dirtyPrice": 103578
+      },
+      {
+        "tradingDate": "2026-08-26",
+        "cleanPrice": 102970,
+        "dirtyPrice": 103770
+      },
+      {
+        "tradingDate": "2026-08-27",
+        "cleanPrice": 102795,
+        "dirtyPrice": 103595
+      },
+      {
+        "tradingDate": "2026-08-28",
+        "cleanPrice": 102730,
+        "dirtyPrice": 103530
+      },
+      {
+        "tradingDate": "2026-08-31",
+        "cleanPrice": 102537,
+        "dirtyPrice": 103337
+      },
+      {
+        "tradingDate": "2026-09-01",
+        "cleanPrice": 102615,
+        "dirtyPrice": 103415
+      },
+      {
+        "tradingDate": "2026-09-02",
+        "cleanPrice": 102457,
+        "dirtyPrice": 103257
+      },
+      {
+        "tradingDate": "2026-09-03",
+        "cleanPrice": 102523,
+        "dirtyPrice": 103323
+      },
+      {
+        "tradingDate": "2026-09-04",
+        "cleanPrice": 102475,
+        "dirtyPrice": 103275
+      },
+      {
+        "tradingDate": "2026-09-07",
+        "cleanPrice": 102596,
+        "dirtyPrice": 103396
+      },
+      {
+        "tradingDate": "2026-09-08",
+        "cleanPrice": 102529,
+        "dirtyPrice": 103329
+      },
+      {
+        "tradingDate": "2026-09-09",
+        "cleanPrice": 102340,
+        "dirtyPrice": 103140
+      },
+      {
+        "tradingDate": "2026-09-10",
+        "cleanPrice": 102148,
+        "dirtyPrice": 102948
+      },
+      {
+        "tradingDate": "2026-09-11",
+        "cleanPrice": 101991,
+        "dirtyPrice": 102791
+      },
+      {
+        "tradingDate": "2026-09-14",
+        "cleanPrice": 101788,
+        "dirtyPrice": 102588
+      },
+      {
+        "tradingDate": "2026-09-15",
+        "cleanPrice": 101685,
+        "dirtyPrice": 102485
+      },
+      {
+        "tradingDate": "2026-09-16",
+        "cleanPrice": 101642,
+        "dirtyPrice": 102442
+      },
+      {
+        "tradingDate": "2026-09-17",
+        "cleanPrice": 101653,
+        "dirtyPrice": 102453
+      },
+      {
+        "tradingDate": "2026-09-18",
+        "cleanPrice": 101576,
+        "dirtyPrice": 102376
+      },
+      {
+        "tradingDate": "2026-09-21",
+        "cleanPrice": 101693,
+        "dirtyPrice": 102493
+      },
+      {
+        "tradingDate": "2026-09-22",
+        "cleanPrice": 101831,
+        "dirtyPrice": 102631
+      },
+      {
+        "tradingDate": "2026-09-23",
+        "cleanPrice": 101964,
+        "dirtyPrice": 102764
+      },
+      {
+        "tradingDate": "2026-09-24",
+        "cleanPrice": 101772,
+        "dirtyPrice": 102572
+      },
+      {
+        "tradingDate": "2026-09-25",
+        "cleanPrice": 101721,
+        "dirtyPrice": 102521
+      },
+      {
+        "tradingDate": "2026-09-28",
+        "cleanPrice": 101518,
+        "dirtyPrice": 102318
+      },
+      {
+        "tradingDate": "2026-09-29",
+        "cleanPrice": 101489,
+        "dirtyPrice": 102289
+      },
+      {
+        "tradingDate": "2026-09-30",
+        "cleanPrice": 101621,
+        "dirtyPrice": 102421
+      },
+      {
+        "tradingDate": "2026-10-01",
+        "cleanPrice": 101742,
+        "dirtyPrice": 102542
+      },
+      {
+        "tradingDate": "2026-10-02",
+        "cleanPrice": 101855,
+        "dirtyPrice": 102655
+      },
+      {
+        "tradingDate": "2026-10-05",
+        "cleanPrice": 101785,
+        "dirtyPrice": 102585
+      },
+      {
+        "tradingDate": "2026-10-06",
+        "cleanPrice": 101920,
+        "dirtyPrice": 102720
+      },
+      {
+        "tradingDate": "2026-10-07",
+        "cleanPrice": 102043,
+        "dirtyPrice": 102843
+      },
+      {
+        "tradingDate": "2026-10-08",
+        "cleanPrice": 101841,
+        "dirtyPrice": 102641
+      },
+      {
+        "tradingDate": "2026-10-09",
+        "cleanPrice": 102000,
+        "dirtyPrice": 102800
+      }
+    ],
+    "DMCPD": [
+      {
+        "tradingDate": "2026-07-20",
+        "cleanPrice": 104847,
+        "dirtyPrice": 105647
+      },
+      {
+        "tradingDate": "2026-07-21",
+        "cleanPrice": 104977,
+        "dirtyPrice": 105777
+      },
+      {
+        "tradingDate": "2026-07-22",
+        "cleanPrice": 104955,
+        "dirtyPrice": 105755
+      },
+      {
+        "tradingDate": "2026-07-23",
+        "cleanPrice": 105157,
+        "dirtyPrice": 105957
+      },
+      {
+        "tradingDate": "2026-07-24",
+        "cleanPrice": 105353,
+        "dirtyPrice": 106153
+      },
+      {
+        "tradingDate": "2026-07-27",
+        "cleanPrice": 105461,
+        "dirtyPrice": 106261
+      },
+      {
+        "tradingDate": "2026-07-28",
+        "cleanPrice": 105326,
+        "dirtyPrice": 106126
+      },
+      {
+        "tradingDate": "2026-07-29",
+        "cleanPrice": 105357,
+        "dirtyPrice": 106157
+      },
+      {
+        "tradingDate": "2026-07-30",
+        "cleanPrice": 105338,
+        "dirtyPrice": 106138
+      },
+      {
+        "tradingDate": "2026-07-31",
+        "cleanPrice": 105349,
+        "dirtyPrice": 106149
+      },
+      {
+        "tradingDate": "2026-08-03",
+        "cleanPrice": 105233,
+        "dirtyPrice": 106033
+      },
+      {
+        "tradingDate": "2026-08-04",
+        "cleanPrice": 105034,
+        "dirtyPrice": 105834
+      },
+      {
+        "tradingDate": "2026-08-05",
+        "cleanPrice": 105190,
+        "dirtyPrice": 105990
+      },
+      {
+        "tradingDate": "2026-08-06",
+        "cleanPrice": 105021,
+        "dirtyPrice": 105821
+      },
+      {
+        "tradingDate": "2026-08-07",
+        "cleanPrice": 104941,
+        "dirtyPrice": 105741
+      },
+      {
+        "tradingDate": "2026-08-10",
+        "cleanPrice": 104831,
+        "dirtyPrice": 105631
+      },
+      {
+        "tradingDate": "2026-08-11",
+        "cleanPrice": 104949,
+        "dirtyPrice": 105749
+      },
+      {
+        "tradingDate": "2026-08-12",
+        "cleanPrice": 105094,
+        "dirtyPrice": 105894
+      },
+      {
+        "tradingDate": "2026-08-13",
+        "cleanPrice": 105100,
+        "dirtyPrice": 105900
+      },
+      {
+        "tradingDate": "2026-08-14",
+        "cleanPrice": 105258,
+        "dirtyPrice": 106058
+      },
+      {
+        "tradingDate": "2026-08-17",
+        "cleanPrice": 105267,
+        "dirtyPrice": 106067
+      },
+      {
+        "tradingDate": "2026-08-18",
+        "cleanPrice": 105263,
+        "dirtyPrice": 106063
+      },
+      {
+        "tradingDate": "2026-08-19",
+        "cleanPrice": 105340,
+        "dirtyPrice": 106140
+      },
+      {
+        "tradingDate": "2026-08-20",
+        "cleanPrice": 105203,
+        "dirtyPrice": 106003
+      },
+      {
+        "tradingDate": "2026-08-21",
+        "cleanPrice": 105017,
+        "dirtyPrice": 105817
+      },
+      {
+        "tradingDate": "2026-08-24",
+        "cleanPrice": 105122,
+        "dirtyPrice": 105922
+      },
+      {
+        "tradingDate": "2026-08-25",
+        "cleanPrice": 105113,
+        "dirtyPrice": 105913
+      },
+      {
+        "tradingDate": "2026-08-26",
+        "cleanPrice": 105315,
+        "dirtyPrice": 106115
+      },
+      {
+        "tradingDate": "2026-08-27",
+        "cleanPrice": 105475,
+        "dirtyPrice": 106275
+      },
+      {
+        "tradingDate": "2026-08-28",
+        "cleanPrice": 105314,
+        "dirtyPrice": 106114
+      },
+      {
+        "tradingDate": "2026-08-31",
+        "cleanPrice": 105520,
+        "dirtyPrice": 106320
+      },
+      {
+        "tradingDate": "2026-09-01",
+        "cleanPrice": 105410,
+        "dirtyPrice": 106210
+      },
+      {
+        "tradingDate": "2026-09-02",
+        "cleanPrice": 105544,
+        "dirtyPrice": 106344
+      },
+      {
+        "tradingDate": "2026-09-03",
+        "cleanPrice": 105491,
+        "dirtyPrice": 106291
+      },
+      {
+        "tradingDate": "2026-09-04",
+        "cleanPrice": 105702,
+        "dirtyPrice": 106502
+      },
+      {
+        "tradingDate": "2026-09-07",
+        "cleanPrice": 105566,
+        "dirtyPrice": 106366
+      },
+      {
+        "tradingDate": "2026-09-08",
+        "cleanPrice": 105705,
+        "dirtyPrice": 106505
+      },
+      {
+        "tradingDate": "2026-09-09",
+        "cleanPrice": 105834,
+        "dirtyPrice": 106634
+      },
+      {
+        "tradingDate": "2026-09-10",
+        "cleanPrice": 105757,
+        "dirtyPrice": 106557
+      },
+      {
+        "tradingDate": "2026-09-11",
+        "cleanPrice": 105681,
+        "dirtyPrice": 106481
+      },
+      {
+        "tradingDate": "2026-09-14",
+        "cleanPrice": 105568,
+        "dirtyPrice": 106368
+      },
+      {
+        "tradingDate": "2026-09-15",
+        "cleanPrice": 105523,
+        "dirtyPrice": 106323
+      },
+      {
+        "tradingDate": "2026-09-16",
+        "cleanPrice": 105504,
+        "dirtyPrice": 106304
+      },
+      {
+        "tradingDate": "2026-09-17",
+        "cleanPrice": 105559,
+        "dirtyPrice": 106359
+      },
+      {
+        "tradingDate": "2026-09-18",
+        "cleanPrice": 105758,
+        "dirtyPrice": 106558
+      },
+      {
+        "tradingDate": "2026-09-21",
+        "cleanPrice": 105909,
+        "dirtyPrice": 106709
+      },
+      {
+        "tradingDate": "2026-09-22",
+        "cleanPrice": 105906,
+        "dirtyPrice": 106706
+      },
+      {
+        "tradingDate": "2026-09-23",
+        "cleanPrice": 105844,
+        "dirtyPrice": 106644
+      },
+      {
+        "tradingDate": "2026-09-24",
+        "cleanPrice": 105979,
+        "dirtyPrice": 106779
+      },
+      {
+        "tradingDate": "2026-09-25",
+        "cleanPrice": 105827,
+        "dirtyPrice": 106627
+      },
+      {
+        "tradingDate": "2026-09-28",
+        "cleanPrice": 105641,
+        "dirtyPrice": 106441
+      },
+      {
+        "tradingDate": "2026-09-29",
+        "cleanPrice": 105596,
+        "dirtyPrice": 106396
+      },
+      {
+        "tradingDate": "2026-09-30",
+        "cleanPrice": 105415,
+        "dirtyPrice": 106215
+      },
+      {
+        "tradingDate": "2026-10-01",
+        "cleanPrice": 105262,
+        "dirtyPrice": 106062
+      },
+      {
+        "tradingDate": "2026-10-02",
+        "cleanPrice": 105306,
+        "dirtyPrice": 106106
+      },
+      {
+        "tradingDate": "2026-10-05",
+        "cleanPrice": 105247,
+        "dirtyPrice": 106047
+      },
+      {
+        "tradingDate": "2026-10-06",
+        "cleanPrice": 105116,
+        "dirtyPrice": 105916
+      },
+      {
+        "tradingDate": "2026-10-07",
+        "cleanPrice": 104992,
+        "dirtyPrice": 105792
+      },
+      {
+        "tradingDate": "2026-10-08",
+        "cleanPrice": 104993,
+        "dirtyPrice": 105793
+      },
+      {
+        "tradingDate": "2026-10-09",
+        "cleanPrice": 105000,
+        "dirtyPrice": 105800
+      }
+    ]
+  }
+}

@@ -1,0 +1,416 @@
+[
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0",
+    "basis": "nominal",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F01-01",
+    "family_id": "DEMO-F01",
+    "name": "Du học cho Minh Châu",
+    "type": "education",
+    "beneficiary": "M-F01-3",
+    "year": 2030,
+    "month": 10,
+    "amount": "8000000000",
+    "priority": "essential",
+    "earmarks": [
+      {
+        "holding_id": "H-F01-03",
+        "pct": "1"
+      },
+      {
+        "holding_id": "H-F01-02",
+        "pct": "0.4"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0",
+    "basis": "nominal",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F02-01",
+    "family_id": "DEMO-F02",
+    "name": "Chuyển giao doanh nghiệp cho thế hệ 2",
+    "type": "succession",
+    "year": 2035,
+    "month": 1,
+    "amount": "150000000000",
+    "priority": "essential",
+    "earmarks": [
+      {
+        "holding_id": "H-F02-01",
+        "pct": "0.6"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0.04",
+    "basis": "today",
+    "spend": {
+      "kind": "multi",
+      "years": 15
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F03-01",
+    "family_id": "DEMO-F03",
+    "name": "Nghỉ hưu của ông bà",
+    "type": "retirement",
+    "year": 2029,
+    "month": 1,
+    "amount": "1500000000",
+    "priority": "essential",
+    "earmarks": [
+      {
+        "holding_id": "H-F03-04",
+        "pct": "1"
+      },
+      {
+        "holding_id": "H-F03-05",
+        "pct": "1"
+      },
+      {
+        "holding_id": "H-F03-06",
+        "pct": "1"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0.05",
+    "basis": "today",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F04-01",
+    "family_id": "DEMO-F04",
+    "name": "Học thạc sĩ cho Gia Huy",
+    "type": "education",
+    "beneficiary": "M-F04-3",
+    "year": 2028,
+    "month": 8,
+    "amount": "3000000000",
+    "priority": "important",
+    "earmarks": [
+      {
+        "holding_id": "H-F04-02",
+        "pct": "0.5"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0",
+    "basis": "nominal",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F06-01",
+    "family_id": "DEMO-F06",
+    "name": "Mua nhà cho con",
+    "type": "purchase",
+    "beneficiary": "M-F06-3",
+    "year": 2029,
+    "month": 6,
+    "amount": "12000000000",
+    "priority": "important",
+    "earmarks": []
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0",
+    "basis": "nominal",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F07-01",
+    "family_id": "DEMO-F07",
+    "name": "Mua căn hộ nghỉ dưỡng",
+    "type": "purchase",
+    "year": 2030,
+    "month": 3,
+    "amount": "9000000000",
+    "priority": "aspirational",
+    "earmarks": [
+      {
+        "holding_id": "H-F07-05",
+        "pct": "1"
+      },
+      {
+        "holding_id": "H-F07-02",
+        "pct": "0.5"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0",
+    "basis": "nominal",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F08-01",
+    "family_id": "DEMO-F08",
+    "name": "Mua nhà cho con trai",
+    "type": "purchase",
+    "beneficiary": "M-F08-3",
+    "year": 2029,
+    "month": 9,
+    "amount": "14000000000",
+    "priority": "important",
+    "earmarks": [
+      {
+        "holding_id": "H-F08-03",
+        "pct": "1"
+      },
+      {
+        "holding_id": "H-F08-04",
+        "pct": "1"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0.04",
+    "basis": "today",
+    "spend": {
+      "kind": "multi",
+      "years": 20
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F10-01",
+    "family_id": "DEMO-F10",
+    "name": "Nghỉ hưu",
+    "type": "retirement",
+    "year": 2031,
+    "month": 1,
+    "amount": "1200000000",
+    "priority": "essential",
+    "earmarks": [
+      {
+        "holding_id": "H-F10-05",
+        "pct": "1"
+      },
+      {
+        "holding_id": "H-F10-07",
+        "pct": "1"
+      },
+      {
+        "holding_id": "H-F10-02",
+        "pct": "0.5"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0",
+    "basis": "nominal",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F12-01",
+    "family_id": "DEMO-F12",
+    "name": "Mua biệt thự",
+    "type": "purchase",
+    "year": 2031,
+    "month": 6,
+    "amount": "25000000000",
+    "priority": "aspirational",
+    "earmarks": [
+      {
+        "holding_id": "H-F12-02",
+        "pct": "1"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0",
+    "basis": "nominal",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F13-01",
+    "family_id": "DEMO-F13",
+    "name": "Quỹ dự phòng gia đình",
+    "type": "other",
+    "year": 2027,
+    "month": 12,
+    "amount": "10000000000",
+    "priority": "important",
+    "earmarks": [
+      {
+        "holding_id": "H-F13-04",
+        "pct": "0.3"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "300000000",
+    "cost_growth": "0.04",
+    "basis": "today",
+    "spend": {
+      "kind": "multi",
+      "years": 20
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F14-01",
+    "family_id": "DEMO-F14",
+    "name": "Nghỉ hưu",
+    "type": "retirement",
+    "year": 2032,
+    "month": 1,
+    "amount": "1000000000",
+    "priority": "essential",
+    "earmarks": [
+      {
+        "holding_id": "H-F14-05",
+        "pct": "1"
+      },
+      {
+        "holding_id": "H-F14-06",
+        "pct": "0.6"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0",
+    "basis": "nominal",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F15-01",
+    "family_id": "DEMO-F15",
+    "name": "Đại học cho Minh Anh",
+    "type": "education",
+    "beneficiary": "M-F15-3",
+    "year": 2031,
+    "month": 9,
+    "amount": "10000000000",
+    "priority": "essential",
+    "earmarks": [
+      {
+        "holding_id": "H-F15-04",
+        "pct": "1"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0.03",
+    "basis": "today",
+    "spend": {
+      "kind": "multi",
+      "years": 15
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F17-01",
+    "family_id": "DEMO-F17",
+    "name": "Nghỉ hưu ở nước ngoài",
+    "type": "retirement",
+    "year": 2033,
+    "month": 1,
+    "amount": "2000000000",
+    "priority": "important",
+    "earmarks": [
+      {
+        "holding_id": "H-F17-03",
+        "pct": "1"
+      },
+      {
+        "holding_id": "H-F17-02",
+        "pct": "0.5"
+      }
+    ]
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0",
+    "basis": "nominal",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F19-01",
+    "family_id": "DEMO-F19",
+    "name": "Quỹ từ thiện gia đình",
+    "type": "charity",
+    "year": 2032,
+    "month": 12,
+    "amount": "5000000000",
+    "priority": "aspirational",
+    "earmarks": []
+  },
+  {
+    "currency": "VND",
+    "status": "active",
+    "annual_contribution": "0",
+    "cost_growth": "0",
+    "basis": "nominal",
+    "spend": {
+      "kind": "once"
+    },
+    "source_note": "Theo trao đổi với khách ngày 15/09/2026 (giả lập)",
+    "id": "GL-F20-01",
+    "family_id": "DEMO-F20",
+    "name": "Mua nhà phố",
+    "type": "purchase",
+    "year": 2028,
+    "month": 12,
+    "amount": "8000000000",
+    "priority": "important",
+    "earmarks": [
+      {
+        "holding_id": "H-F20-01",
+        "pct": "1"
+      },
+      {
+        "holding_id": "H-F20-04",
+        "pct": "1"
+      }
+    ]
+  }
+]

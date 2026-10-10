@@ -1,0 +1,14 @@
+{
+  "pre": {
+    "findings": [
+      {
+        "check": "overconfidence",
+        "severity": "medium",
+        "target": "asset_class:EQ_VN:EQ_VN",
+        "issue": "NW-0009 nói mới ở danh sách xem xét, quyết định chính thức còn khoảng 6 tháng; mức +2 có thể quá tự tin",
+        "suggestion": "Cân nhắc mức +1 hoặc khung thời gian dài hơn 6 tháng"
+      }
+    ],
+    "counter_scenario": "Nếu tổ chức xếp hạng giả lập hoãn quyết định, dòng vốn có thể rút ra nhanh."
+  }
+}

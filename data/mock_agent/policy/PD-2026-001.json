@@ -1,0 +1,33 @@
+{
+  "changes": [
+    {
+      "change_id": "C1",
+      "article_refs": [
+        "Điều 3 khoản 1"
+      ],
+      "quote": "Thuế suất 2% trên giá chuyển nhượng được thay bằng thuế suất 20% trên phần chênh lệch giữa giá bán và giá mua có chứng từ.",
+      "summary": "Đổi cách tính thuế chuyển nhượng bất động sản từ 2% giá bán sang 20% phần chênh lệch có chứng từ.",
+      "topics": [
+        "PROPERTY_LAND"
+      ],
+      "affected_parties": "Cá nhân chuyển nhượng bất động sản",
+      "effective_from": "2027-07-01",
+      "certainty": "draft"
+    },
+    {
+      "change_id": "C2",
+      "article_refs": [
+        "Điều 5 khoản 1",
+        "Điều 5 khoản 2"
+      ],
+      "quote": "Bất động sản nắm giữ dưới 2 năm chịu thuế suất bổ sung 10% trên phần chênh lệch.",
+      "summary": "Thêm thuế suất bổ sung khi chuyển nhượng nhiều bất động sản trong năm hoặc nắm giữ dưới 2 năm.",
+      "topics": [
+        "PROPERTY_LAND"
+      ],
+      "affected_parties": "Cá nhân chuyển nhượng từ bất động sản thứ hai trong năm",
+      "effective_from": "2027-07-01",
+      "certainty": "draft"
+    }
+  ]
+}

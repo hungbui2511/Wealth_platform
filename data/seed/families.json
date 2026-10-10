@@ -1,0 +1,5619 @@
+[
+  {
+    "id": "DEMO-F01",
+    "name": "Gia đình Nguyễn Văn An (giả lập)",
+    "rm_id": "RM1",
+    "persona": "P1",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F01-1",
+        "name": "Nguyễn Văn An",
+        "generation": 1,
+        "role": "Nhà sáng lập"
+      },
+      {
+        "id": "M-F01-2",
+        "name": "Lê Thị Bình",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F01-3",
+        "name": "Nguyễn Minh Châu",
+        "generation": 2,
+        "role": "Con"
+      }
+    ],
+    "entities": [
+      {
+        "id": "E-F01-1",
+        "name": "Công ty Holding An Demo",
+        "type": "Công ty holding"
+      }
+    ],
+    "ownerships": [
+      {
+        "entity_id": "E-F01-1",
+        "member_id": "M-F01-1",
+        "pct": "0.6"
+      }
+    ],
+    "accounts": [
+      {
+        "id": "A-F01-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F01-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F01-EFX",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "USD",
+        "owners": [
+          {
+            "kind": "entity",
+            "id": "E-F01-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F01-01",
+        "account_id": "A-F01-M1",
+        "instrument_id": "DMNGA",
+        "quantity": "400000"
+      },
+      {
+        "id": "H-F01-02",
+        "account_id": "A-F01-M1",
+        "instrument_id": "DMBDA",
+        "quantity": "50000"
+      },
+      {
+        "id": "H-F01-03",
+        "account_id": "A-F01-M1",
+        "instrument_id": "DMQCP",
+        "quantity": "200000"
+      },
+      {
+        "id": "H-F01-04",
+        "account_id": "A-F01-EFX",
+        "instrument_id": "CASH-USD",
+        "quantity": "80000"
+      },
+      {
+        "id": "H-F01-05",
+        "account_id": "A-F01-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "2800000000"
+      },
+      {
+        "id": "H-F01-06",
+        "account_id": "A-F01-M1",
+        "instrument_id": "BDS-CANHO",
+        "quantity": "1",
+        "price_key": "RE-F01-1",
+        "property": {
+          "type": "apartment",
+          "project": "Khu đô thị Demo Sông Xanh",
+          "building": "Tòa S2",
+          "floor": 18,
+          "unit": "1806",
+          "area_m2": "120",
+          "bedrooms": 3,
+          "supported": true,
+          "purchase_price": "11075000000",
+          "capitalized_costs": "221500000"
+        },
+        "manual": {
+          "price": "14550000000",
+          "valuation_date": "2026-03-31"
+        }
+      },
+      {
+        "id": "H-F01-07",
+        "account_id": "A-F01-M1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F01-1",
+        "manual": {
+          "price": "14000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F01-08",
+        "account_id": "A-F01-M1",
+        "instrument_id": "DMVGM",
+        "quantity": "16"
+      },
+      {
+        "id": "H-F01-09",
+        "account_id": "A-F01-M1",
+        "instrument_id": "BH-TICHLUY",
+        "quantity": "1",
+        "price_key": "INS-F01-1",
+        "manual": {
+          "price": "2000000000",
+          "valuation_date": "2026-09-30"
+        }
+      }
+    ],
+    "liabilities": [
+      {
+        "name": "Vay thế chấp căn hộ",
+        "borrower": {
+          "kind": "member",
+          "id": "M-F01-1"
+        },
+        "balance": "6000000000",
+        "currency": "VND",
+        "rate": "0.09",
+        "rate_type": "fixed",
+        "repayment": "amortizing",
+        "principal_per_month": "50000000",
+        "maturity": "2036-10-31",
+        "collateral": "Căn hộ Tòa S2",
+        "id": "L-F01-1"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "TX-F01-0001",
+        "holding_id": "H-F01-02",
+        "type": "BUY",
+        "date": "2024-10-10",
+        "quantity": "50000",
+        "price": "100000",
+        "fee": "7500000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0002",
+        "holding_id": "H-F01-02",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "225000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0003",
+        "holding_id": "H-F01-03",
+        "type": "BUY",
+        "date": "2025-03-11",
+        "quantity": "200000",
+        "price": "17925",
+        "fee": "5377500",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0005",
+        "holding_id": "H-F01-06",
+        "type": "BUY",
+        "date": "2023-07-05",
+        "quantity": "1",
+        "price": "11075000000",
+        "fee": "221500000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0006",
+        "holding_id": "H-F01-07",
+        "type": "BUY",
+        "date": "2021-11-18",
+        "quantity": "1",
+        "price": "9998000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0007",
+        "holding_id": "H-F01-08",
+        "type": "BUY",
+        "date": "2025-03-31",
+        "quantity": "16",
+        "price": "108392626",
+        "fee": "2601423",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0008",
+        "holding_id": "H-F01-09",
+        "type": "CAPITAL_CALL",
+        "date": "2021-10-11",
+        "amount": "333000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0009",
+        "holding_id": "H-F01-09",
+        "type": "CAPITAL_CALL",
+        "date": "2022-10-10",
+        "amount": "333000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0010",
+        "holding_id": "H-F01-09",
+        "type": "CAPITAL_CALL",
+        "date": "2023-10-10",
+        "amount": "333000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0011",
+        "holding_id": "H-F01-09",
+        "type": "CAPITAL_CALL",
+        "date": "2024-10-09",
+        "amount": "333000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0012",
+        "holding_id": "H-F01-09",
+        "type": "CAPITAL_CALL",
+        "date": "2025-10-09",
+        "amount": "333000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0013",
+        "holding_id": "H-F01-01",
+        "type": "BUY",
+        "date": "2024-03-01",
+        "quantity": "300000",
+        "price": "20000",
+        "fee": "9000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0014",
+        "holding_id": "H-F01-01",
+        "type": "BUY",
+        "date": "2024-09-03",
+        "quantity": "200000",
+        "price": "23000",
+        "fee": "6900000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0015",
+        "holding_id": "H-F01-01",
+        "type": "DIVIDEND_CASH",
+        "date": "2025-06-02",
+        "amount": "500000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0016",
+        "holding_id": "H-F01-01",
+        "type": "SELL",
+        "date": "2026-02-02",
+        "quantity": "100000",
+        "price": "26000",
+        "fee": "2600000",
+        "tax": "2600000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F01-0017",
+        "holding_id": "H-F01-04",
+        "type": "BUY",
+        "date": "2025-01-10",
+        "quantity": "80000",
+        "price": "1",
+        "currency": "USD",
+        "fx_rate": "24000"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F01-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "150000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F01-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F01-0002",
+        "label": "Cổ tức DMNGA (dự kiến)",
+        "category": "dividend",
+        "direction": "in",
+        "amount": "400000000",
+        "currency": "VND",
+        "frequency": "once",
+        "start": "2027-05-15",
+        "subject": {
+          "kind": "member",
+          "id": "M-F01-1"
+        },
+        "origin": "manual",
+        "expected": true
+      },
+      {
+        "id": "CF-F01-0003",
+        "label": "Tiền thuê căn hộ Tòa S2",
+        "category": "rent",
+        "direction": "in",
+        "amount": "40000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F01-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F01-0004",
+        "label": "Phí bảo hiểm",
+        "category": "insurance_premium",
+        "direction": "out",
+        "amount": "200000000",
+        "currency": "VND",
+        "frequency": "annual",
+        "start": "2027-01-15",
+        "subject": {
+          "kind": "member",
+          "id": "M-F01-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F01-0005",
+        "label": "Gọi vốn cổ phần tư nhân",
+        "category": "capital_call",
+        "direction": "out",
+        "amount": "1000000000",
+        "currency": "VND",
+        "frequency": "once",
+        "start": "2027-03-10",
+        "subject": {
+          "kind": "member",
+          "id": "M-F01-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F02",
+    "name": "Gia đình Trần Quốc Bảo (giả lập)",
+    "rm_id": "RM1",
+    "persona": "P1",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F02-1",
+        "name": "Trần Quốc Bảo",
+        "generation": 1,
+        "role": "Nhà sáng lập"
+      },
+      {
+        "id": "M-F02-2",
+        "name": "Phạm Thu Cúc",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F02-3",
+        "name": "Trần Đức Duy",
+        "generation": 2,
+        "role": "Con"
+      },
+      {
+        "id": "M-F02-4",
+        "name": "Trần Mai Em",
+        "generation": 2,
+        "role": "Con"
+      }
+    ],
+    "entities": [
+      {
+        "id": "E-F02-1",
+        "name": "Công ty Holding Bảo Demo",
+        "type": "Công ty holding"
+      }
+    ],
+    "ownerships": [
+      {
+        "entity_id": "E-F02-1",
+        "member_id": "M-F02-1",
+        "pct": "0.5"
+      },
+      {
+        "entity_id": "E-F02-1",
+        "member_id": "M-F02-3",
+        "pct": "0.3"
+      }
+    ],
+    "accounts": [
+      {
+        "id": "A-F02-E1",
+        "custodian": "Ngân hàng Demo B",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "entity",
+            "id": "E-F02-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F02-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F02-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F02-01",
+        "account_id": "A-F02-E1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F02-1",
+        "manual": {
+          "price": "120000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F02-02",
+        "account_id": "A-F02-M1",
+        "instrument_id": "BDS-BIETTHU",
+        "quantity": "1",
+        "price_key": "RE-F02-1",
+        "property": {
+          "type": "villa",
+          "project": "Khu biệt thự Demo Đồi Thông",
+          "area_m2": "450",
+          "supported": false,
+          "purchase_price": "35221000000",
+          "capitalized_costs": "704420000"
+        },
+        "manual": {
+          "price": "45000000000",
+          "valuation_date": "2026-03-31"
+        }
+      },
+      {
+        "id": "H-F02-03",
+        "account_id": "A-F02-E1",
+        "instrument_id": "BDS-THUONGMAI",
+        "quantity": "1",
+        "price_key": "RE-F02-2",
+        "property": {
+          "type": "commercial",
+          "project": "Tòa văn phòng Demo Trung Tâm",
+          "area_m2": "300",
+          "supported": false,
+          "purchase_price": "19648000000",
+          "capitalized_costs": "392960000"
+        },
+        "manual": {
+          "price": "30000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F02-04",
+        "account_id": "A-F02-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "28000000000"
+      },
+      {
+        "id": "H-F02-05",
+        "account_id": "A-F02-E1",
+        "instrument_id": "CASH-VND",
+        "quantity": "10000000000",
+        "deposit": {
+          "rate": "0.055",
+          "start": "2026-06-15",
+          "maturity": "2027-06-15"
+        }
+      },
+      {
+        "id": "H-F02-06",
+        "account_id": "A-F02-M1",
+        "instrument_id": "DMVGM",
+        "quantity": "144"
+      },
+      {
+        "id": "H-F02-07",
+        "account_id": "A-F02-M1",
+        "instrument_id": "DMNGB",
+        "quantity": "250000"
+      },
+      {
+        "id": "H-F02-08",
+        "account_id": "A-F02-M1",
+        "instrument_id": "DMCKA",
+        "quantity": "272700"
+      },
+      {
+        "id": "H-F02-09",
+        "account_id": "A-F02-M1",
+        "instrument_id": "DMTHP",
+        "quantity": "185200"
+      }
+    ],
+    "liabilities": [
+      {
+        "name": "Vay vốn công ty holding",
+        "borrower": {
+          "kind": "entity",
+          "id": "E-F02-1"
+        },
+        "balance": "40000000000",
+        "currency": "VND",
+        "rate": "0.085",
+        "rate_type": "floating",
+        "repayment": "bullet",
+        "principal_per_month": "0",
+        "maturity": "2028-12-31",
+        "id": "L-F02-1"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "TX-F02-0001",
+        "holding_id": "H-F02-01",
+        "type": "BUY",
+        "date": "2021-07-27",
+        "quantity": "1",
+        "price": "68987000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F02-0002",
+        "holding_id": "H-F02-02",
+        "type": "BUY",
+        "date": "2023-01-04",
+        "quantity": "1",
+        "price": "35221000000",
+        "fee": "704420000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F02-0003",
+        "holding_id": "H-F02-03",
+        "type": "BUY",
+        "date": "2020-11-16",
+        "quantity": "1",
+        "price": "19648000000",
+        "fee": "392960000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F02-0004",
+        "holding_id": "H-F02-06",
+        "type": "BUY",
+        "date": "2024-09-26",
+        "quantity": "144",
+        "price": "136069440",
+        "fee": "29390999",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F02-0005",
+        "holding_id": "H-F02-07",
+        "type": "BUY",
+        "date": "2024-01-31",
+        "quantity": "312500",
+        "price": "31115",
+        "fee": "11668125",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F02-0006",
+        "holding_id": "H-F02-07",
+        "type": "SELL",
+        "date": "2026-03-03",
+        "quantity": "62500",
+        "price": "31189",
+        "fee": "2923969",
+        "tax": "1949313",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F02-0007",
+        "holding_id": "H-F02-07",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "200000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F02-0008",
+        "holding_id": "H-F02-08",
+        "type": "BUY",
+        "date": "2024-05-13",
+        "quantity": "272700",
+        "price": "21834",
+        "fee": "8931198",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F02-0009",
+        "holding_id": "H-F02-09",
+        "type": "BUY",
+        "date": "2024-04-19",
+        "quantity": "185200",
+        "price": "21310",
+        "fee": "5919918",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F02-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "400000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F02-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F02-0002",
+        "label": "Gọi vốn dự án tư nhân",
+        "category": "capital_call",
+        "direction": "out",
+        "amount": "5000000000",
+        "currency": "VND",
+        "frequency": "once",
+        "start": "2027-06-20",
+        "subject": {
+          "kind": "entity",
+          "id": "E-F02-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F02-0003",
+        "label": "Cổ tức từ doanh nghiệp gia đình",
+        "category": "distribution",
+        "direction": "in",
+        "amount": "6000000000",
+        "currency": "VND",
+        "frequency": "annual",
+        "start": "2027-04-30",
+        "subject": {
+          "kind": "entity",
+          "id": "E-F02-1"
+        },
+        "origin": "manual",
+        "expected": true
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F03",
+    "name": "Gia đình Lê Hoàng Cường (giả lập)",
+    "rm_id": "RM1",
+    "persona": "P2",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F03-1",
+        "name": "Lê Hoàng Cường",
+        "generation": 1,
+        "role": "Chủ hộ"
+      },
+      {
+        "id": "M-F03-2",
+        "name": "Vũ Thị Dung",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F03-3",
+        "name": "Lê Hoàng Giang",
+        "generation": 2,
+        "role": "Con, đồng quản lý tài sản"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F03-J",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F03-1",
+            "pct": "0.5"
+          },
+          {
+            "kind": "member",
+            "id": "M-F03-2",
+            "pct": "0.5"
+          }
+        ]
+      },
+      {
+        "id": "A-F03-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F03-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F03-01",
+        "account_id": "A-F03-J",
+        "instrument_id": "BDS-CANHO",
+        "quantity": "1",
+        "price_key": "RE-F03-1",
+        "property": {
+          "type": "apartment",
+          "project": "Khu đô thị Demo Sông Xanh",
+          "building": "Tòa S5",
+          "floor": 25,
+          "unit": "2508",
+          "area_m2": "150",
+          "bedrooms": 3,
+          "supported": true,
+          "purchase_price": "14155000000",
+          "capitalized_costs": "283100000"
+        },
+        "manual": {
+          "price": "17460000000",
+          "valuation_date": "2026-03-31"
+        }
+      },
+      {
+        "id": "H-F03-02",
+        "account_id": "A-F03-M1",
+        "instrument_id": "DMNGB",
+        "quantity": "171900"
+      },
+      {
+        "id": "H-F03-03",
+        "account_id": "A-F03-M1",
+        "instrument_id": "DMNGC",
+        "quantity": "297300"
+      },
+      {
+        "id": "H-F03-04",
+        "account_id": "A-F03-M1",
+        "instrument_id": "DMQTP",
+        "quantity": "533333"
+      },
+      {
+        "id": "H-F03-05",
+        "account_id": "A-F03-M1",
+        "instrument_id": "DMBNB",
+        "quantity": "79208"
+      },
+      {
+        "id": "H-F03-06",
+        "account_id": "A-F03-M1",
+        "instrument_id": "DMCPD",
+        "quantity": "38095"
+      },
+      {
+        "id": "H-F03-07",
+        "account_id": "A-F03-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "8000000000"
+      },
+      {
+        "id": "H-F03-08",
+        "account_id": "A-F03-M1",
+        "instrument_id": "BH-TICHLUY",
+        "quantity": "1",
+        "price_key": "INS-F03-1",
+        "manual": {
+          "price": "4000000000",
+          "valuation_date": "2026-09-30"
+        }
+      },
+      {
+        "id": "H-F03-09",
+        "account_id": "A-F03-M1",
+        "instrument_id": "BDS-NHAPHO",
+        "quantity": "1",
+        "price_key": "RE-F03-2",
+        "property": {
+          "type": "townhouse",
+          "project": "Khu nhà phố Demo Hoa Sữa",
+          "area_m2": "100",
+          "supported": false,
+          "purchase_price": "7429000000",
+          "capitalized_costs": "148580000"
+        },
+        "manual": {
+          "price": "10000000000",
+          "valuation_date": "2026-04-30"
+        }
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F03-0001",
+        "holding_id": "H-F03-01",
+        "type": "BUY",
+        "date": "2022-06-27",
+        "quantity": "1",
+        "price": "14155000000",
+        "fee": "283100000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0002",
+        "holding_id": "H-F03-02",
+        "type": "BUY",
+        "date": "2024-01-10",
+        "quantity": "214900",
+        "price": "27097",
+        "fee": "6986961",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0003",
+        "holding_id": "H-F03-02",
+        "type": "SELL",
+        "date": "2026-01-19",
+        "quantity": "43000",
+        "price": "31176",
+        "fee": "2010852",
+        "tax": "1340568",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0004",
+        "holding_id": "H-F03-03",
+        "type": "BUY",
+        "date": "2024-05-17",
+        "quantity": "297300",
+        "price": "19311",
+        "fee": "8611740",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0005",
+        "holding_id": "H-F03-04",
+        "type": "BUY",
+        "date": "2023-10-30",
+        "quantity": "533333",
+        "price": "14109",
+        "fee": "11287193",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0006",
+        "holding_id": "H-F03-05",
+        "type": "BUY",
+        "date": "2024-11-07",
+        "quantity": "79208",
+        "price": "100000",
+        "fee": "11881200",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0007",
+        "holding_id": "H-F03-05",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "554456000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0008",
+        "holding_id": "H-F03-06",
+        "type": "BUY",
+        "date": "2024-04-08",
+        "quantity": "38095",
+        "price": "100000",
+        "fee": "5714250",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0009",
+        "holding_id": "H-F03-06",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "198094000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0010",
+        "holding_id": "H-F03-08",
+        "type": "CAPITAL_CALL",
+        "date": "2021-10-11",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0011",
+        "holding_id": "H-F03-08",
+        "type": "CAPITAL_CALL",
+        "date": "2022-10-10",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0012",
+        "holding_id": "H-F03-08",
+        "type": "CAPITAL_CALL",
+        "date": "2023-10-10",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0013",
+        "holding_id": "H-F03-08",
+        "type": "CAPITAL_CALL",
+        "date": "2024-10-09",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0014",
+        "holding_id": "H-F03-08",
+        "type": "CAPITAL_CALL",
+        "date": "2025-10-09",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F03-0015",
+        "holding_id": "H-F03-09",
+        "type": "BUY",
+        "date": "2022-05-24",
+        "quantity": "1",
+        "price": "7429000000",
+        "fee": "148580000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F03-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "120000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F03-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F03-0002",
+        "label": "Lương hưu và thu nhập khác",
+        "category": "other_income",
+        "direction": "in",
+        "amount": "60000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F03-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F03-0003",
+        "label": "Phí bảo hiểm",
+        "category": "insurance_premium",
+        "direction": "out",
+        "amount": "300000000",
+        "currency": "VND",
+        "frequency": "annual",
+        "start": "2027-02-10",
+        "subject": {
+          "kind": "member",
+          "id": "M-F03-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F04",
+    "name": "Gia đình Phạm Minh Đức (giả lập)",
+    "rm_id": "RM1",
+    "persona": "P4",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F04-1",
+        "name": "Phạm Minh Đức",
+        "generation": 1,
+        "role": "Chủ hộ"
+      },
+      {
+        "id": "M-F04-2",
+        "name": "Hoàng Thu Hà",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F04-3",
+        "name": "Phạm Gia Huy",
+        "generation": 2,
+        "role": "Con, sống ở nước ngoài"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F04-FX1",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "USD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F04-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F04-SG",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "SGD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F04-3",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F04-AU",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "AUD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F04-3",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F04-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F04-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F04-01",
+        "account_id": "A-F04-FX1",
+        "instrument_id": "DMGLB",
+        "quantity": "1920"
+      },
+      {
+        "id": "H-F04-02",
+        "account_id": "A-F04-FX1",
+        "instrument_id": "CASH-USD",
+        "quantity": "240000"
+      },
+      {
+        "id": "H-F04-03",
+        "account_id": "A-F04-SG",
+        "instrument_id": "CASH-SGD",
+        "quantity": "216000"
+      },
+      {
+        "id": "H-F04-04",
+        "account_id": "A-F04-AU",
+        "instrument_id": "CASH-AUD",
+        "quantity": "120000"
+      },
+      {
+        "id": "H-F04-05",
+        "account_id": "A-F04-M1",
+        "instrument_id": "BDS-NHAPHO",
+        "quantity": "1",
+        "price_key": "RE-F04-1",
+        "property": {
+          "type": "townhouse",
+          "project": "Khu nhà phố Demo Phú Mỹ",
+          "area_m2": "150",
+          "supported": false,
+          "purchase_price": "9465000000",
+          "capitalized_costs": "189300000"
+        },
+        "manual": {
+          "price": "15000000000",
+          "valuation_date": "2026-05-31"
+        }
+      },
+      {
+        "id": "H-F04-06",
+        "account_id": "A-F04-M1",
+        "instrument_id": "BH-TICHLUY",
+        "quantity": "1",
+        "price_key": "INS-F04-1",
+        "manual": {
+          "price": "6000000000",
+          "valuation_date": "2026-09-30"
+        }
+      },
+      {
+        "id": "H-F04-07",
+        "account_id": "A-F04-M1",
+        "instrument_id": "DMNGA",
+        "quantity": "120000"
+      },
+      {
+        "id": "H-F04-08",
+        "account_id": "A-F04-M1",
+        "instrument_id": "DMTDG",
+        "quantity": "42900"
+      },
+      {
+        "id": "H-F04-09",
+        "account_id": "A-F04-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "3000000000"
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F04-0001",
+        "holding_id": "H-F04-01",
+        "type": "BUY",
+        "date": "2025-01-27",
+        "quantity": "1920",
+        "price": "207.51",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F04-0002",
+        "holding_id": "H-F04-02",
+        "type": "BUY",
+        "date": "2025-01-13",
+        "quantity": "240000",
+        "price": "1",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F04-0003",
+        "holding_id": "H-F04-03",
+        "type": "BUY",
+        "date": "2025-01-27",
+        "quantity": "216000",
+        "price": "1",
+        "currency": "SGD",
+        "fx_rate": "17800"
+      },
+      {
+        "id": "TX-F04-0004",
+        "holding_id": "H-F04-04",
+        "type": "BUY",
+        "date": "2025-07-03",
+        "quantity": "120000",
+        "price": "1",
+        "currency": "AUD",
+        "fx_rate": "16100"
+      },
+      {
+        "id": "TX-F04-0005",
+        "holding_id": "H-F04-05",
+        "type": "BUY",
+        "date": "2023-03-15",
+        "quantity": "1",
+        "price": "9465000000",
+        "fee": "189300000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F04-0006",
+        "holding_id": "H-F04-06",
+        "type": "CAPITAL_CALL",
+        "date": "2021-10-11",
+        "amount": "1000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F04-0007",
+        "holding_id": "H-F04-06",
+        "type": "CAPITAL_CALL",
+        "date": "2022-10-10",
+        "amount": "1000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F04-0008",
+        "holding_id": "H-F04-06",
+        "type": "CAPITAL_CALL",
+        "date": "2023-10-10",
+        "amount": "1000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F04-0009",
+        "holding_id": "H-F04-06",
+        "type": "CAPITAL_CALL",
+        "date": "2024-10-09",
+        "amount": "1000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F04-0010",
+        "holding_id": "H-F04-06",
+        "type": "CAPITAL_CALL",
+        "date": "2025-10-09",
+        "amount": "1000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F04-0011",
+        "holding_id": "H-F04-07",
+        "type": "BUY",
+        "date": "2024-03-07",
+        "quantity": "120000",
+        "price": "20105",
+        "fee": "3618900",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F04-0012",
+        "holding_id": "H-F04-08",
+        "type": "BUY",
+        "date": "2025-01-06",
+        "quantity": "42900",
+        "price": "76140",
+        "fee": "4899609",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F04-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "200000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F04-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F04-0002",
+        "label": "Chi phí sinh hoạt của con ở nước ngoài",
+        "category": "living",
+        "direction": "out",
+        "amount": "3000",
+        "currency": "SGD",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F04-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F05",
+    "name": "Gia đình Võ Thành Phát (giả lập)",
+    "rm_id": "RM1",
+    "persona": "P1",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F05-1",
+        "name": "Võ Thành Phát",
+        "generation": 1,
+        "role": "Nhà sáng lập"
+      },
+      {
+        "id": "M-F05-2",
+        "name": "Đặng Thị Lan",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F05-3",
+        "name": "Võ Thành Long",
+        "generation": 2,
+        "role": "Con"
+      }
+    ],
+    "entities": [
+      {
+        "id": "E-F05-1",
+        "name": "Công ty TNHH Phát Demo",
+        "type": "Doanh nghiệp gia đình"
+      }
+    ],
+    "ownerships": [
+      {
+        "entity_id": "E-F05-1",
+        "member_id": "M-F05-1",
+        "pct": "1"
+      }
+    ],
+    "accounts": [
+      {
+        "id": "A-F05-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F05-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F05-E1",
+        "custodian": "Ngân hàng Demo B",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "entity",
+            "id": "E-F05-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F05-01",
+        "account_id": "A-F05-M1",
+        "instrument_id": "BDS-DATO",
+        "quantity": "1",
+        "price_key": "RE-F05-1",
+        "property": {
+          "type": "residential_land",
+          "project": "Khu đất ở Demo Ven Sông",
+          "area_m2": "250",
+          "supported": false,
+          "purchase_price": "16390000000",
+          "capitalized_costs": "327800000"
+        },
+        "manual": {
+          "price": "25000000000",
+          "valuation_date": "2025-06-30"
+        }
+      },
+      {
+        "id": "H-F05-02",
+        "account_id": "A-F05-E1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F05-1",
+        "manual": {
+          "price": "40000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F05-03",
+        "account_id": "A-F05-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "8000000000"
+      },
+      {
+        "id": "H-F05-04",
+        "account_id": "A-F05-M1",
+        "instrument_id": "DMVGM",
+        "quantity": "48"
+      },
+      {
+        "id": "H-F05-05",
+        "account_id": "A-F05-M1",
+        "instrument_id": "DMNLG",
+        "quantity": "114300"
+      },
+      {
+        "id": "H-F05-06",
+        "account_id": "A-F05-M1",
+        "instrument_id": "DMDNC",
+        "quantity": "100000"
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F05-0001",
+        "holding_id": "H-F05-01",
+        "type": "BUY",
+        "date": "2021-04-28",
+        "quantity": "1",
+        "price": "16390000000",
+        "fee": "327800000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F05-0002",
+        "holding_id": "H-F05-02",
+        "type": "BUY",
+        "date": "2020-10-19",
+        "quantity": "1",
+        "price": "29106000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F05-0003",
+        "holding_id": "H-F05-04",
+        "type": "BUY",
+        "date": "2023-05-22",
+        "quantity": "48",
+        "price": "133527523",
+        "fee": "9613982",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F05-0004",
+        "holding_id": "H-F05-05",
+        "type": "BUY",
+        "date": "2024-01-16",
+        "quantity": "114300",
+        "price": "31069",
+        "fee": "5326780",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F05-0005",
+        "holding_id": "H-F05-05",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "91440000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F05-0006",
+        "holding_id": "H-F05-06",
+        "type": "BUY",
+        "date": "2024-08-09",
+        "quantity": "100000",
+        "price": "28403",
+        "fee": "4260450",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F05-0007",
+        "holding_id": "H-F05-06",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "80000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F05-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "180000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F05-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F06",
+    "name": "Gia đình Đỗ Hữu Nghĩa (giả lập)",
+    "rm_id": "RM1",
+    "persona": "P2",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F06-1",
+        "name": "Đỗ Hữu Nghĩa",
+        "generation": 1,
+        "role": "Chủ hộ"
+      },
+      {
+        "id": "M-F06-2",
+        "name": "Bùi Thị Oanh",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F06-3",
+        "name": "Đỗ Hữu Phúc",
+        "generation": 2,
+        "role": "Con"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F06-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F06-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F06-01",
+        "account_id": "A-F06-M1",
+        "instrument_id": "BDS-NHAPHO",
+        "quantity": "1",
+        "price_key": "RE-F06-1",
+        "property": {
+          "type": "townhouse",
+          "project": "Khu nhà phố Demo Hoa Sữa",
+          "area_m2": "200",
+          "supported": false,
+          "purchase_price": "12546000000",
+          "capitalized_costs": "250920000"
+        },
+        "manual": {
+          "price": "20000000000",
+          "valuation_date": "2026-02-28"
+        }
+      },
+      {
+        "id": "H-F06-02",
+        "account_id": "A-F06-M1",
+        "instrument_id": "DMBLE",
+        "quantity": "100000"
+      },
+      {
+        "id": "H-F06-03",
+        "account_id": "A-F06-M1",
+        "instrument_id": "DMXYZ",
+        "quantity": "333300"
+      },
+      {
+        "id": "H-F06-04",
+        "account_id": "A-F06-M1",
+        "instrument_id": "DMNGA",
+        "quantity": "120000"
+      },
+      {
+        "id": "H-F06-05",
+        "account_id": "A-F06-M1",
+        "instrument_id": "DMQKA",
+        "quantity": "800000"
+      },
+      {
+        "id": "H-F06-06",
+        "account_id": "A-F06-M1",
+        "instrument_id": "DMBNC",
+        "quantity": "80402"
+      },
+      {
+        "id": "H-F06-07",
+        "account_id": "A-F06-M1",
+        "instrument_id": "DMCPN",
+        "quantity": "49020"
+      },
+      {
+        "id": "H-F06-08",
+        "account_id": "A-F06-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "9000000000"
+      },
+      {
+        "id": "H-F06-09",
+        "account_id": "A-F06-M1",
+        "instrument_id": "BH-TICHLUY",
+        "quantity": "1",
+        "price_key": "INS-F06-1",
+        "manual": {
+          "price": "4000000000",
+          "valuation_date": "2026-09-30"
+        }
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F06-0001",
+        "holding_id": "H-F06-01",
+        "type": "BUY",
+        "date": "2022-12-07",
+        "quantity": "1",
+        "price": "12546000000",
+        "fee": "250920000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0002",
+        "holding_id": "H-F06-02",
+        "type": "BUY",
+        "date": "2024-07-18",
+        "quantity": "100000",
+        "price": "54269",
+        "fee": "8140350",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0003",
+        "holding_id": "H-F06-03",
+        "type": "BUY",
+        "date": "2023-05-16",
+        "quantity": "333300",
+        "price": "10338",
+        "fee": "5168483",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0004",
+        "holding_id": "H-F06-04",
+        "type": "BUY",
+        "date": "2025-02-27",
+        "quantity": "120000",
+        "price": "21288",
+        "fee": "3831840",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0005",
+        "holding_id": "H-F06-04",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "96000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0006",
+        "holding_id": "H-F06-05",
+        "type": "BUY",
+        "date": "2024-01-09",
+        "quantity": "800000",
+        "price": "8957",
+        "fee": "10748400",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0007",
+        "holding_id": "H-F06-06",
+        "type": "BUY",
+        "date": "2023-06-14",
+        "quantity": "80402",
+        "price": "100000",
+        "fee": "12060300",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0008",
+        "holding_id": "H-F06-06",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "341708500",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0009",
+        "holding_id": "H-F06-07",
+        "type": "BUY",
+        "date": "2024-08-21",
+        "quantity": "49020",
+        "price": "100000",
+        "fee": "7353000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0010",
+        "holding_id": "H-F06-07",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "220590000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0011",
+        "holding_id": "H-F06-09",
+        "type": "CAPITAL_CALL",
+        "date": "2021-10-11",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0012",
+        "holding_id": "H-F06-09",
+        "type": "CAPITAL_CALL",
+        "date": "2022-10-10",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0013",
+        "holding_id": "H-F06-09",
+        "type": "CAPITAL_CALL",
+        "date": "2023-10-10",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0014",
+        "holding_id": "H-F06-09",
+        "type": "CAPITAL_CALL",
+        "date": "2024-10-09",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F06-0015",
+        "holding_id": "H-F06-09",
+        "type": "CAPITAL_CALL",
+        "date": "2025-10-09",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F06-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "130000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F06-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F07",
+    "name": "Gia đình Ngô Thanh Quân (giả lập)",
+    "rm_id": "RM1",
+    "persona": "P3",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F07-1",
+        "name": "Ngô Thanh Quân",
+        "generation": 1,
+        "role": "Doanh nhân"
+      },
+      {
+        "id": "M-F07-2",
+        "name": "Trịnh Mỹ Linh",
+        "generation": 1,
+        "role": "Vợ"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F07-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F07-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F07-FX1",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "USD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F07-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F07-01",
+        "account_id": "A-F07-M1",
+        "instrument_id": "DMCNT",
+        "quantity": "126300"
+      },
+      {
+        "id": "H-F07-02",
+        "account_id": "A-F07-M1",
+        "instrument_id": "DMCKA",
+        "quantity": "272700"
+      },
+      {
+        "id": "H-F07-03",
+        "account_id": "A-F07-M1",
+        "instrument_id": "DMBLE",
+        "quantity": "66700"
+      },
+      {
+        "id": "H-F07-04",
+        "account_id": "A-F07-M1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F07-1",
+        "manual": {
+          "price": "15000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F07-05",
+        "account_id": "A-F07-FX1",
+        "instrument_id": "DMGLA",
+        "quantity": "2540"
+      },
+      {
+        "id": "H-F07-06",
+        "account_id": "A-F07-M1",
+        "instrument_id": "DMKTA",
+        "quantity": "2"
+      },
+      {
+        "id": "H-F07-07",
+        "account_id": "A-F07-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "10000000000"
+      },
+      {
+        "id": "H-F07-08",
+        "account_id": "A-F07-M1",
+        "instrument_id": "DMVGM",
+        "quantity": "16"
+      },
+      {
+        "id": "H-F07-09",
+        "account_id": "A-F07-M1",
+        "instrument_id": "BDS-CANHO",
+        "quantity": "1",
+        "price_key": "RE-F07-1",
+        "property": {
+          "type": "apartment",
+          "project": "Chung cư Demo Ánh Dương",
+          "building": "Tòa A",
+          "floor": 9,
+          "unit": "0905",
+          "area_m2": "95",
+          "bedrooms": 2,
+          "supported": false,
+          "purchase_price": "7002000000",
+          "capitalized_costs": "140040000"
+        },
+        "manual": {
+          "price": "10000000000",
+          "valuation_date": "2026-05-31"
+        }
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F07-0001",
+        "holding_id": "H-F07-01",
+        "type": "BUY",
+        "date": "2024-01-01",
+        "quantity": "157900",
+        "price": "102488",
+        "fee": "19416352",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F07-0002",
+        "holding_id": "H-F07-01",
+        "type": "SELL",
+        "date": "2026-02-03",
+        "quantity": "31600",
+        "price": "99476",
+        "fee": "4715162",
+        "tax": "3143442",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F07-0003",
+        "holding_id": "H-F07-02",
+        "type": "BUY",
+        "date": "2023-06-19",
+        "quantity": "272700",
+        "price": "21734",
+        "fee": "8890293",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F07-0004",
+        "holding_id": "H-F07-02",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "218160000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F07-0005",
+        "holding_id": "H-F07-03",
+        "type": "BUY",
+        "date": "2023-08-22",
+        "quantity": "66700",
+        "price": "53922",
+        "fee": "5394896",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F07-0006",
+        "holding_id": "H-F07-03",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "53360000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F07-0007",
+        "holding_id": "H-F07-04",
+        "type": "BUY",
+        "date": "2021-11-11",
+        "quantity": "1",
+        "price": "9314000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F07-0008",
+        "holding_id": "H-F07-05",
+        "type": "BUY",
+        "date": "2023-11-22",
+        "quantity": "2540",
+        "price": "104.35",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F07-0009",
+        "holding_id": "H-F07-06",
+        "type": "BUY",
+        "date": "2023-05-29",
+        "quantity": "2",
+        "price": "1272205122",
+        "fee": "3816615",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F07-0010",
+        "holding_id": "H-F07-08",
+        "type": "BUY",
+        "date": "2023-09-22",
+        "quantity": "16",
+        "price": "112162028",
+        "fee": "2691889",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F07-0011",
+        "holding_id": "H-F07-09",
+        "type": "BUY",
+        "date": "2022-02-24",
+        "quantity": "1",
+        "price": "7002000000",
+        "fee": "140040000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F07-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "160000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F07-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F08",
+    "name": "Gia đình Hồ Văn Sơn (giả lập)",
+    "rm_id": "RM2",
+    "persona": "P2",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F08-1",
+        "name": "Hồ Văn Sơn",
+        "generation": 1,
+        "role": "Chủ hộ"
+      },
+      {
+        "id": "M-F08-2",
+        "name": "Lý Thị Tâm",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F08-3",
+        "name": "Hồ Văn Tùng",
+        "generation": 2,
+        "role": "Con, đồng quản lý tài sản"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F08-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F08-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F08-01",
+        "account_id": "A-F08-M1",
+        "instrument_id": "BDS-CANHO",
+        "quantity": "1",
+        "price_key": "RE-F08-1",
+        "property": {
+          "type": "apartment",
+          "project": "Khu đô thị Demo Sông Xanh",
+          "building": "Tòa S7",
+          "floor": 12,
+          "unit": "1203",
+          "area_m2": "110",
+          "bedrooms": 3,
+          "supported": true,
+          "purchase_price": "11065000000",
+          "capitalized_costs": "221300000"
+        },
+        "manual": {
+          "price": "15520000000",
+          "valuation_date": "2026-03-31"
+        }
+      },
+      {
+        "id": "H-F08-02",
+        "account_id": "A-F08-M1",
+        "instrument_id": "BDS-NHAPHO",
+        "quantity": "1",
+        "price_key": "RE-F08-2",
+        "property": {
+          "type": "townhouse",
+          "project": "Khu nhà phố Demo Phú Mỹ",
+          "area_m2": "100",
+          "supported": false,
+          "purchase_price": "7463000000",
+          "capitalized_costs": "149260000"
+        },
+        "manual": {
+          "price": "10000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F08-03",
+        "account_id": "A-F08-M1",
+        "instrument_id": "DMBDS",
+        "quantity": "146300"
+      },
+      {
+        "id": "H-F08-04",
+        "account_id": "A-F08-M1",
+        "instrument_id": "DMBDV",
+        "quantity": "178600"
+      },
+      {
+        "id": "H-F08-05",
+        "account_id": "A-F08-M1",
+        "instrument_id": "DMQTP",
+        "quantity": "466667"
+      },
+      {
+        "id": "H-F08-06",
+        "account_id": "A-F08-M1",
+        "instrument_id": "DMBDA",
+        "quantity": "70000"
+      },
+      {
+        "id": "H-F08-07",
+        "account_id": "A-F08-M1",
+        "instrument_id": "DMCPN",
+        "quantity": "39216"
+      },
+      {
+        "id": "H-F08-08",
+        "account_id": "A-F08-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "8000000000"
+      },
+      {
+        "id": "H-F08-09",
+        "account_id": "A-F08-M1",
+        "instrument_id": "BH-TICHLUY",
+        "quantity": "1",
+        "price_key": "INS-F08-1",
+        "manual": {
+          "price": "4000000000",
+          "valuation_date": "2026-09-30"
+        }
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F08-0001",
+        "holding_id": "H-F08-01",
+        "type": "BUY",
+        "date": "2021-12-22",
+        "quantity": "1",
+        "price": "11065000000",
+        "fee": "221300000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0002",
+        "holding_id": "H-F08-02",
+        "type": "BUY",
+        "date": "2023-09-07",
+        "quantity": "1",
+        "price": "7463000000",
+        "fee": "149260000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0003",
+        "holding_id": "H-F08-03",
+        "type": "BUY",
+        "date": "2024-01-16",
+        "quantity": "182900",
+        "price": "43886",
+        "fee": "9630783",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0004",
+        "holding_id": "H-F08-03",
+        "type": "SELL",
+        "date": "2026-01-19",
+        "quantity": "36600",
+        "price": "44544",
+        "fee": "2445466",
+        "tax": "1630310",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0005",
+        "holding_id": "H-F08-03",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "117040000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0006",
+        "holding_id": "H-F08-04",
+        "type": "BUY",
+        "date": "2025-02-07",
+        "quantity": "178600",
+        "price": "25088",
+        "fee": "6721075",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0007",
+        "holding_id": "H-F08-04",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "142880000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0008",
+        "holding_id": "H-F08-05",
+        "type": "BUY",
+        "date": "2025-01-06",
+        "quantity": "466667",
+        "price": "12423",
+        "fee": "8696106",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0009",
+        "holding_id": "H-F08-06",
+        "type": "BUY",
+        "date": "2024-07-10",
+        "quantity": "70000",
+        "price": "100000",
+        "fee": "10500000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0010",
+        "holding_id": "H-F08-06",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "315000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0011",
+        "holding_id": "H-F08-07",
+        "type": "BUY",
+        "date": "2024-08-26",
+        "quantity": "39216",
+        "price": "100000",
+        "fee": "5882400",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0012",
+        "holding_id": "H-F08-07",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "176472000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0013",
+        "holding_id": "H-F08-09",
+        "type": "CAPITAL_CALL",
+        "date": "2021-10-11",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0014",
+        "holding_id": "H-F08-09",
+        "type": "CAPITAL_CALL",
+        "date": "2022-10-10",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0015",
+        "holding_id": "H-F08-09",
+        "type": "CAPITAL_CALL",
+        "date": "2023-10-10",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0016",
+        "holding_id": "H-F08-09",
+        "type": "CAPITAL_CALL",
+        "date": "2024-10-09",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F08-0017",
+        "holding_id": "H-F08-09",
+        "type": "CAPITAL_CALL",
+        "date": "2025-10-09",
+        "amount": "667000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F08-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "120000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F08-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F09",
+    "name": "Gia đình Mai Xuân Uy (giả lập)",
+    "rm_id": "RM2",
+    "persona": "P1",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F09-1",
+        "name": "Mai Xuân Uy",
+        "generation": 1,
+        "role": "Nhà sáng lập"
+      },
+      {
+        "id": "M-F09-2",
+        "name": "Cao Thị Vân",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F09-3",
+        "name": "Mai Xuân Vinh",
+        "generation": 2,
+        "role": "Con"
+      }
+    ],
+    "entities": [
+      {
+        "id": "E-F09-1",
+        "name": "Công ty Cổ phần Uy Demo",
+        "type": "Doanh nghiệp gia đình"
+      }
+    ],
+    "ownerships": [
+      {
+        "entity_id": "E-F09-1",
+        "member_id": "M-F09-1",
+        "pct": "0.9"
+      }
+    ],
+    "accounts": [
+      {
+        "id": "A-F09-E1",
+        "custodian": "Ngân hàng Demo B",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "entity",
+            "id": "E-F09-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F09-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F09-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F09-01",
+        "account_id": "A-F09-E1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F09-1",
+        "manual": {
+          "price": "35000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F09-02",
+        "account_id": "A-F09-M1",
+        "instrument_id": "BDS-NHAPHO",
+        "quantity": "1",
+        "price_key": "RE-F09-1",
+        "property": {
+          "type": "townhouse",
+          "project": "Khu nhà phố Demo Phú Mỹ",
+          "area_m2": "200",
+          "supported": false,
+          "purchase_price": "12997000000",
+          "capitalized_costs": "259940000"
+        },
+        "manual": {
+          "price": "20000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F09-03",
+        "account_id": "A-F09-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "1500000000"
+      },
+      {
+        "id": "H-F09-04",
+        "account_id": "A-F09-M1",
+        "instrument_id": "DMVGM",
+        "quantity": "40"
+      },
+      {
+        "id": "H-F09-05",
+        "account_id": "A-F09-M1",
+        "instrument_id": "DMTHP",
+        "quantity": "148100"
+      }
+    ],
+    "liabilities": [
+      {
+        "name": "Vay kinh doanh",
+        "borrower": {
+          "kind": "member",
+          "id": "M-F09-1"
+        },
+        "balance": "8000000000",
+        "currency": "VND",
+        "rate": "0.10",
+        "rate_type": "floating",
+        "repayment": "amortizing",
+        "principal_per_month": "100000000",
+        "maturity": "2033-06-30",
+        "id": "L-F09-1"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "TX-F09-0001",
+        "holding_id": "H-F09-01",
+        "type": "BUY",
+        "date": "2020-05-07",
+        "quantity": "1",
+        "price": "24999000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F09-0002",
+        "holding_id": "H-F09-02",
+        "type": "BUY",
+        "date": "2022-10-28",
+        "quantity": "1",
+        "price": "12997000000",
+        "fee": "259940000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F09-0003",
+        "holding_id": "H-F09-04",
+        "type": "BUY",
+        "date": "2024-01-29",
+        "quantity": "40",
+        "price": "101118255",
+        "fee": "6067095",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F09-0004",
+        "holding_id": "H-F09-05",
+        "type": "BUY",
+        "date": "2024-03-12",
+        "quantity": "148100",
+        "price": "20398",
+        "fee": "4531416",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F09-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "120000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F09-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F09-0002",
+        "label": "Gọi vốn mở rộng doanh nghiệp",
+        "category": "capital_call",
+        "direction": "out",
+        "amount": "3000000000",
+        "currency": "VND",
+        "frequency": "once",
+        "start": "2027-01-15",
+        "subject": {
+          "kind": "member",
+          "id": "M-F09-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F10",
+    "name": "Gia đình Châu Minh Xuyên (giả lập)",
+    "rm_id": "RM2",
+    "persona": "P2",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F10-1",
+        "name": "Châu Minh Xuyên",
+        "generation": 1,
+        "role": "Chủ hộ"
+      },
+      {
+        "id": "M-F10-2",
+        "name": "Tạ Thị Yến",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F10-3",
+        "name": "Châu Minh Khoa",
+        "generation": 2,
+        "role": "Con"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F10-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F10-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F10-01",
+        "account_id": "A-F10-M1",
+        "instrument_id": "BDS-BIETTHU",
+        "quantity": "1",
+        "price_key": "RE-F10-1",
+        "property": {
+          "type": "villa",
+          "project": "Khu biệt thự Demo Đồi Thông",
+          "area_m2": "300",
+          "supported": false,
+          "purchase_price": "21380000000",
+          "capitalized_costs": "427600000"
+        },
+        "manual": {
+          "price": "30000000000",
+          "valuation_date": "2026-03-31"
+        }
+      },
+      {
+        "id": "H-F10-02",
+        "account_id": "A-F10-M1",
+        "instrument_id": "DMNGB",
+        "quantity": "312500"
+      },
+      {
+        "id": "H-F10-03",
+        "account_id": "A-F10-M1",
+        "instrument_id": "DMCNT",
+        "quantity": "84200"
+      },
+      {
+        "id": "H-F10-04",
+        "account_id": "A-F10-M1",
+        "instrument_id": "DMTDG",
+        "quantity": "85700"
+      },
+      {
+        "id": "H-F10-05",
+        "account_id": "A-F10-M1",
+        "instrument_id": "DMQTP",
+        "quantity": "666667"
+      },
+      {
+        "id": "H-F10-06",
+        "account_id": "A-F10-M1",
+        "instrument_id": "DMQCP",
+        "quantity": "300000"
+      },
+      {
+        "id": "H-F10-07",
+        "account_id": "A-F10-M1",
+        "instrument_id": "DMBNB",
+        "quantity": "99010"
+      },
+      {
+        "id": "H-F10-08",
+        "account_id": "A-F10-M1",
+        "instrument_id": "DMCPD",
+        "quantity": "57143"
+      },
+      {
+        "id": "H-F10-09",
+        "account_id": "A-F10-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "12000000000",
+        "deposit": {
+          "rate": "0.05",
+          "start": "2026-08-01",
+          "maturity": "2027-02-01"
+        }
+      },
+      {
+        "id": "H-F10-10",
+        "account_id": "A-F10-M1",
+        "instrument_id": "BH-TICHLUY",
+        "quantity": "1",
+        "price_key": "INS-F10-1",
+        "manual": {
+          "price": "6000000000",
+          "valuation_date": "2026-09-30"
+        }
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F10-0001",
+        "holding_id": "H-F10-01",
+        "type": "BUY",
+        "date": "2022-02-21",
+        "quantity": "1",
+        "price": "21380000000",
+        "fee": "427600000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0002",
+        "holding_id": "H-F10-02",
+        "type": "BUY",
+        "date": "2024-01-26",
+        "quantity": "312500",
+        "price": "34030",
+        "fee": "15951563",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0003",
+        "holding_id": "H-F10-02",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "250000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0004",
+        "holding_id": "H-F10-03",
+        "type": "BUY",
+        "date": "2024-03-04",
+        "quantity": "84200",
+        "price": "99395",
+        "fee": "12553589",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0005",
+        "holding_id": "H-F10-03",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "67360000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0006",
+        "holding_id": "H-F10-04",
+        "type": "BUY",
+        "date": "2024-01-15",
+        "quantity": "107100",
+        "price": "69647",
+        "fee": "8953122",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0007",
+        "holding_id": "H-F10-04",
+        "type": "SELL",
+        "date": "2026-02-12",
+        "quantity": "21400",
+        "price": "71003",
+        "fee": "2279196",
+        "tax": "1519464",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0008",
+        "holding_id": "H-F10-04",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "68560000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0009",
+        "holding_id": "H-F10-05",
+        "type": "BUY",
+        "date": "2024-05-16",
+        "quantity": "666667",
+        "price": "12842",
+        "fee": "12842006",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0010",
+        "holding_id": "H-F10-06",
+        "type": "BUY",
+        "date": "2023-10-06",
+        "quantity": "300000",
+        "price": "17227",
+        "fee": "7752150",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0011",
+        "holding_id": "H-F10-07",
+        "type": "BUY",
+        "date": "2024-12-05",
+        "quantity": "99010",
+        "price": "100000",
+        "fee": "14851500",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0012",
+        "holding_id": "H-F10-07",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "693070000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0013",
+        "holding_id": "H-F10-08",
+        "type": "BUY",
+        "date": "2023-07-18",
+        "quantity": "57143",
+        "price": "100000",
+        "fee": "8571450",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0014",
+        "holding_id": "H-F10-08",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "297143600",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0015",
+        "holding_id": "H-F10-10",
+        "type": "CAPITAL_CALL",
+        "date": "2021-10-11",
+        "amount": "1000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0016",
+        "holding_id": "H-F10-10",
+        "type": "CAPITAL_CALL",
+        "date": "2022-10-10",
+        "amount": "1000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0017",
+        "holding_id": "H-F10-10",
+        "type": "CAPITAL_CALL",
+        "date": "2023-10-10",
+        "amount": "1000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0018",
+        "holding_id": "H-F10-10",
+        "type": "CAPITAL_CALL",
+        "date": "2024-10-09",
+        "amount": "1000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F10-0019",
+        "holding_id": "H-F10-10",
+        "type": "CAPITAL_CALL",
+        "date": "2025-10-09",
+        "amount": "1000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F10-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "200000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F10-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F10-0002",
+        "label": "Thu nhập cho thuê biệt thự",
+        "category": "rent",
+        "direction": "in",
+        "amount": "90000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F10-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F11",
+    "name": "Gia đình Kiều Anh Tuấn (giả lập)",
+    "rm_id": "RM2",
+    "persona": "P3",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F11-1",
+        "name": "Kiều Anh Tuấn",
+        "generation": 1,
+        "role": "Doanh nhân"
+      },
+      {
+        "id": "M-F11-2",
+        "name": "Lâm Ngọc Diệp",
+        "generation": 1,
+        "role": "Vợ"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F11-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F11-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F11-FX1",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "USD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F11-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F11-01",
+        "account_id": "A-F11-M1",
+        "instrument_id": "DMCNT",
+        "quantity": "210500"
+      },
+      {
+        "id": "H-F11-02",
+        "account_id": "A-F11-M1",
+        "instrument_id": "DMXYZ",
+        "quantity": "416700"
+      },
+      {
+        "id": "H-F11-03",
+        "account_id": "A-F11-M1",
+        "instrument_id": "DMCKA",
+        "quantity": "363600"
+      },
+      {
+        "id": "H-F11-04",
+        "account_id": "A-F11-M1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F11-1",
+        "manual": {
+          "price": "25000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F11-05",
+        "account_id": "A-F11-FX1",
+        "instrument_id": "DMGLB",
+        "quantity": "1600"
+      },
+      {
+        "id": "H-F11-06",
+        "account_id": "A-F11-M1",
+        "instrument_id": "DMKTA",
+        "quantity": "3"
+      },
+      {
+        "id": "H-F11-07",
+        "account_id": "A-F11-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "12000000000"
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F11-0001",
+        "holding_id": "H-F11-02",
+        "type": "BUY",
+        "date": "2025-03-05",
+        "quantity": "416700",
+        "price": "12676",
+        "fee": "7923134",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F11-0002",
+        "holding_id": "H-F11-02",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "333360000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F11-0003",
+        "holding_id": "H-F11-03",
+        "type": "BUY",
+        "date": "2024-04-01",
+        "quantity": "454500",
+        "price": "17744",
+        "fee": "9677578",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F11-0004",
+        "holding_id": "H-F11-03",
+        "type": "SELL",
+        "date": "2026-02-11",
+        "quantity": "90900",
+        "price": "21681",
+        "fee": "2956204",
+        "tax": "1970803",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F11-0005",
+        "holding_id": "H-F11-04",
+        "type": "BUY",
+        "date": "2022-02-18",
+        "quantity": "1",
+        "price": "19468000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F11-0006",
+        "holding_id": "H-F11-05",
+        "type": "BUY",
+        "date": "2023-12-29",
+        "quantity": "1600",
+        "price": "243.32",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F11-0007",
+        "holding_id": "H-F11-06",
+        "type": "BUY",
+        "date": "2024-04-18",
+        "quantity": "3",
+        "price": "1135287943",
+        "fee": "5108796",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F11-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "180000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F11-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F12",
+    "name": "Gia đình Quách Bảo Ngọc (giả lập)",
+    "rm_id": "RM2",
+    "persona": "P3",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F12-1",
+        "name": "Quách Bảo Ngọc",
+        "generation": 1,
+        "role": "Doanh nhân"
+      },
+      {
+        "id": "M-F12-2",
+        "name": "Hà Minh Trí",
+        "generation": 1,
+        "role": "Chồng"
+      },
+      {
+        "id": "M-F12-3",
+        "name": "Quách Hà My",
+        "generation": 2,
+        "role": "Con"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F12-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F12-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F12-FX1",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "USD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F12-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F12-01",
+        "account_id": "A-F12-M1",
+        "instrument_id": "DMBLE",
+        "quantity": "166700"
+      },
+      {
+        "id": "H-F12-02",
+        "account_id": "A-F12-M1",
+        "instrument_id": "DMCNP",
+        "quantity": "177800"
+      },
+      {
+        "id": "H-F12-03",
+        "account_id": "A-F12-M1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F12-1",
+        "manual": {
+          "price": "20000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F12-04",
+        "account_id": "A-F12-FX1",
+        "instrument_id": "DMGLA",
+        "quantity": "2180"
+      },
+      {
+        "id": "H-F12-05",
+        "account_id": "A-F12-M1",
+        "instrument_id": "DMKTA",
+        "quantity": "2"
+      },
+      {
+        "id": "H-F12-06",
+        "account_id": "A-F12-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "8000000000"
+      },
+      {
+        "id": "H-F12-07",
+        "account_id": "A-F12-M1",
+        "instrument_id": "BDS-CANHO",
+        "quantity": "1",
+        "price_key": "RE-F12-1",
+        "property": {
+          "type": "apartment",
+          "project": "Chung cư Demo Ánh Dương",
+          "building": "Tòa B",
+          "floor": 20,
+          "unit": "2001",
+          "area_m2": "130",
+          "bedrooms": 3,
+          "supported": false,
+          "purchase_price": "9390000000",
+          "capitalized_costs": "187800000"
+        },
+        "manual": {
+          "price": "12000000000",
+          "valuation_date": "2026-04-30"
+        }
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F12-0001",
+        "holding_id": "H-F12-01",
+        "type": "BUY",
+        "date": "2024-02-08",
+        "quantity": "166700",
+        "price": "59324",
+        "fee": "14833966",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F12-0002",
+        "holding_id": "H-F12-02",
+        "type": "BUY",
+        "date": "2024-01-30",
+        "quantity": "177800",
+        "price": "38554",
+        "fee": "10282352",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F12-0003",
+        "holding_id": "H-F12-02",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "142240000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F12-0004",
+        "holding_id": "H-F12-03",
+        "type": "BUY",
+        "date": "2019-12-09",
+        "quantity": "1",
+        "price": "15899000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F12-0005",
+        "holding_id": "H-F12-04",
+        "type": "BUY",
+        "date": "2024-09-30",
+        "quantity": "2180",
+        "price": "112.54",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F12-0006",
+        "holding_id": "H-F12-05",
+        "type": "BUY",
+        "date": "2024-03-14",
+        "quantity": "2",
+        "price": "1145503948",
+        "fee": "3436512",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F12-0007",
+        "holding_id": "H-F12-07",
+        "type": "BUY",
+        "date": "2022-11-22",
+        "quantity": "1",
+        "price": "9390000000",
+        "fee": "187800000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F12-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "400000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F12-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F12-0002",
+        "label": "Thu nhập từ cổ tức doanh nghiệp",
+        "category": "distribution",
+        "direction": "in",
+        "amount": "1200000000",
+        "currency": "VND",
+        "frequency": "annual",
+        "start": "2027-04-30",
+        "subject": {
+          "kind": "member",
+          "id": "M-F12-1"
+        },
+        "origin": "manual",
+        "expected": true
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F13",
+    "name": "Gia đình Đinh Công Hiển (giả lập)",
+    "rm_id": "RM2",
+    "persona": "P1",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F13-1",
+        "name": "Đinh Công Hiển",
+        "generation": 1,
+        "role": "Nhà sáng lập"
+      },
+      {
+        "id": "M-F13-2",
+        "name": "Phan Thị Hoa",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F13-3",
+        "name": "Đinh Công Khải",
+        "generation": 2,
+        "role": "Con"
+      },
+      {
+        "id": "M-F13-4",
+        "name": "Đinh Bảo An",
+        "generation": 3,
+        "role": "Cháu"
+      }
+    ],
+    "entities": [
+      {
+        "id": "E-F13-1",
+        "name": "Tập đoàn Hiển Demo",
+        "type": "Công ty holding"
+      }
+    ],
+    "ownerships": [
+      {
+        "entity_id": "E-F13-1",
+        "member_id": "M-F13-1",
+        "pct": "0.4"
+      },
+      {
+        "entity_id": "E-F13-1",
+        "member_id": "M-F13-3",
+        "pct": "0.3"
+      }
+    ],
+    "accounts": [
+      {
+        "id": "A-F13-E1",
+        "custodian": "Ngân hàng Demo B",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "entity",
+            "id": "E-F13-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F13-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F13-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F13-01",
+        "account_id": "A-F13-E1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F13-1",
+        "manual": {
+          "price": "200000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F13-02",
+        "account_id": "A-F13-E1",
+        "instrument_id": "BDS-THUONGMAI",
+        "quantity": "1",
+        "price_key": "RE-F13-1",
+        "property": {
+          "type": "commercial",
+          "project": "Trung tâm thương mại Demo Cửa Nam",
+          "area_m2": "800",
+          "supported": false,
+          "purchase_price": "54368000000",
+          "capitalized_costs": "1087360000"
+        },
+        "manual": {
+          "price": "80000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F13-03",
+        "account_id": "A-F13-M1",
+        "instrument_id": "BDS-BIETTHU",
+        "quantity": "1",
+        "price_key": "RE-F13-2",
+        "property": {
+          "type": "villa",
+          "project": "Khu biệt thự Demo Đồi Thông",
+          "area_m2": "600",
+          "supported": false,
+          "purchase_price": "37220000000",
+          "capitalized_costs": "744400000"
+        },
+        "manual": {
+          "price": "60000000000",
+          "valuation_date": "2026-03-31"
+        }
+      },
+      {
+        "id": "H-F13-04",
+        "account_id": "A-F13-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "40000000000"
+      },
+      {
+        "id": "H-F13-05",
+        "account_id": "A-F13-M1",
+        "instrument_id": "DMVGM",
+        "quantity": "240"
+      },
+      {
+        "id": "H-F13-06",
+        "account_id": "A-F13-M1",
+        "instrument_id": "DMNGA",
+        "quantity": "800000"
+      },
+      {
+        "id": "H-F13-07",
+        "account_id": "A-F13-M1",
+        "instrument_id": "DMBDS",
+        "quantity": "365900"
+      }
+    ],
+    "liabilities": [
+      {
+        "name": "Vay hợp vốn tập đoàn",
+        "borrower": {
+          "kind": "entity",
+          "id": "E-F13-1"
+        },
+        "balance": "100000000000",
+        "currency": "VND",
+        "rate": "0.08",
+        "rate_type": "floating",
+        "repayment": "bullet",
+        "principal_per_month": "0",
+        "maturity": "2029-12-31",
+        "id": "L-F13-1"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "TX-F13-0001",
+        "holding_id": "H-F13-01",
+        "type": "BUY",
+        "date": "2022-09-07",
+        "quantity": "1",
+        "price": "85200000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F13-0002",
+        "holding_id": "H-F13-02",
+        "type": "BUY",
+        "date": "2022-07-07",
+        "quantity": "1",
+        "price": "54368000000",
+        "fee": "1087360000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F13-0003",
+        "holding_id": "H-F13-03",
+        "type": "BUY",
+        "date": "2021-08-16",
+        "quantity": "1",
+        "price": "37220000000",
+        "fee": "744400000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F13-0004",
+        "holding_id": "H-F13-05",
+        "type": "BUY",
+        "date": "2023-07-17",
+        "quantity": "240",
+        "price": "129434237",
+        "fee": "46596325",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F13-0005",
+        "holding_id": "H-F13-06",
+        "type": "BUY",
+        "date": "2024-04-08",
+        "quantity": "1000000",
+        "price": "26991",
+        "fee": "32389200",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F13-0006",
+        "holding_id": "H-F13-06",
+        "type": "SELL",
+        "date": "2026-02-02",
+        "quantity": "200000",
+        "price": "24061",
+        "fee": "7218300",
+        "tax": "4812200",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F13-0007",
+        "holding_id": "H-F13-06",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "640000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F13-0008",
+        "holding_id": "H-F13-07",
+        "type": "BUY",
+        "date": "2024-02-12",
+        "quantity": "365900",
+        "price": "39016",
+        "fee": "21413932",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F13-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "600000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F13-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F13-0002",
+        "label": "Gọi vốn quỹ đầu tư tư nhân",
+        "category": "capital_call",
+        "direction": "out",
+        "amount": "10000000000",
+        "currency": "VND",
+        "frequency": "once",
+        "start": "2027-08-15",
+        "subject": {
+          "kind": "entity",
+          "id": "E-F13-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F14",
+    "name": "Gia đình Lương Thế Vinh (giả lập)",
+    "rm_id": "RM2",
+    "persona": "P2",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F14-1",
+        "name": "Lương Thế Vinh",
+        "generation": 1,
+        "role": "Chủ hộ"
+      },
+      {
+        "id": "M-F14-2",
+        "name": "Mạc Thị Xoan",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F14-3",
+        "name": "Lương Thế Bách",
+        "generation": 2,
+        "role": "Con"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F14-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F14-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F14-01",
+        "account_id": "A-F14-M1",
+        "instrument_id": "BDS-CANHO",
+        "quantity": "1",
+        "price_key": "RE-F14-1",
+        "property": {
+          "type": "apartment",
+          "project": "Chung cư Demo Ánh Dương",
+          "building": "Tòa C",
+          "floor": 30,
+          "unit": "3002",
+          "area_m2": "160",
+          "bedrooms": 4,
+          "supported": false,
+          "purchase_price": "16050000000",
+          "capitalized_costs": "321000000"
+        },
+        "manual": {
+          "price": "25000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F14-02",
+        "account_id": "A-F14-M1",
+        "instrument_id": "DMNGC",
+        "quantity": "432400"
+      },
+      {
+        "id": "H-F14-03",
+        "account_id": "A-F14-M1",
+        "instrument_id": "DMTDG",
+        "quantity": "100000"
+      },
+      {
+        "id": "H-F14-04",
+        "account_id": "A-F14-M1",
+        "instrument_id": "DMCNP",
+        "quantity": "111100"
+      },
+      {
+        "id": "H-F14-05",
+        "account_id": "A-F14-M1",
+        "instrument_id": "DMQCB",
+        "quantity": "833333"
+      },
+      {
+        "id": "H-F14-06",
+        "account_id": "A-F14-M1",
+        "instrument_id": "DMBDA",
+        "quantity": "100000"
+      },
+      {
+        "id": "H-F14-07",
+        "account_id": "A-F14-M1",
+        "instrument_id": "DMCPN",
+        "quantity": "49020"
+      },
+      {
+        "id": "H-F14-08",
+        "account_id": "A-F14-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "10000000000"
+      },
+      {
+        "id": "H-F14-09",
+        "account_id": "A-F14-M1",
+        "instrument_id": "BH-TICHLUY",
+        "quantity": "1",
+        "price_key": "INS-F14-1",
+        "manual": {
+          "price": "5000000000",
+          "valuation_date": "2026-09-30"
+        }
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F14-0001",
+        "holding_id": "H-F14-01",
+        "type": "BUY",
+        "date": "2020-12-30",
+        "quantity": "1",
+        "price": "16050000000",
+        "fee": "321000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0002",
+        "holding_id": "H-F14-02",
+        "type": "BUY",
+        "date": "2023-08-16",
+        "quantity": "432400",
+        "price": "20030",
+        "fee": "12991458",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0003",
+        "holding_id": "H-F14-03",
+        "type": "BUY",
+        "date": "2025-04-04",
+        "quantity": "100000",
+        "price": "61775",
+        "fee": "9266250",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0004",
+        "holding_id": "H-F14-04",
+        "type": "BUY",
+        "date": "2024-08-23",
+        "quantity": "111100",
+        "price": "46762",
+        "fee": "7792887",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0005",
+        "holding_id": "H-F14-05",
+        "type": "BUY",
+        "date": "2025-03-03",
+        "quantity": "833333",
+        "price": "11321",
+        "fee": "14151244",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0006",
+        "holding_id": "H-F14-06",
+        "type": "BUY",
+        "date": "2023-12-08",
+        "quantity": "100000",
+        "price": "100000",
+        "fee": "15000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0007",
+        "holding_id": "H-F14-06",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "450000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0008",
+        "holding_id": "H-F14-07",
+        "type": "BUY",
+        "date": "2025-02-10",
+        "quantity": "49020",
+        "price": "100000",
+        "fee": "7353000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0009",
+        "holding_id": "H-F14-07",
+        "type": "COUPON",
+        "date": "2026-06-22",
+        "amount": "220590000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0010",
+        "holding_id": "H-F14-09",
+        "type": "CAPITAL_CALL",
+        "date": "2021-10-11",
+        "amount": "833000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0011",
+        "holding_id": "H-F14-09",
+        "type": "CAPITAL_CALL",
+        "date": "2022-10-10",
+        "amount": "833000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0012",
+        "holding_id": "H-F14-09",
+        "type": "CAPITAL_CALL",
+        "date": "2023-10-10",
+        "amount": "833000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0013",
+        "holding_id": "H-F14-09",
+        "type": "CAPITAL_CALL",
+        "date": "2024-10-09",
+        "amount": "833000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F14-0014",
+        "holding_id": "H-F14-09",
+        "type": "CAPITAL_CALL",
+        "date": "2025-10-09",
+        "amount": "833000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F14-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "150000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F14-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F15",
+    "name": "Gia đình Tôn Nữ Thảo (giả lập)",
+    "rm_id": "RM3",
+    "persona": "P4",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F15-1",
+        "name": "Tôn Nữ Thảo",
+        "generation": 1,
+        "role": "Chủ hộ"
+      },
+      {
+        "id": "M-F15-2",
+        "name": "James Tôn (giả lập)",
+        "generation": 1,
+        "role": "Chồng"
+      },
+      {
+        "id": "M-F15-3",
+        "name": "Tôn Minh Anh",
+        "generation": 2,
+        "role": "Con, du học"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F15-FX1",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "USD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F15-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F15-SG",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "SGD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F15-3",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F15-AU",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "AUD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F15-3",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F15-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F15-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F15-01",
+        "account_id": "A-F15-FX1",
+        "instrument_id": "DMGLA",
+        "quantity": "7270"
+      },
+      {
+        "id": "H-F15-02",
+        "account_id": "A-F15-FX1",
+        "instrument_id": "DMGLB",
+        "quantity": "1600"
+      },
+      {
+        "id": "H-F15-03",
+        "account_id": "A-F15-FX1",
+        "instrument_id": "CASH-USD",
+        "quantity": "400000"
+      },
+      {
+        "id": "H-F15-04",
+        "account_id": "A-F15-SG",
+        "instrument_id": "CASH-SGD",
+        "quantity": "432000"
+      },
+      {
+        "id": "H-F15-05",
+        "account_id": "A-F15-AU",
+        "instrument_id": "CASH-AUD",
+        "quantity": "364000"
+      },
+      {
+        "id": "H-F15-06",
+        "account_id": "A-F15-M1",
+        "instrument_id": "BDS-CANHO",
+        "quantity": "1",
+        "price_key": "RE-F15-1",
+        "property": {
+          "type": "apartment",
+          "project": "Khu đô thị Demo Sông Xanh",
+          "building": "Tòa S1",
+          "floor": 35,
+          "unit": "3501",
+          "area_m2": "200",
+          "bedrooms": 4,
+          "supported": true,
+          "purchase_price": "20095000000",
+          "capitalized_costs": "401900000"
+        },
+        "manual": {
+          "price": "29100000000",
+          "valuation_date": "2026-03-31"
+        }
+      },
+      {
+        "id": "H-F15-07",
+        "account_id": "A-F15-M1",
+        "instrument_id": "BH-TICHLUY",
+        "quantity": "1",
+        "price_key": "INS-F15-1",
+        "manual": {
+          "price": "12000000000",
+          "valuation_date": "2026-09-30"
+        }
+      },
+      {
+        "id": "H-F15-08",
+        "account_id": "A-F15-M1",
+        "instrument_id": "DMNGA",
+        "quantity": "240000"
+      },
+      {
+        "id": "H-F15-09",
+        "account_id": "A-F15-M1",
+        "instrument_id": "DMCNT",
+        "quantity": "63200"
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F15-0001",
+        "holding_id": "H-F15-01",
+        "type": "BUY",
+        "date": "2025-01-14",
+        "quantity": "7270",
+        "price": "117.43",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F15-0002",
+        "holding_id": "H-F15-02",
+        "type": "BUY",
+        "date": "2024-11-04",
+        "quantity": "1600",
+        "price": "187.82",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F15-0003",
+        "holding_id": "H-F15-03",
+        "type": "BUY",
+        "date": "2025-03-24",
+        "quantity": "400000",
+        "price": "1",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F15-0004",
+        "holding_id": "H-F15-04",
+        "type": "BUY",
+        "date": "2025-08-13",
+        "quantity": "432000",
+        "price": "1",
+        "currency": "SGD",
+        "fx_rate": "17800"
+      },
+      {
+        "id": "TX-F15-0005",
+        "holding_id": "H-F15-05",
+        "type": "BUY",
+        "date": "2025-03-05",
+        "quantity": "364000",
+        "price": "1",
+        "currency": "AUD",
+        "fx_rate": "16100"
+      },
+      {
+        "id": "TX-F15-0006",
+        "holding_id": "H-F15-06",
+        "type": "BUY",
+        "date": "2020-11-16",
+        "quantity": "1",
+        "price": "20095000000",
+        "fee": "401900000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F15-0007",
+        "holding_id": "H-F15-07",
+        "type": "CAPITAL_CALL",
+        "date": "2021-10-11",
+        "amount": "2000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F15-0008",
+        "holding_id": "H-F15-07",
+        "type": "CAPITAL_CALL",
+        "date": "2022-10-10",
+        "amount": "2000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F15-0009",
+        "holding_id": "H-F15-07",
+        "type": "CAPITAL_CALL",
+        "date": "2023-10-10",
+        "amount": "2000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F15-0010",
+        "holding_id": "H-F15-07",
+        "type": "CAPITAL_CALL",
+        "date": "2024-10-09",
+        "amount": "2000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F15-0011",
+        "holding_id": "H-F15-07",
+        "type": "CAPITAL_CALL",
+        "date": "2025-10-09",
+        "amount": "2000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F15-0012",
+        "holding_id": "H-F15-08",
+        "type": "BUY",
+        "date": "2024-07-29",
+        "quantity": "240000",
+        "price": "21056",
+        "fee": "7580160",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F15-0013",
+        "holding_id": "H-F15-09",
+        "type": "BUY",
+        "date": "2025-02-24",
+        "quantity": "63200",
+        "price": "92390",
+        "fee": "8758572",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F15-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "250000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F15-1"
+        },
+        "origin": "manual",
+        "expected": false
+      },
+      {
+        "id": "CF-F15-0002",
+        "label": "Học phí du học",
+        "category": "education",
+        "direction": "out",
+        "amount": "30000",
+        "currency": "AUD",
+        "frequency": "annual",
+        "start": "2027-01-10",
+        "subject": {
+          "kind": "member",
+          "id": "M-F15-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F16",
+    "name": "Gia đình Văn Khánh Linh (giả lập)",
+    "rm_id": "RM3",
+    "persona": "P3",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F16-1",
+        "name": "Văn Khánh Linh",
+        "generation": 1,
+        "role": "Doanh nhân"
+      },
+      {
+        "id": "M-F16-2",
+        "name": "Âu Đức Mạnh",
+        "generation": 1,
+        "role": "Chồng"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F16-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F16-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F16-FX1",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "USD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F16-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F16-01",
+        "account_id": "A-F16-M1",
+        "instrument_id": "DMCKA",
+        "quantity": "454500"
+      },
+      {
+        "id": "H-F16-02",
+        "account_id": "A-F16-M1",
+        "instrument_id": "DMNLG",
+        "quantity": "228600"
+      },
+      {
+        "id": "H-F16-03",
+        "account_id": "A-F16-M1",
+        "instrument_id": "DMBDT",
+        "quantity": "394700"
+      },
+      {
+        "id": "H-F16-04",
+        "account_id": "A-F16-M1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F16-1",
+        "manual": {
+          "price": "20000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F16-05",
+        "account_id": "A-F16-FX1",
+        "instrument_id": "DMGLB",
+        "quantity": "1280"
+      },
+      {
+        "id": "H-F16-06",
+        "account_id": "A-F16-M1",
+        "instrument_id": "DMKTA",
+        "quantity": "3"
+      },
+      {
+        "id": "H-F16-07",
+        "account_id": "A-F16-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "10000000000"
+      },
+      {
+        "id": "H-F16-08",
+        "account_id": "A-F16-M1",
+        "instrument_id": "BDS-NHAPHO",
+        "quantity": "1",
+        "price_key": "RE-F16-1",
+        "property": {
+          "type": "townhouse",
+          "project": "Khu nhà phố Demo Hoa Sữa",
+          "area_m2": "100",
+          "supported": false,
+          "purchase_price": "6550000000",
+          "capitalized_costs": "131000000"
+        },
+        "manual": {
+          "price": "10000000000",
+          "valuation_date": "2026-06-30"
+        }
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F16-0001",
+        "holding_id": "H-F16-01",
+        "type": "BUY",
+        "date": "2023-10-10",
+        "quantity": "454500",
+        "price": "18918",
+        "fee": "12897347",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F16-0002",
+        "holding_id": "H-F16-02",
+        "type": "BUY",
+        "date": "2023-06-29",
+        "quantity": "228600",
+        "price": "27224",
+        "fee": "9335110",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F16-0003",
+        "holding_id": "H-F16-02",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "182880000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F16-0004",
+        "holding_id": "H-F16-03",
+        "type": "BUY",
+        "date": "2023-04-21",
+        "quantity": "394700",
+        "price": "12811",
+        "fee": "7584753",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F16-0005",
+        "holding_id": "H-F16-03",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "315760000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F16-0006",
+        "holding_id": "H-F16-04",
+        "type": "BUY",
+        "date": "2022-08-02",
+        "quantity": "1",
+        "price": "13301000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F16-0007",
+        "holding_id": "H-F16-05",
+        "type": "BUY",
+        "date": "2024-01-01",
+        "quantity": "1280",
+        "price": "269.4",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F16-0008",
+        "holding_id": "H-F16-08",
+        "type": "BUY",
+        "date": "2023-01-20",
+        "quantity": "1",
+        "price": "6550000000",
+        "fee": "131000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F16-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "170000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F16-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F17",
+    "name": "Gia đình Lục Gia Bảo (giả lập)",
+    "rm_id": "RM3",
+    "persona": "P4",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F17-1",
+        "name": "Lục Gia Bảo",
+        "generation": 1,
+        "role": "Chủ hộ"
+      },
+      {
+        "id": "M-F17-2",
+        "name": "Ông Thị Ngân",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F17-3",
+        "name": "Lục Gia Phong",
+        "generation": 2,
+        "role": "Con, sống ở nước ngoài"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F17-FX1",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "USD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F17-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F17-AU",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "AUD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F17-3",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F17-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F17-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F17-01",
+        "account_id": "A-F17-FX1",
+        "instrument_id": "DMGLA",
+        "quantity": "1000"
+      },
+      {
+        "id": "H-F17-02",
+        "account_id": "A-F17-FX1",
+        "instrument_id": "DMGLB",
+        "quantity": "2400"
+      },
+      {
+        "id": "H-F17-03",
+        "account_id": "A-F17-FX1",
+        "instrument_id": "CASH-USD",
+        "quantity": "320000"
+      },
+      {
+        "id": "H-F17-04",
+        "account_id": "A-F17-AU",
+        "instrument_id": "CASH-AUD",
+        "quantity": "303000"
+      },
+      {
+        "id": "H-F17-05",
+        "account_id": "A-F17-M1",
+        "instrument_id": "BDS-CANHO",
+        "quantity": "1",
+        "price_key": "RE-F17-1",
+        "property": {
+          "type": "apartment",
+          "project": "Khu đô thị Demo Sông Xanh",
+          "building": "Tòa S3",
+          "floor": 22,
+          "unit": "2205",
+          "area_m2": "140",
+          "bedrooms": 3,
+          "supported": true,
+          "purchase_price": "15174000000",
+          "capitalized_costs": "303480000"
+        },
+        "manual": {
+          "price": "19400000000",
+          "valuation_date": "2026-03-31"
+        }
+      },
+      {
+        "id": "H-F17-06",
+        "account_id": "A-F17-M1",
+        "instrument_id": "BH-TICHLUY",
+        "quantity": "1",
+        "price_key": "INS-F17-1",
+        "manual": {
+          "price": "8000000000",
+          "valuation_date": "2026-09-30"
+        }
+      },
+      {
+        "id": "H-F17-07",
+        "account_id": "A-F17-M1",
+        "instrument_id": "DMBDS",
+        "quantity": "97600"
+      },
+      {
+        "id": "H-F17-08",
+        "account_id": "A-F17-M1",
+        "instrument_id": "DMNGB",
+        "quantity": "125000"
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F17-0002",
+        "holding_id": "H-F17-02",
+        "type": "BUY",
+        "date": "2024-03-06",
+        "quantity": "3000",
+        "price": "221.96",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F17-0003",
+        "holding_id": "H-F17-02",
+        "type": "SELL",
+        "date": "2026-02-24",
+        "quantity": "600",
+        "price": "249.82",
+        "fee": "0",
+        "tax": "0",
+        "currency": "USD",
+        "fx_rate": "24700"
+      },
+      {
+        "id": "TX-F17-0004",
+        "holding_id": "H-F17-03",
+        "type": "BUY",
+        "date": "2024-10-14",
+        "quantity": "320000",
+        "price": "1",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F17-0005",
+        "holding_id": "H-F17-04",
+        "type": "BUY",
+        "date": "2025-08-18",
+        "quantity": "303000",
+        "price": "1",
+        "currency": "AUD",
+        "fx_rate": "16100"
+      },
+      {
+        "id": "TX-F17-0006",
+        "holding_id": "H-F17-05",
+        "type": "BUY",
+        "date": "2021-09-10",
+        "quantity": "1",
+        "price": "15174000000",
+        "fee": "303480000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F17-0007",
+        "holding_id": "H-F17-06",
+        "type": "CAPITAL_CALL",
+        "date": "2021-10-11",
+        "amount": "1333000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F17-0008",
+        "holding_id": "H-F17-06",
+        "type": "CAPITAL_CALL",
+        "date": "2022-10-10",
+        "amount": "1333000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F17-0009",
+        "holding_id": "H-F17-06",
+        "type": "CAPITAL_CALL",
+        "date": "2023-10-10",
+        "amount": "1333000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F17-0010",
+        "holding_id": "H-F17-06",
+        "type": "CAPITAL_CALL",
+        "date": "2024-10-09",
+        "amount": "1333000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F17-0011",
+        "holding_id": "H-F17-06",
+        "type": "CAPITAL_CALL",
+        "date": "2025-10-09",
+        "amount": "1333000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F17-0012",
+        "holding_id": "H-F17-07",
+        "type": "BUY",
+        "date": "2023-11-01",
+        "quantity": "97600",
+        "price": "32745",
+        "fee": "4793868",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F17-0013",
+        "holding_id": "H-F17-08",
+        "type": "BUY",
+        "date": "2024-01-23",
+        "quantity": "125000",
+        "price": "29836",
+        "fee": "5594250",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F17-0014",
+        "holding_id": "H-F17-01",
+        "type": "BUY",
+        "date": "2025-02-10",
+        "quantity": "1000",
+        "price": "100",
+        "currency": "USD",
+        "fx_rate": "24000"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F17-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "180000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F17-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F18",
+    "name": "Gia đình Thái Hoàng Long (giả lập)",
+    "rm_id": "RM3",
+    "persona": "P4",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F18-1",
+        "name": "Thái Hoàng Long",
+        "generation": 1,
+        "role": "Chủ hộ"
+      },
+      {
+        "id": "M-F18-2",
+        "name": "Diệp Thị Quyên",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F18-3",
+        "name": "Thái Hoàng Nam",
+        "generation": 2,
+        "role": "Con, sống ở nước ngoài"
+      },
+      {
+        "id": "M-F18-4",
+        "name": "Thái Hoàng Mi",
+        "generation": 2,
+        "role": "Con"
+      }
+    ],
+    "entities": [
+      {
+        "id": "E-F18-1",
+        "name": "Công ty Đầu tư Long Demo",
+        "type": "Công ty holding"
+      }
+    ],
+    "ownerships": [
+      {
+        "entity_id": "E-F18-1",
+        "member_id": "M-F18-1",
+        "pct": "0.5"
+      },
+      {
+        "entity_id": "E-F18-1",
+        "member_id": "M-F18-2",
+        "pct": "0.5"
+      }
+    ],
+    "accounts": [
+      {
+        "id": "A-F18-E1",
+        "custodian": "Ngân hàng Demo B",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "entity",
+            "id": "E-F18-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F18-FX1",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "USD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F18-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F18-SG",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "SGD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F18-3",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F18-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F18-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F18-01",
+        "account_id": "A-F18-E1",
+        "instrument_id": "BDS-THUONGMAI",
+        "quantity": "1",
+        "price_key": "RE-F18-1",
+        "property": {
+          "type": "commercial",
+          "project": "Khu phức hợp Demo Bến Cảng",
+          "area_m2": "7000",
+          "supported": false,
+          "purchase_price": "547664000000",
+          "capitalized_costs": "10953280000"
+        },
+        "manual": {
+          "price": "700000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F18-02",
+        "account_id": "A-F18-FX1",
+        "instrument_id": "DMGLA",
+        "quantity": "72700"
+      },
+      {
+        "id": "H-F18-03",
+        "account_id": "A-F18-FX1",
+        "instrument_id": "DMGLB",
+        "quantity": "48000"
+      },
+      {
+        "id": "H-F18-04",
+        "account_id": "A-F18-FX1",
+        "instrument_id": "CASH-USD",
+        "quantity": "6000000"
+      },
+      {
+        "id": "H-F18-05",
+        "account_id": "A-F18-SG",
+        "instrument_id": "CASH-SGD",
+        "quantity": "4320000"
+      },
+      {
+        "id": "H-F18-06",
+        "account_id": "A-F18-M1",
+        "instrument_id": "BH-TICHLUY",
+        "quantity": "1",
+        "price_key": "INS-F18-1",
+        "manual": {
+          "price": "150000000000",
+          "valuation_date": "2026-09-30"
+        }
+      },
+      {
+        "id": "H-F18-07",
+        "account_id": "A-F18-M1",
+        "instrument_id": "DMNGA",
+        "quantity": "4000000"
+      },
+      {
+        "id": "H-F18-08",
+        "account_id": "A-F18-M1",
+        "instrument_id": "DMCNT",
+        "quantity": "1052600"
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F18-0001",
+        "holding_id": "H-F18-01",
+        "type": "BUY",
+        "date": "2021-02-09",
+        "quantity": "1",
+        "price": "547664000000",
+        "fee": "10953280000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F18-0002",
+        "holding_id": "H-F18-02",
+        "type": "BUY",
+        "date": "2023-11-20",
+        "quantity": "72700",
+        "price": "92.35",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F18-0003",
+        "holding_id": "H-F18-03",
+        "type": "BUY",
+        "date": "2025-03-10",
+        "quantity": "48000",
+        "price": "258.28",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F18-0004",
+        "holding_id": "H-F18-04",
+        "type": "BUY",
+        "date": "2024-11-13",
+        "quantity": "6000000",
+        "price": "1",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F18-0005",
+        "holding_id": "H-F18-05",
+        "type": "BUY",
+        "date": "2024-12-19",
+        "quantity": "4320000",
+        "price": "1",
+        "currency": "SGD",
+        "fx_rate": "17800"
+      },
+      {
+        "id": "TX-F18-0006",
+        "holding_id": "H-F18-06",
+        "type": "CAPITAL_CALL",
+        "date": "2021-10-11",
+        "amount": "25000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F18-0007",
+        "holding_id": "H-F18-06",
+        "type": "CAPITAL_CALL",
+        "date": "2022-10-10",
+        "amount": "25000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F18-0008",
+        "holding_id": "H-F18-06",
+        "type": "CAPITAL_CALL",
+        "date": "2023-10-10",
+        "amount": "25000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F18-0009",
+        "holding_id": "H-F18-06",
+        "type": "CAPITAL_CALL",
+        "date": "2024-10-09",
+        "amount": "25000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F18-0010",
+        "holding_id": "H-F18-06",
+        "type": "CAPITAL_CALL",
+        "date": "2025-10-09",
+        "amount": "25000000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F18-0011",
+        "holding_id": "H-F18-07",
+        "type": "BUY",
+        "date": "2025-01-27",
+        "quantity": "4000000",
+        "price": "23427",
+        "fee": "140562000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F18-0012",
+        "holding_id": "H-F18-08",
+        "type": "BUY",
+        "date": "2023-05-22",
+        "quantity": "1052600",
+        "price": "72890",
+        "fee": "115086021",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F18-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "1500000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F18-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F19",
+    "name": "Gia đình Bạch Văn Thịnh (giả lập)",
+    "rm_id": "RM3",
+    "persona": "P1",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F19-1",
+        "name": "Bạch Văn Thịnh",
+        "generation": 1,
+        "role": "Nhà sáng lập"
+      },
+      {
+        "id": "M-F19-2",
+        "name": "Chu Thị Uyên",
+        "generation": 1,
+        "role": "Vợ"
+      },
+      {
+        "id": "M-F19-3",
+        "name": "Bạch Văn Vũ",
+        "generation": 2,
+        "role": "Con"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F19-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F19-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F19-01",
+        "account_id": "A-F19-M1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F19-1",
+        "manual": {
+          "price": "50000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F19-02",
+        "account_id": "A-F19-M1",
+        "instrument_id": "BDS-BIETTHU",
+        "quantity": "1",
+        "price_key": "RE-F19-1",
+        "property": {
+          "type": "villa",
+          "project": "Khu biệt thự Demo Đồi Thông",
+          "area_m2": "250",
+          "supported": false,
+          "purchase_price": "19568000000",
+          "capitalized_costs": "391360000"
+        },
+        "manual": {
+          "price": "25000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F19-03",
+        "account_id": "A-F19-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "8000000000"
+      },
+      {
+        "id": "H-F19-04",
+        "account_id": "A-F19-M1",
+        "instrument_id": "DMVGM",
+        "quantity": "48"
+      },
+      {
+        "id": "H-F19-05",
+        "account_id": "A-F19-M1",
+        "instrument_id": "DMDNC",
+        "quantity": "133300"
+      }
+    ],
+    "liabilities": [
+      {
+        "name": "Vay mua biệt thự",
+        "borrower": {
+          "kind": "member",
+          "id": "M-F19-1"
+        },
+        "balance": "10000000000",
+        "currency": "VND",
+        "rate": "0.095",
+        "rate_type": "fixed",
+        "repayment": "amortizing",
+        "principal_per_month": "80000000",
+        "maturity": "2037-06-30",
+        "id": "L-F19-1"
+      }
+    ],
+    "transactions": [
+      {
+        "id": "TX-F19-0001",
+        "holding_id": "H-F19-01",
+        "type": "BUY",
+        "date": "2022-02-24",
+        "quantity": "1",
+        "price": "33988000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F19-0002",
+        "holding_id": "H-F19-02",
+        "type": "BUY",
+        "date": "2021-07-26",
+        "quantity": "1",
+        "price": "19568000000",
+        "fee": "391360000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F19-0003",
+        "holding_id": "H-F19-04",
+        "type": "BUY",
+        "date": "2023-11-13",
+        "quantity": "48",
+        "price": "99105442",
+        "fee": "7135592",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F19-0004",
+        "holding_id": "H-F19-05",
+        "type": "BUY",
+        "date": "2024-03-11",
+        "quantity": "166600",
+        "price": "25347",
+        "fee": "5068133",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F19-0005",
+        "holding_id": "H-F19-05",
+        "type": "SELL",
+        "date": "2026-02-19",
+        "quantity": "33300",
+        "price": "31636",
+        "fee": "1580218",
+        "tax": "1053479",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F19-0006",
+        "holding_id": "H-F19-05",
+        "type": "DIVIDEND_CASH",
+        "date": "2026-05-18",
+        "amount": "106640000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F19-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "140000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F19-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  },
+  {
+    "id": "DEMO-F20",
+    "name": "Gia đình Từ Minh Khang (giả lập)",
+    "rm_id": "RM3",
+    "persona": "P3",
+    "currency": "VND",
+    "members": [
+      {
+        "id": "M-F20-1",
+        "name": "Từ Minh Khang",
+        "generation": 1,
+        "role": "Doanh nhân trẻ"
+      },
+      {
+        "id": "M-F20-2",
+        "name": "La Thị Hằng",
+        "generation": 1,
+        "role": "Vợ"
+      }
+    ],
+    "entities": [],
+    "ownerships": [],
+    "accounts": [
+      {
+        "id": "A-F20-M1",
+        "custodian": "Ngân hàng Demo A",
+        "currency": "VND",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F20-1",
+            "pct": "1"
+          }
+        ]
+      },
+      {
+        "id": "A-F20-FX1",
+        "custodian": "Lưu ký nước ngoài Demo",
+        "currency": "USD",
+        "owners": [
+          {
+            "kind": "member",
+            "id": "M-F20-1",
+            "pct": "1"
+          }
+        ]
+      }
+    ],
+    "holdings": [
+      {
+        "id": "H-F20-01",
+        "account_id": "A-F20-M1",
+        "instrument_id": "DMCNT",
+        "quantity": "52600"
+      },
+      {
+        "id": "H-F20-02",
+        "account_id": "A-F20-M1",
+        "instrument_id": "DMBLE",
+        "quantity": "66700"
+      },
+      {
+        "id": "H-F20-03",
+        "account_id": "A-F20-M1",
+        "instrument_id": "CPTN",
+        "quantity": "1",
+        "price_key": "PE-F20-1",
+        "manual": {
+          "price": "6000000000",
+          "valuation_date": "2026-06-30"
+        }
+      },
+      {
+        "id": "H-F20-04",
+        "account_id": "A-F20-FX1",
+        "instrument_id": "DMGLA",
+        "quantity": "1090"
+      },
+      {
+        "id": "H-F20-05",
+        "account_id": "A-F20-M1",
+        "instrument_id": "DMKTA",
+        "quantity": "1"
+      },
+      {
+        "id": "H-F20-06",
+        "account_id": "A-F20-M1",
+        "instrument_id": "CASH-VND",
+        "quantity": "4000000000"
+      },
+      {
+        "id": "H-F20-07",
+        "account_id": "A-F20-M1",
+        "instrument_id": "BDS-CANHO",
+        "quantity": "1",
+        "price_key": "RE-F20-1",
+        "property": {
+          "type": "apartment",
+          "project": "Chung cư Demo Ánh Dương",
+          "building": "Tòa D",
+          "floor": 7,
+          "unit": "0712",
+          "area_m2": "70",
+          "bedrooms": 2,
+          "supported": false,
+          "purchase_price": "5050000000",
+          "capitalized_costs": "101000000"
+        },
+        "manual": {
+          "price": "6500000000",
+          "valuation_date": "2026-05-31"
+        }
+      }
+    ],
+    "liabilities": [],
+    "transactions": [
+      {
+        "id": "TX-F20-0001",
+        "holding_id": "H-F20-01",
+        "type": "BUY",
+        "date": "2023-08-09",
+        "quantity": "52600",
+        "price": "99414",
+        "fee": "7843765",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F20-0002",
+        "holding_id": "H-F20-02",
+        "type": "BUY",
+        "date": "2024-08-12",
+        "quantity": "66700",
+        "price": "53522",
+        "fee": "5354876",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F20-0003",
+        "holding_id": "H-F20-03",
+        "type": "BUY",
+        "date": "2021-09-24",
+        "quantity": "1",
+        "price": "3843000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F20-0004",
+        "holding_id": "H-F20-04",
+        "type": "BUY",
+        "date": "2024-01-08",
+        "quantity": "1090",
+        "price": "89.32",
+        "fee": "0",
+        "currency": "USD",
+        "fx_rate": "24000"
+      },
+      {
+        "id": "TX-F20-0005",
+        "holding_id": "H-F20-05",
+        "type": "BUY",
+        "date": "2025-01-20",
+        "quantity": "1",
+        "price": "1615510976",
+        "fee": "2423266",
+        "currency": "VND",
+        "fx_rate": "1"
+      },
+      {
+        "id": "TX-F20-0006",
+        "holding_id": "H-F20-07",
+        "type": "BUY",
+        "date": "2022-03-07",
+        "quantity": "1",
+        "price": "5050000000",
+        "fee": "101000000",
+        "currency": "VND",
+        "fx_rate": "1"
+      }
+    ],
+    "cashflows": [
+      {
+        "id": "CF-F20-0001",
+        "label": "Chi sinh hoạt",
+        "category": "living",
+        "direction": "out",
+        "amount": "70000000",
+        "currency": "VND",
+        "frequency": "monthly",
+        "start": "2026-11-01",
+        "subject": {
+          "kind": "member",
+          "id": "M-F20-1"
+        },
+        "origin": "manual",
+        "expected": false
+      }
+    ]
+  }
+]

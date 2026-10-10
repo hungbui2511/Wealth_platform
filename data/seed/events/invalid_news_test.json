@@ -1,0 +1,16 @@
+[
+  {
+    "title": "[TIN GIẢ LẬP] Tin đồn chưa công bố về sáp nhập",
+    "source": "nguon-noi-bo",
+    "url": "",
+    "published_at": "2026-10-09T09:00:00+07:00",
+    "summary": "Tin không có đường dẫn công khai."
+  },
+  {
+    "title": "[TIN GIẢ LẬP] Bài viết từ diễn đàn không được phép",
+    "source": "dien-dan-khong-ro.example",
+    "url": "https://dien-dan-khong-ro.example/bai-viet",
+    "published_at": "2026-10-09T09:00:00+07:00",
+    "summary": "Tin có miền ngoài danh sách nguồn công khai."
+  }
+]

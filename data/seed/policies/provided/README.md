@@ -1,0 +1,1 @@
+"# Văn bản do người yêu cầu cung cấp\n\nĐặt văn bản chính sách công khai thật vào thư mục này theo cùng cấu trúc JSON với `../sample/PD-2026-001.json`\n(gồm `url` công khai và `published_at`). Khi thư mục có văn bản, demo dùng văn bản thật thay cho văn bản giả lập.\n"

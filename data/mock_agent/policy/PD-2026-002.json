@@ -1,0 +1,32 @@
+{
+  "changes": [
+    {
+      "change_id": "C1",
+      "article_refs": [
+        "Điều 4 khoản 2"
+      ],
+      "quote": "Công ty holding phải công bố danh sách thành viên gia đình nắm giữ từ 10% vốn trở lên trong vòng 30 ngày kể từ ngày tặng cho.",
+      "summary": "Công ty holding phải công bố thành viên gia đình nắm từ 10% vốn sau khi tặng cho.",
+      "topics": [
+        "CORPORATE_HOLDING"
+      ],
+      "affected_parties": "Công ty holding của gia đình",
+      "effective_from": "2026-12-01",
+      "certainty": "final"
+    },
+    {
+      "change_id": "C2",
+      "article_refs": [
+        "Điều 6 khoản 1"
+      ],
+      "quote": "Tặng cho, thừa kế cổ phần giữa cha mẹ và con được miễn thuế thu nhập cá nhân nếu bên nhận cam kết nắm giữ tối thiểu 3 năm.",
+      "summary": "Miễn thuế thu nhập cá nhân khi tặng cho, thừa kế cổ phần giữa cha mẹ và con nếu nắm giữ tối thiểu 3 năm.",
+      "topics": [
+        "INHERITANCE_GIFT"
+      ],
+      "affected_parties": "Cha mẹ và con tặng cho, thừa kế cổ phần",
+      "effective_from": "2026-12-01",
+      "certainty": "final"
+    }
+  ]
+}

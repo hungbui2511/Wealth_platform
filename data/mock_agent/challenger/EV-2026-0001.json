@@ -1,0 +1,14 @@
+{
+  "pre": {
+    "findings": [
+      {
+        "check": "opposite_direction",
+        "severity": "medium",
+        "target": "sector:EQ_VN:BANK",
+        "issue": "Lãi suất tăng cũng làm tăng chi phí huy động và rủi ro nợ xấu, có thể triệt tiêu lợi ích biên lãi của ngân hàng",
+        "suggestion": "Cân nhắc đặt mức 0 hoặc ghi rõ giả định về chi phí huy động trong lập luận"
+      }
+    ],
+    "counter_scenario": "Nếu lạm phát hạ nhiệt nhanh, ngân hàng trung ương giả lập có thể đảo chiều trong 6 tháng, khi đó trái phiếu hồi phục."
+  }
+}

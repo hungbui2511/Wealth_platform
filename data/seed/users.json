@@ -1,0 +1,61 @@
+[
+  {
+    "id": "CIO1",
+    "name": "Giám đốc đầu tư (demo)",
+    "role": "CIO",
+    "families": []
+  },
+  {
+    "id": "RM1",
+    "name": "RM Nguyễn Thị Hạnh (demo)",
+    "role": "RM",
+    "families": [
+      "DEMO-F01",
+      "DEMO-F02",
+      "DEMO-F03",
+      "DEMO-F04",
+      "DEMO-F05",
+      "DEMO-F06",
+      "DEMO-F07"
+    ]
+  },
+  {
+    "id": "RM2",
+    "name": "RM Trần Văn Khôi (demo)",
+    "role": "RM",
+    "families": [
+      "DEMO-F08",
+      "DEMO-F09",
+      "DEMO-F10",
+      "DEMO-F11",
+      "DEMO-F12",
+      "DEMO-F13",
+      "DEMO-F14"
+    ]
+  },
+  {
+    "id": "RM3",
+    "name": "RM Lê Minh Phương (demo)",
+    "role": "RM",
+    "families": [
+      "DEMO-F15",
+      "DEMO-F16",
+      "DEMO-F17",
+      "DEMO-F18",
+      "DEMO-F19",
+      "DEMO-F20"
+    ]
+  },
+  {
+    "id": "CMP1",
+    "name": "Chuyên viên Tuân thủ (demo)",
+    "role": "COMPLIANCE",
+    "families": []
+  },
+  {
+    "id": "ADM1",
+    "name": "Quản trị hệ thống (demo)",
+    "role": "ADMIN",
+    "families": []
+  }
+]

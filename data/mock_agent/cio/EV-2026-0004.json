@@ -1,0 +1,375 @@
+{
+  "v1": {
+    "view": {
+      "event_id": "EV-2026-0004",
+      "view_id": "VW-0004-v1",
+      "event_type": "",
+      "summary": "Thị trường chứng khoán giả lập được đưa vào danh sách xem xét nâng hạng",
+      "impacts": [
+        {
+          "scope": "asset_class",
+          "asset_class": "CASH",
+          "target": "CASH",
+          "level": 0,
+          "direction": "neutral",
+          "rationale": "Không ảnh hưởng trực tiếp tới giá trị tiền gửi",
+          "source_ids": []
+        },
+        {
+          "scope": "asset_class",
+          "asset_class": "GOV_BOND",
+          "target": "GOV_BOND",
+          "level": 0,
+          "direction": "neutral",
+          "rationale": "Không liên quan trực tiếp tới trái phiếu Chính phủ",
+          "source_ids": []
+        },
+        {
+          "scope": "asset_class",
+          "asset_class": "CORP_BOND",
+          "target": "CORP_BOND",
+          "level": 0,
+          "direction": "neutral",
+          "rationale": "Chưa thấy tác động trực tiếp lên trái phiếu doanh nghiệp nói chung",
+          "source_ids": []
+        },
+        {
+          "scope": "asset_class",
+          "asset_class": "EQ_VN",
+          "target": "EQ_VN",
+          "level": 2,
+          "direction": "positive",
+          "horizon": "3-6 tháng",
+          "confidence": "medium",
+          "rationale": "Kỳ vọng dòng vốn ngoại vào thị trường sau thông tin nâng hạng",
+          "source_ids": [
+            "NW-0009",
+            "NW-0011"
+          ]
+        },
+        {
+          "scope": "asset_class",
+          "asset_class": "EQ_INTL",
+          "target": "EQ_INTL",
+          "level": 0,
+          "direction": "neutral",
+          "rationale": "Sự kiện trong nước, không tác động tới cổ phiếu quốc tế",
+          "source_ids": []
+        },
+        {
+          "scope": "asset_class",
+          "asset_class": "FUND",
+          "target": "FUND",
+          "level": 0,
+          "direction": "neutral",
+          "rationale": "Quỹ được nhìn xuyên qua bảng phân bổ",
+          "source_ids": []
+        },
+        {
+          "scope": "asset_class",
+          "asset_class": "GOLD",
+          "target": "GOLD",
+          "level": 0,
+          "direction": "insufficient_evidence",
+          "rationale": "Nguồn không đề cập tới vàng",
+          "source_ids": []
+        },
+        {
+          "scope": "asset_class",
+          "asset_class": "REAL_ESTATE",
+          "target": "REAL_ESTATE",
+          "level": 0,
+          "direction": "neutral",
+          "rationale": "Nguồn không đề cập tác động tới giá bất động sản",
+          "source_ids": []
+        },
+        {
+          "scope": "asset_class",
+          "asset_class": "PRIVATE_EQ",
+          "target": "PRIVATE_EQ",
+          "level": 0,
+          "direction": "insufficient_evidence",
+          "rationale": "Phụ thuộc ngành của từng doanh nghiệp, nguồn không đủ",
+          "source_ids": []
+        },
+        {
+          "scope": "asset_class",
+          "asset_class": "CRYPTO",
+          "target": "CRYPTO",
+          "level": 0,
+          "direction": "neutral",
+          "rationale": "Không có liên hệ trực tiếp với tài sản mã hóa",
+          "source_ids": []
+        },
+        {
+          "scope": "asset_class",
+          "asset_class": "INSURANCE",
+          "target": "INSURANCE",
+          "level": 0,
+          "direction": "neutral",
+          "rationale": "Không ảnh hưởng đáng kể tới bảo hiểm tích lũy",
+          "source_ids": []
+        },
+        {
+          "scope": "sector",
+          "asset_class": "EQ_VN",
+          "target": "SECURITIES",
+          "level": 3,
+          "direction": "positive",
+          "horizon": "1-3 tháng",
+          "confidence": "medium",
+          "rationale": "Công ty chứng khoán hưởng lợi trực tiếp từ thanh khoản tăng",
+          "source_ids": [
+            "NW-0010"
+          ]
+        },
+        {
+          "scope": "sector",
+          "asset_class": "EQ_VN",
+          "target": "BANK",
+          "level": 1,
+          "direction": "positive",
+          "horizon": "1-3 tháng",
+          "confidence": "low",
+          "rationale": "Cổ phiếu ngân hàng vốn hóa lớn được khối ngoại mua ròng",
+          "source_ids": [
+            "NW-0010"
+          ]
+        },
+        {
+          "scope": "fx",
+          "target": "USD",
+          "level": -1,
+          "direction": "negative",
+          "horizon": "3-6 tháng",
+          "confidence": "low",
+          "rationale": "Dòng vốn ngoại vào giúp VND vững hơn so với USD",
+          "source_ids": [
+            "NW-0010"
+          ]
+        },
+        {
+          "scope": "fx",
+          "target": "SGD",
+          "level": 0,
+          "direction": "neutral",
+          "rationale": "Không tác động tới tỷ giá SGD/VND",
+          "source_ids": []
+        },
+        {
+          "scope": "fx",
+          "target": "AUD",
+          "level": 0,
+          "direction": "neutral",
+          "rationale": "Không tác động tới tỷ giá AUD/VND",
+          "source_ids": []
+        }
+      ]
+    },
+    "nodes": {
+      "analyst_macro": {
+        "analyst": "Vĩ mô và lãi suất",
+        "lines": [
+          {
+            "scope": "asset_class",
+            "asset_class": "CASH",
+            "target": "CASH",
+            "level": 0,
+            "direction": "neutral",
+            "rationale": "Không ảnh hưởng trực tiếp tới giá trị tiền gửi",
+            "source_ids": []
+          },
+          {
+            "scope": "asset_class",
+            "asset_class": "GOV_BOND",
+            "target": "GOV_BOND",
+            "level": 0,
+            "direction": "neutral",
+            "rationale": "Không liên quan trực tiếp tới trái phiếu Chính phủ",
+            "source_ids": []
+          },
+          {
+            "scope": "fx",
+            "target": "USD",
+            "level": -1,
+            "direction": "negative",
+            "horizon": "3-6 tháng",
+            "confidence": "low",
+            "rationale": "Dòng vốn ngoại vào giúp VND vững hơn so với USD",
+            "source_ids": [
+              "NW-0010"
+            ]
+          },
+          {
+            "scope": "fx",
+            "target": "SGD",
+            "level": 0,
+            "direction": "neutral",
+            "rationale": "Không tác động tới tỷ giá SGD/VND",
+            "source_ids": []
+          },
+          {
+            "scope": "fx",
+            "target": "AUD",
+            "level": 0,
+            "direction": "neutral",
+            "rationale": "Không tác động tới tỷ giá AUD/VND",
+            "source_ids": []
+          }
+        ],
+        "notes": "Nhóm Vĩ mô và lãi suất đánh giá 1 dòng có tác động."
+      },
+      "analyst_equity": {
+        "analyst": "Cổ phiếu và quỹ",
+        "lines": [
+          {
+            "scope": "asset_class",
+            "asset_class": "EQ_VN",
+            "target": "EQ_VN",
+            "level": 2,
+            "direction": "positive",
+            "horizon": "3-6 tháng",
+            "confidence": "medium",
+            "rationale": "Kỳ vọng dòng vốn ngoại vào thị trường sau thông tin nâng hạng",
+            "source_ids": [
+              "NW-0009",
+              "NW-0011"
+            ]
+          },
+          {
+            "scope": "asset_class",
+            "asset_class": "EQ_INTL",
+            "target": "EQ_INTL",
+            "level": 0,
+            "direction": "neutral",
+            "rationale": "Sự kiện trong nước, không tác động tới cổ phiếu quốc tế",
+            "source_ids": []
+          },
+          {
+            "scope": "asset_class",
+            "asset_class": "FUND",
+            "target": "FUND",
+            "level": 0,
+            "direction": "neutral",
+            "rationale": "Quỹ được nhìn xuyên qua bảng phân bổ",
+            "source_ids": []
+          },
+          {
+            "scope": "sector",
+            "asset_class": "EQ_VN",
+            "target": "SECURITIES",
+            "level": 3,
+            "direction": "positive",
+            "horizon": "1-3 tháng",
+            "confidence": "medium",
+            "rationale": "Công ty chứng khoán hưởng lợi trực tiếp từ thanh khoản tăng",
+            "source_ids": [
+              "NW-0010"
+            ]
+          },
+          {
+            "scope": "sector",
+            "asset_class": "EQ_VN",
+            "target": "BANK",
+            "level": 1,
+            "direction": "positive",
+            "horizon": "1-3 tháng",
+            "confidence": "low",
+            "rationale": "Cổ phiếu ngân hàng vốn hóa lớn được khối ngoại mua ròng",
+            "source_ids": [
+              "NW-0010"
+            ]
+          }
+        ],
+        "notes": "Nhóm Cổ phiếu và quỹ đánh giá 3 dòng có tác động."
+      },
+      "analyst_credit_re": {
+        "analyst": "Tín dụng và bất động sản",
+        "lines": [
+          {
+            "scope": "asset_class",
+            "asset_class": "CORP_BOND",
+            "target": "CORP_BOND",
+            "level": 0,
+            "direction": "neutral",
+            "rationale": "Chưa thấy tác động trực tiếp lên trái phiếu doanh nghiệp nói chung",
+            "source_ids": []
+          },
+          {
+            "scope": "asset_class",
+            "asset_class": "REAL_ESTATE",
+            "target": "REAL_ESTATE",
+            "level": 0,
+            "direction": "neutral",
+            "rationale": "Nguồn không đề cập tác động tới giá bất động sản",
+            "source_ids": []
+          },
+          {
+            "scope": "asset_class",
+            "asset_class": "PRIVATE_EQ",
+            "target": "PRIVATE_EQ",
+            "level": 0,
+            "direction": "insufficient_evidence",
+            "rationale": "Phụ thuộc ngành của từng doanh nghiệp, nguồn không đủ",
+            "source_ids": []
+          }
+        ],
+        "notes": "Nhóm Tín dụng và bất động sản đánh giá 0 dòng có tác động."
+      },
+      "analyst_commodity": {
+        "analyst": "Hàng hóa và tài sản khác",
+        "lines": [
+          {
+            "scope": "asset_class",
+            "asset_class": "GOLD",
+            "target": "GOLD",
+            "level": 0,
+            "direction": "insufficient_evidence",
+            "rationale": "Nguồn không đề cập tới vàng",
+            "source_ids": []
+          },
+          {
+            "scope": "asset_class",
+            "asset_class": "CRYPTO",
+            "target": "CRYPTO",
+            "level": 0,
+            "direction": "neutral",
+            "rationale": "Không có liên hệ trực tiếp với tài sản mã hóa",
+            "source_ids": []
+          },
+          {
+            "scope": "asset_class",
+            "asset_class": "INSURANCE",
+            "target": "INSURANCE",
+            "level": 0,
+            "direction": "neutral",
+            "rationale": "Không ảnh hưởng đáng kể tới bảo hiểm tích lũy",
+            "source_ids": []
+          }
+        ],
+        "notes": "Nhóm Hàng hóa và tài sản khác đánh giá 0 dòng có tác động."
+      },
+      "debate": {
+        "topics": [
+          {
+            "key": "sector:EQ_VN:SECURITIES",
+            "rounds": [
+              {
+                "bull": "Thanh khoản tăng mạnh ngay sau thông tin; doanh thu môi giới cải thiện.",
+                "bear": "Quyết định chính thức còn 6 tháng; kỳ vọng có thể đã phản ánh vào giá."
+              }
+            ],
+            "conclusion": "Giữ +3 nhưng độ tin cậy trung bình.",
+            "agreed": true
+          }
+        ]
+      },
+      "synthesize": {
+        "summary": "Thị trường chứng khoán giả lập được đưa vào danh sách xem xét nâng hạng",
+        "reasons": {
+          "sector:EQ_VN:SECURITIES": "Giữ +3 nhưng độ tin cậy trung bình."
+        }
+      }
+    }
+  }
+}

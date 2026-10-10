@@ -1,0 +1,412 @@
+[
+  {
+    "id": "DMNGA",
+    "name": "Ngân hàng Demo NGA",
+    "asset_class": "EQ_VN",
+    "sector": "BANK",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMNGB",
+    "name": "Ngân hàng Demo NGB",
+    "asset_class": "EQ_VN",
+    "sector": "BANK",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMNGC",
+    "name": "Ngân hàng Demo NGC",
+    "asset_class": "EQ_VN",
+    "sector": "BANK",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMBDS",
+    "name": "Địa ốc Demo BDS",
+    "asset_class": "EQ_VN",
+    "sector": "REAL_ESTATE",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMBDT",
+    "name": "Địa ốc Demo BDT",
+    "asset_class": "EQ_VN",
+    "sector": "REAL_ESTATE",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMBDV",
+    "name": "Địa ốc Demo BDV",
+    "asset_class": "EQ_VN",
+    "sector": "REAL_ESTATE",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMCKA",
+    "name": "Chứng khoán Demo CKA",
+    "asset_class": "EQ_VN",
+    "sector": "SECURITIES",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMTHP",
+    "name": "Thép Demo THP",
+    "asset_class": "EQ_VN",
+    "sector": "STEEL_MATERIALS",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMBLE",
+    "name": "Bán lẻ Demo BLE",
+    "asset_class": "EQ_VN",
+    "sector": "RETAIL",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMCNT",
+    "name": "Công nghệ Demo CNT",
+    "asset_class": "EQ_VN",
+    "sector": "TECH",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMNLG",
+    "name": "Năng lượng Demo NLG",
+    "asset_class": "EQ_VN",
+    "sector": "ENERGY",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMTDG",
+    "name": "Tiêu dùng Demo TDG",
+    "asset_class": "EQ_VN",
+    "sector": "CONSUMER",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMCNP",
+    "name": "Công nghiệp Demo CNP",
+    "asset_class": "EQ_VN",
+    "sector": "INDUSTRIAL",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMDNC",
+    "name": "Điện nước Demo DNC",
+    "asset_class": "EQ_VN",
+    "sector": "UTILITIES",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK"
+  },
+  {
+    "id": "DMXYZ",
+    "name": "Công ty Demo X",
+    "asset_class": "EQ_VN",
+    "sector": "INDUSTRIAL",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_STOCK",
+    "issuer": "Công ty Demo X"
+  },
+  {
+    "id": "DMBDA",
+    "name": "Trái phiếu Địa ốc Demo A",
+    "asset_class": "CORP_BOND",
+    "sector": "REAL_ESTATE",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_BOND",
+    "bond": {
+      "par": "100000",
+      "coupon_rate": "0.09",
+      "freq": 2,
+      "maturity": "2029-03-15"
+    }
+  },
+  {
+    "id": "DMBNB",
+    "name": "Trái phiếu Ngân hàng Demo B",
+    "asset_class": "CORP_BOND",
+    "sector": "BANK",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_BOND",
+    "bond": {
+      "par": "100000",
+      "coupon_rate": "0.07",
+      "freq": 1,
+      "maturity": "2028-06-20"
+    }
+  },
+  {
+    "id": "DMBNC",
+    "name": "Trái phiếu Năng lượng Demo C",
+    "asset_class": "CORP_BOND",
+    "sector": "ENERGY",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_BOND",
+    "bond": {
+      "par": "100000",
+      "coupon_rate": "0.085",
+      "freq": 2,
+      "maturity": "2030-08-10"
+    }
+  },
+  {
+    "id": "DMCPN",
+    "name": "Trái phiếu Chính phủ giả lập kỳ hạn ngắn",
+    "asset_class": "GOV_BOND",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_BOND",
+    "bond": {
+      "par": "100000",
+      "coupon_rate": "0.045",
+      "freq": 1,
+      "maturity": "2028-09-30"
+    }
+  },
+  {
+    "id": "DMCPD",
+    "name": "Trái phiếu Chính phủ giả lập kỳ hạn dài",
+    "asset_class": "GOV_BOND",
+    "currency": "VND",
+    "listed": true,
+    "price_source": "TCBS_BOND",
+    "bond": {
+      "par": "100000",
+      "coupon_rate": "0.052",
+      "freq": 1,
+      "maturity": "2033-09-30"
+    }
+  },
+  {
+    "id": "DMQCP",
+    "name": "Quỹ cổ phiếu Demo QCP",
+    "asset_class": "FUND",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "SAMPLE",
+    "allocations": [
+      {
+        "asset_class": "EQ_VN",
+        "sector": "BANK",
+        "weight": "0.5"
+      },
+      {
+        "asset_class": "EQ_VN",
+        "sector": "REAL_ESTATE",
+        "weight": "0.5"
+      }
+    ]
+  },
+  {
+    "id": "DMQTP",
+    "name": "Quỹ trái phiếu Demo QTP",
+    "asset_class": "FUND",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "SAMPLE",
+    "allocations": [
+      {
+        "asset_class": "CORP_BOND",
+        "sector": "BANK",
+        "weight": "0.7"
+      },
+      {
+        "asset_class": "GOV_BOND",
+        "weight": "0.3",
+        "tenor": "short"
+      }
+    ]
+  },
+  {
+    "id": "DMQCB",
+    "name": "Quỹ cân bằng Demo QCB",
+    "asset_class": "FUND",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "SAMPLE",
+    "allocations": [
+      {
+        "asset_class": "EQ_VN",
+        "sector": "TECH",
+        "weight": "0.4"
+      },
+      {
+        "asset_class": "EQ_VN",
+        "sector": "CONSUMER",
+        "weight": "0.2"
+      },
+      {
+        "asset_class": "CORP_BOND",
+        "sector": "ENERGY",
+        "weight": "0.4"
+      }
+    ]
+  },
+  {
+    "id": "DMQKA",
+    "name": "Quỹ mở Demo QKA",
+    "asset_class": "FUND",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "SAMPLE"
+  },
+  {
+    "id": "DMGLA",
+    "name": "ETF quốc tế Demo GLA",
+    "asset_class": "EQ_INTL",
+    "sector": "OTHER",
+    "currency": "USD",
+    "listed": true,
+    "price_source": "SAMPLE"
+  },
+  {
+    "id": "DMGLB",
+    "name": "Cổ phiếu quốc tế Demo GLB",
+    "asset_class": "EQ_INTL",
+    "sector": "TECH",
+    "currency": "USD",
+    "listed": true,
+    "price_source": "SAMPLE"
+  },
+  {
+    "id": "DMVGM",
+    "name": "Vàng miếng Demo (lượng)",
+    "asset_class": "GOLD",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "SAMPLE"
+  },
+  {
+    "id": "DMKTA",
+    "name": "Tài sản mã hóa Demo KTA",
+    "asset_class": "CRYPTO",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "SAMPLE"
+  },
+  {
+    "id": "CASH-VND",
+    "name": "Tiền gửi VND",
+    "asset_class": "CASH",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "FIXED"
+  },
+  {
+    "id": "CASH-USD",
+    "name": "Tiền gửi USD",
+    "asset_class": "CASH",
+    "currency": "USD",
+    "listed": false,
+    "price_source": "FIXED"
+  },
+  {
+    "id": "CASH-SGD",
+    "name": "Tiền gửi SGD",
+    "asset_class": "CASH",
+    "currency": "SGD",
+    "listed": false,
+    "price_source": "FIXED"
+  },
+  {
+    "id": "CASH-AUD",
+    "name": "Tiền gửi AUD",
+    "asset_class": "CASH",
+    "currency": "AUD",
+    "listed": false,
+    "price_source": "FIXED"
+  },
+  {
+    "id": "BDS-CANHO",
+    "name": "Căn hộ",
+    "asset_class": "REAL_ESTATE",
+    "sector": "REAL_ESTATE",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "ONEMOUNT"
+  },
+  {
+    "id": "BDS-NHAPHO",
+    "name": "Nhà liền kề",
+    "asset_class": "REAL_ESTATE",
+    "sector": "REAL_ESTATE",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "MANUAL"
+  },
+  {
+    "id": "BDS-BIETTHU",
+    "name": "Biệt thự",
+    "asset_class": "REAL_ESTATE",
+    "sector": "REAL_ESTATE",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "MANUAL"
+  },
+  {
+    "id": "BDS-DATO",
+    "name": "Đất ở",
+    "asset_class": "REAL_ESTATE",
+    "sector": "REAL_ESTATE",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "MANUAL"
+  },
+  {
+    "id": "BDS-THUONGMAI",
+    "name": "Bất động sản thương mại",
+    "asset_class": "REAL_ESTATE",
+    "sector": "REAL_ESTATE",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "MANUAL"
+  },
+  {
+    "id": "CPTN",
+    "name": "Cổ phần doanh nghiệp chưa niêm yết",
+    "asset_class": "PRIVATE_EQ",
+    "sector": "OTHER",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "MANUAL"
+  },
+  {
+    "id": "BH-TICHLUY",
+    "name": "Hợp đồng bảo hiểm liên kết",
+    "asset_class": "INSURANCE",
+    "currency": "VND",
+    "listed": false,
+    "price_source": "MANUAL"
+  }
+]

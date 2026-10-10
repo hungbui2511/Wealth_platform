@@ -1,0 +1,59 @@
+[
+  {
+    "id": "EV-2026-0001",
+    "type": "monetary_policy",
+    "title": "Ngân hàng Trung ương (giả lập) tăng lãi suất điều hành",
+    "news": [
+      "NW-0001",
+      "NW-0002",
+      "NW-0003"
+    ]
+  },
+  {
+    "id": "EV-2026-0002",
+    "type": "sector_regulation",
+    "title": "Quy định giả lập siết tín dụng bất động sản",
+    "news": [
+      "NW-0004",
+      "NW-0005",
+      "NW-0006"
+    ]
+  },
+  {
+    "id": "EV-2026-0003",
+    "type": "commodity",
+    "title": "Giá vàng thế giới tăng mạnh",
+    "news": [
+      "NW-0007",
+      "NW-0008"
+    ]
+  },
+  {
+    "id": "EV-2026-0004",
+    "type": "global_macro",
+    "title": "Thông tin nâng hạng thị trường chứng khoán (giả lập)",
+    "news": [
+      "NW-0009",
+      "NW-0010",
+      "NW-0011"
+    ]
+  },
+  {
+    "id": "EV-2026-0005",
+    "type": "fx",
+    "title": "Tỷ giá USD/VND tăng mạnh",
+    "news": [
+      "NW-0012",
+      "NW-0013"
+    ]
+  },
+  {
+    "id": "EV-2026-0006",
+    "type": "corporate",
+    "title": "Công ty Demo X phát hành riêng lẻ",
+    "news": [
+      "NW-0014",
+      "NW-0015"
+    ]
+  }
+]

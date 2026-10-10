@@ -1,0 +1,90 @@
+{
+  "_note": "DỮ LIỆU MẪU – không phải giá thật. Cấu trúc đặt theo dữ liệu của nguồn tương ứng; mã là hư cấu. Định giá căn hộ theo cấu trúc kết quả định giá tự động.",
+  "valuations": [
+    {
+      "request": {
+        "project": "Khu đô thị Demo Sông Xanh",
+        "building": "Tòa S2",
+        "floor": 18,
+        "unit": "1806",
+        "area_m2": "120",
+        "bedrooms": 3
+      },
+      "result": {
+        "price": 15000000000,
+        "priceMin": 14250000000,
+        "priceMax": 15750000000,
+        "valuationDate": "2026-09-30",
+        "modelVersion": "avm-mau-1"
+      }
+    },
+    {
+      "request": {
+        "project": "Khu đô thị Demo Sông Xanh",
+        "building": "Tòa S5",
+        "floor": 25,
+        "unit": "2508",
+        "area_m2": "150",
+        "bedrooms": 3
+      },
+      "result": {
+        "price": 18000000000,
+        "priceMin": 17100000000,
+        "priceMax": 18900000000,
+        "valuationDate": "2026-09-30",
+        "modelVersion": "avm-mau-1"
+      }
+    },
+    {
+      "request": {
+        "project": "Khu đô thị Demo Sông Xanh",
+        "building": "Tòa S7",
+        "floor": 12,
+        "unit": "1203",
+        "area_m2": "110",
+        "bedrooms": 3
+      },
+      "result": {
+        "price": 16000000000,
+        "priceMin": 15200000000,
+        "priceMax": 16800000000,
+        "valuationDate": "2026-09-30",
+        "modelVersion": "avm-mau-1"
+      }
+    },
+    {
+      "request": {
+        "project": "Khu đô thị Demo Sông Xanh",
+        "building": "Tòa S1",
+        "floor": 35,
+        "unit": "3501",
+        "area_m2": "200",
+        "bedrooms": 4
+      },
+      "result": {
+        "price": 30000000000,
+        "priceMin": 28500000000,
+        "priceMax": 31500000000,
+        "valuationDate": "2026-09-30",
+        "modelVersion": "avm-mau-1"
+      }
+    },
+    {
+      "request": {
+        "project": "Khu đô thị Demo Sông Xanh",
+        "building": "Tòa S3",
+        "floor": 22,
+        "unit": "2205",
+        "area_m2": "140",
+        "bedrooms": 3
+      },
+      "result": {
+        "price": 20000000000,
+        "priceMin": 19000000000,
+        "priceMax": 21000000000,
+        "valuationDate": "2026-09-30",
+        "modelVersion": "avm-mau-1"
+      }
+    }
+  ]
+}

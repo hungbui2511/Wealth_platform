@@ -1,0 +1,14 @@
+{
+  "pre": {
+    "findings": [
+      {
+        "check": "second_order_effect",
+        "severity": "medium",
+        "target": "asset_class:CORP_BOND:CORP_BOND",
+        "issue": "Doanh nghiệp phát hành có nợ ngoại tệ lớn có thể chịu rủi ro tín dụng, nhận định để trái phiếu doanh nghiệp ở mức 0",
+        "suggestion": "Cân nhắc dòng ngành cho nhóm phát hành có nợ ngoại tệ lớn nếu có căn cứ"
+      }
+    ],
+    "counter_scenario": "Nếu USD suy yếu toàn cầu trở lại, tỷ giá có thể giảm nhanh."
+  }
+}

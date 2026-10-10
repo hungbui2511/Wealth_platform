@@ -1,0 +1,14 @@
+{
+  "pre": {
+    "findings": [
+      {
+        "check": "source_support",
+        "severity": "low",
+        "target": "asset_class:REAL_ESTATE:REAL_ESTATE",
+        "issue": "Văn bản còn ở dạng dự thảo hoặc mới ban hành; tác động tới giá phụ thuộc lộ trình áp dụng",
+        "suggestion": "Giữ độ tin cậy thấp và theo dõi bản chính thức"
+      }
+    ],
+    "counter_scenario": "Nếu dự thảo được điều chỉnh khi lấy ý kiến, tác động có thể nhỏ hơn."
+  }
+}

@@ -1,0 +1,16 @@
+[
+  {
+    "id": "RL-001",
+    "issuer": "Công ty Demo X",
+    "instruments": [
+      "DMXYZ"
+    ],
+    "keywords": [
+      "Công ty Demo X",
+      "Demo X"
+    ],
+    "valid_from": "2026-01-01",
+    "valid_to": "2026-12-31",
+    "reason": "Tổ chức hư cấu dùng để kiểm thử: giả định ngân hàng đang có quan hệ tư vấn phát hành (chỉ Tuân thủ xem)."
+  }
+]

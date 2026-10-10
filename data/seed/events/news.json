@@ -1,0 +1,152 @@
+[
+  {
+    "id": "NW-0001",
+    "title": "[TIN GIẢ LẬP] Ngân hàng Trung ương (giả lập) tăng lãi suất điều hành thêm 0,5 điểm %",
+    "source": "tintuc-gialap.example",
+    "url": "https://tintuc-gialap.example/vi-mo/ntw-tang-lai-suat",
+    "published_at": "2026-10-08T08:00:00+07:00",
+    "summary": "Ngân hàng Trung ương (giả lập) công bố tăng lãi suất điều hành từ 4,5% lên 5%, có hiệu lực từ tuần sau, nhằm kiểm soát lạm phát.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0002",
+    "title": "[TIN GIẢ LẬP] Lãi suất huy động kỳ hạn 12 tháng dự kiến tăng theo",
+    "source": "baotaichinh-demo.example",
+    "url": "https://baotaichinh-demo.example/ngan-hang/lai-suat-huy-dong",
+    "published_at": "2026-10-08T10:30:00+07:00",
+    "summary": "Một số ngân hàng hư cấu cho biết sẽ điều chỉnh lãi suất huy động; chi phí vốn của doanh nghiệp vay có thể tăng.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0003",
+    "title": "[TIN GIẢ LẬP] Thị trường trái phiếu phản ứng với quyết định lãi suất",
+    "source": "tintuc-gialap.example",
+    "url": "https://tintuc-gialap.example/trai-phieu/phan-ung",
+    "published_at": "2026-10-08T14:00:00+07:00",
+    "summary": "Lợi suất trái phiếu Chính phủ giả lập kỳ hạn dài tăng; giá trái phiếu kỳ hạn dài giảm mạnh hơn kỳ hạn ngắn.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0004",
+    "title": "[TIN GIẢ LẬP] Cơ quan quản lý (giả lập) siết tín dụng cho lĩnh vực bất động sản",
+    "source": "tintuc-gialap.example",
+    "url": "https://tintuc-gialap.example/chinh-sach/siet-tin-dung-bds",
+    "published_at": "2026-10-08T09:00:00+07:00",
+    "summary": "Quy định giả lập yêu cầu ngân hàng giảm hạn mức cho vay kinh doanh bất động sản và nâng hệ số rủi ro, áp dụng từ quý tới.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0005",
+    "title": "[TIN GIẢ LẬP] Nhà đầu tư thận trọng sau thông tin siết tín dụng",
+    "source": "baotaichinh-demo.example",
+    "url": "https://baotaichinh-demo.example/chung-khoan/than-trong",
+    "published_at": "2026-10-08T15:00:00+07:00",
+    "summary": "Chỉ số DEMO-INDEX giảm trong phiên chiều; thanh khoản thị trường thấp hơn trung bình 20 phiên.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0006",
+    "title": "[TIN GIẢ LẬP] Doanh nghiệp địa ốc (giả lập) đối mặt áp lực dòng tiền",
+    "source": "tintuc-gialap.example",
+    "url": "https://tintuc-gialap.example/doanh-nghiep/dia-oc-dong-tien",
+    "published_at": "2026-10-09T08:30:00+07:00",
+    "summary": "Các doanh nghiệp địa ốc hư cấu có tỷ lệ nợ vay cao được dự báo khó huy động vốn mới; cổ phiếu nhóm này chịu áp lực bán.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0007",
+    "title": "[TIN GIẢ LẬP] Giá vàng thế giới tăng mạnh lên mức cao mới",
+    "source": "baotaichinh-demo.example",
+    "url": "https://baotaichinh-demo.example/hang-hoa/vang-tang",
+    "published_at": "2026-10-08T21:00:00+07:00",
+    "summary": "Giá vàng thế giới tăng do nhu cầu trú ẩn; giá vàng miếng trong nước giả lập tăng theo.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0008",
+    "title": "[TIN GIẢ LẬP] Dòng tiền trú ẩn chảy vào vàng và đồng USD",
+    "source": "tintuc-gialap.example",
+    "url": "https://tintuc-gialap.example/hang-hoa/dong-tien-tru-an",
+    "published_at": "2026-10-09T07:00:00+07:00",
+    "summary": "Các quỹ hư cấu tăng nắm giữ vàng; tài sản rủi ro như tài sản mã hóa biến động mạnh.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0009",
+    "title": "[TIN GIẢ LẬP] Tổ chức xếp hạng chỉ số (giả lập) đưa thị trường vào danh sách xem xét nâng hạng",
+    "source": "baotaichinh-demo.example",
+    "url": "https://baotaichinh-demo.example/chung-khoan/nang-hang",
+    "published_at": "2026-10-08T22:00:00+07:00",
+    "summary": "Thị trường chứng khoán giả lập được đưa vào danh sách xem xét nâng hạng; quyết định chính thức dự kiến trong 6 tháng.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0010",
+    "title": "[TIN GIẢ LẬP] Khối ngoại (giả lập) mua ròng mạnh sau thông tin nâng hạng",
+    "source": "tintuc-gialap.example",
+    "url": "https://tintuc-gialap.example/chung-khoan/khoi-ngoai",
+    "published_at": "2026-10-09T15:00:00+07:00",
+    "summary": "Nhóm cổ phiếu ngân hàng và chứng khoán hư cấu được mua ròng; công ty chứng khoán hưởng lợi từ thanh khoản.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0011",
+    "title": "[TIN GIẢ LẬP] Quỹ ETF quốc tế (giả lập) chuẩn bị tái cơ cấu danh mục",
+    "source": "baotaichinh-demo.example",
+    "url": "https://baotaichinh-demo.example/quy/etf-tai-co-cau",
+    "published_at": "2026-10-09T09:00:00+07:00",
+    "summary": "Dòng vốn ngoại có thể đổ vào cổ phiếu vốn hóa lớn; tâm lý thị trường chung tích cực.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0012",
+    "title": "[TIN GIẢ LẬP] Tỷ giá USD/VND tăng mạnh trên thị trường liên ngân hàng (giả lập)",
+    "source": "tintuc-gialap.example",
+    "url": "https://tintuc-gialap.example/ty-gia/usd-tang",
+    "published_at": "2026-10-08T16:00:00+07:00",
+    "summary": "Tỷ giá USD/VND giả lập tăng do đồng USD mạnh lên toàn cầu; áp lực lên các doanh nghiệp vay nợ ngoại tệ.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0013",
+    "title": "[TIN GIẢ LẬP] Đồng SGD và AUD diễn biến trái chiều so với VND",
+    "source": "baotaichinh-demo.example",
+    "url": "https://baotaichinh-demo.example/ty-gia/sgd-aud",
+    "published_at": "2026-10-09T10:00:00+07:00",
+    "summary": "SGD tăng nhẹ theo USD; AUD gần như đi ngang do giá hàng hóa giảm.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0014",
+    "title": "[TIN GIẢ LẬP] Công ty Demo X công bố kế hoạch phát hành cổ phiếu riêng lẻ",
+    "source": "tintuc-gialap.example",
+    "url": "https://tintuc-gialap.example/doanh-nghiep/demo-x-phat-hanh",
+    "published_at": "2026-10-09T11:00:00+07:00",
+    "summary": "Công ty Demo X (hư cấu) công bố trên cổng thông tin kế hoạch phát hành riêng lẻ; cổ đông hiện hữu có thể bị pha loãng.",
+    "language": "vi",
+    "simulated": true
+  },
+  {
+    "id": "NW-0015",
+    "title": "[TIN GIẢ LẬP] Ngành công nghiệp (giả lập) kỳ vọng đơn hàng quý tới",
+    "source": "baotaichinh-demo.example",
+    "url": "https://baotaichinh-demo.example/nganh/cong-nghiep",
+    "published_at": "2026-10-09T13:00:00+07:00",
+    "summary": "Các doanh nghiệp công nghiệp hư cấu kỳ vọng đơn hàng xuất khẩu tăng; Công ty Demo X là một trong các doanh nghiệp được nhắc tới.",
+    "language": "vi",
+    "simulated": true
+  }
+]

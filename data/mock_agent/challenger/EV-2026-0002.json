@@ -1,0 +1,65 @@
+{
+  "pre": {
+    "findings": [
+      {
+        "check": "second_order_effect",
+        "severity": "critical",
+        "target": "asset_class:CORP_BOND:CORP_BOND",
+        "issue": "Nhận định để trái phiếu doanh nghiệp ở mức 0, nhưng NW-0004 và NW-0006 cho thấy doanh nghiệp địa ốc khó huy động vốn mới; trái phiếu do doanh nghiệp bất động sản phát hành chịu rủi ro tái tài trợ trực tiếp",
+        "suggestion": "Thêm dòng ngành (CORP_BOND, REAL_ESTATE) với mức âm; giữ dòng CORP_BOND chung ở 0 nếu không có căn cứ cho các ngành khác",
+        "source_ids": [
+          "NW-0004",
+          "NW-0006"
+        ]
+      },
+      {
+        "check": "overconfidence",
+        "severity": "medium",
+        "target": "sector:EQ_VN:REAL_ESTATE",
+        "issue": "Mức −3 với độ tin cậy cao dựa trên các tin trong khoảng một ngày, chưa có dữ liệu giao dịch xác nhận",
+        "suggestion": "Cân nhắc hạ độ tin cậy xuống trung bình hoặc nêu thêm căn cứ định lượng"
+      },
+      {
+        "check": "source_support",
+        "severity": "low",
+        "target": "asset_class:EQ_VN:EQ_VN",
+        "issue": "NW-0005 chỉ mô tả diễn biến một phiên, chưa đủ để kết luận tâm lý thị trường chung kém đi",
+        "suggestion": "Ghi rõ đây là phản ứng ngắn hạn hoặc bổ sung nguồn khác cho dòng EQ_VN"
+      }
+    ],
+    "counter_scenario": "Nếu cơ quan quản lý giả lập giãn lộ trình áp dụng, cổ phiếu bất động sản có thể hồi phục nhanh do đã giảm mạnh."
+  },
+  "re_challenge": {
+    "sector:CORP_BOND:REAL_ESTATE": [
+      {
+        "check": "source_support",
+        "severity": "low",
+        "target": "sector:CORP_BOND:REAL_ESTATE",
+        "issue": "NW-0006 hỗ trợ trực tiếp dòng mới nhưng không nêu quy mô trái phiếu đến hạn của nhóm phát hành",
+        "suggestion": "Ghi rõ phạm vi áp dụng là trái phiếu do doanh nghiệp bất động sản phát hành",
+        "source_ids": [
+          "NW-0006"
+        ]
+      }
+    ]
+  },
+  "pre_v2": {
+    "findings": [
+      {
+        "check": "overconfidence",
+        "severity": "medium",
+        "target": "sector:EQ_VN:REAL_ESTATE",
+        "issue": "Mức −3 với độ tin cậy cao dựa trên các tin trong khoảng một ngày, chưa có dữ liệu giao dịch xác nhận",
+        "suggestion": "Cân nhắc hạ độ tin cậy xuống trung bình hoặc nêu thêm căn cứ định lượng"
+      },
+      {
+        "check": "source_support",
+        "severity": "low",
+        "target": "asset_class:EQ_VN:EQ_VN",
+        "issue": "NW-0005 chỉ mô tả diễn biến một phiên, chưa đủ để kết luận tâm lý thị trường chung kém đi",
+        "suggestion": "Ghi rõ đây là phản ứng ngắn hạn hoặc bổ sung nguồn khác cho dòng EQ_VN"
+      }
+    ],
+    "counter_scenario": "Nếu cơ quan quản lý giả lập giãn lộ trình áp dụng, cổ phiếu bất động sản có thể hồi phục nhanh do đã giảm mạnh."
+  }
+}

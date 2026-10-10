@@ -1,0 +1,14 @@
+{
+  "pre": {
+    "findings": [
+      {
+        "check": "source_support",
+        "severity": "medium",
+        "target": "fx::USD",
+        "issue": "NW-0008 nói dòng tiền vào USD trên thị trường quốc tế, chưa nói về tỷ giá USD/VND",
+        "suggestion": "Đặt mức 0 cho dòng tỷ giá USD hoặc bổ sung nguồn về thị trường trong nước"
+      }
+    ],
+    "counter_scenario": "Nếu căng thẳng địa chính trị giảm, giá vàng có thể điều chỉnh nhanh."
+  }
+}

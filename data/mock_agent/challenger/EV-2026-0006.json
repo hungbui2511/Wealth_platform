@@ -1,0 +1,14 @@
+{
+  "pre": {
+    "findings": [
+      {
+        "check": "source_support",
+        "severity": "low",
+        "target": "sector:EQ_VN:INDUSTRIAL",
+        "issue": "NW-0015 chỉ nêu kỳ vọng của doanh nghiệp, chưa có số liệu đơn hàng",
+        "suggestion": "Giữ độ tin cậy thấp và ghi rõ đây là kỳ vọng"
+      }
+    ],
+    "counter_scenario": "Nếu đợt phát hành được bán cho nhà đầu tư chiến lược với giá cao, tác động pha loãng không đáng kể."
+  }
+}
