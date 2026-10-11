@@ -11,8 +11,8 @@ PRICE_MODE = "sample" # sample | live (live cần thỏa thuận dữ liệu và
 [[d1_databases]]
 binding = "DB"
 database_name = "wealth-mvp1"
-# Thay bằng database_id do `wrangler d1 create wealth-mvp1` trả về trước khi deploy
-database_id = "00000000-0000-0000-0000-000000000000"
+# D1 đã tạo trên tài khoản Cloudflare (APAC); schema 0001 đã áp dụng
+database_id = "792b4d3a-39fc-498c-b6a2-4d3d7ebe234c"
 migrations_dir = "migrations"
 
 [assets]
