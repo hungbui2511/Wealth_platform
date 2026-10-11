@@ -90,8 +90,15 @@ describe('Xác thực Cloudflare Access', () => {
     const fixed = await app.request('/api/me', { headers: { 'cf-access-jwt-assertion': await sign(claims('rm@example.com')), 'x-demo-user': 'ADM1' } }, env2)
     expect(fixed.status).toBe(403)
   })
+  it('không đặt ACCESS_AUD: vẫn kiểm chữ ký và iss, chấp nhận aud bất kỳ của team', async () => {
+    const env2 = { ...env, ACCESS_AUD: undefined } as unknown as Env
+    const ok = await app.request('/api/me', { headers: { 'cf-access-jwt-assertion': await sign(claims('operator@example.com', { aud: ['ung-dung-khac'] })), 'x-demo-user': 'ADM1' } }, env2)
+    expect(ok.status).toBe(200)
+    const forged = await app.request('/api/me', { headers: { 'cf-access-jwt-assertion': await sign(claims('operator@example.com'), otherKeys), 'x-demo-user': 'ADM1' } }, env2)
+    expect(forged.status).toBe(401)
+  })
   it('thiếu cấu hình Access thì đóng (503), không mở', async () => {
-    const r = await app.request('/api/me', { headers: { 'x-demo-user': 'ADM1' } }, { ...env, ACCESS_AUD: '' } as Env)
+    const r = await app.request('/api/me', { headers: { 'x-demo-user': 'ADM1' } }, { ...env, ACCESS_TEAM_DOMAIN: '' } as Env)
     expect(r.status).toBe(503)
   })
   it('nhật ký ghi email thật của người thao tác', async () => {

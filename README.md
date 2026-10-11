@@ -52,8 +52,8 @@ npm run seed:remote                         # nạp dữ liệu mẫu (hoặc b�
 
      | Biến | Giá trị |
      |---|---|
-     | `ACCESS_TEAM_DOMAIN` | `<team>.cloudflareaccess.com` |
-     | `ACCESS_AUD` | AUD tag ở bước 2 |
+     | `ACCESS_TEAM_DOMAIN` | `<team>.cloudflareaccess.com` (bản này đã đặt sẵn trong `wrangler.toml`) |
+     | `ACCESS_AUD` | Tùy chọn, nên đặt: AUD tag ở bước 2. Bỏ trống thì nhận JWT của mọi ứng dụng Access trong team (vẫn kiểm chữ ký, iss, hạn dùng) |
      | `DEMO_OPERATORS` | Tùy chọn. Bỏ trống: mọi email qua được chính sách Access đều chuyển vai trò và nạp dữ liệu lần đầu được. Đặt danh sách email (cách nhau dấu phẩy) để chỉ những người này được; thêm `service:<Client ID>` nếu chạy kiểm tra khói bằng service token |
      | `ROLE_MAP` | Tùy chọn: gán cố định `email=CIO1,email2=RM1`; người này chỉ dùng được đúng vai trò đó |
 

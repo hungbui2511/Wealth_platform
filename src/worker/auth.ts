@@ -32,7 +32,7 @@ async function signingKey(domain: string, kid: string, fetchFn: typeof fetch): P
   return map.get(kid)
 }
 
-export async function verifyAccessJwt(token: string, o: { teamDomain: string; aud: string; fetchFn: typeof fetch; nowSec?: number }): Promise<{ email: string }> {
+export async function verifyAccessJwt(token: string, o: { teamDomain: string; aud?: string; fetchFn: typeof fetch; nowSec?: number }): Promise<{ email: string }> {
   const parts = token.split('.')
   if (parts.length !== 3) throw new HttpError(401, 'JWT Cloudflare Access không hợp lệ')
   let header: Record<string, unknown>, payload: Record<string, unknown>
@@ -45,7 +45,8 @@ export async function verifyAccessJwt(token: string, o: { teamDomain: string; au
   if (!ok) throw new HttpError(401, 'Chữ ký JWT Cloudflare Access không hợp lệ')
   const now = o.nowSec ?? Math.floor(Date.now() / 1000)
   const auds = Array.isArray(payload.aud) ? payload.aud : [payload.aud]
-  if (!auds.includes(o.aud)) throw new HttpError(401, 'JWT không dành cho ứng dụng này (aud)')
+  // Không đặt ACCESS_AUD: chấp nhận JWT của mọi ứng dụng Access trong cùng team (chữ ký và iss vẫn kiểm)
+  if (o.aud && !auds.includes(o.aud)) throw new HttpError(401, 'JWT không dành cho ứng dụng này (aud)')
   if (payload.iss !== domain) throw new HttpError(401, 'JWT không do team Cloudflare Access này phát hành (iss)')
   if (typeof payload.exp !== 'number' || payload.exp + 60 < now) throw new HttpError(401, 'Phiên Cloudflare Access đã hết hạn')
   if (typeof payload.nbf === 'number' && payload.nbf - 60 > now) throw new HttpError(401, 'JWT Cloudflare Access chưa có hiệu lực')
@@ -76,10 +77,10 @@ export async function verifiedEmail(req: Request, env: Env, fetchFn: typeof fetc
   if (authMode(env) === 'dev') return { operator: true }
   const teamDomain = typeof env.ACCESS_TEAM_DOMAIN === 'string' ? env.ACCESS_TEAM_DOMAIN : ''
   const aud = typeof env.ACCESS_AUD === 'string' ? env.ACCESS_AUD : ''
-  if (!teamDomain || !aud) throw new HttpError(503, 'Chưa cấu hình Cloudflare Access (ACCESS_TEAM_DOMAIN, ACCESS_AUD); xem README mục Deploy')
+  if (!teamDomain) throw new HttpError(503, 'Chưa cấu hình Cloudflare Access (ACCESS_TEAM_DOMAIN); xem README mục Deploy')
   const token = req.headers.get('cf-access-jwt-assertion')
   if (!token) throw new HttpError(401, 'Yêu cầu không đi qua Cloudflare Access')
-  const { email } = await verifyAccessJwt(token, { teamDomain, aud, fetchFn })
+  const { email } = await verifyAccessJwt(token, { teamDomain, aud: aud || undefined, fetchFn })
   // Không đặt DEMO_OPERATORS: mọi người đã qua chính sách Access (danh sách email được mời) đều được chuyển vai trò demo,
   // trừ email đã gắn cố định trong ROLE_MAP. Đặt DEMO_OPERATORS để giới hạn chặt hơn.
   const operators = csv(env.DEMO_OPERATORS)

@@ -10,7 +10,8 @@ keep_vars = true
 AGENT_MODE = "mock"   # mock | live (live cần ANTHROPIC_API_KEY qua `wrangler secret put`)
 PRICE_MODE = "sample" # sample | live (live cần thỏa thuận dữ liệu và thông tin truy cập nguồn)
 AUTH_MODE = "access"  # access: chỉ tin JWT Cloudflare Access đã xác minh. dev: chỉ dùng trên máy (.dev.vars)
-# ACCESS_TEAM_DOMAIN, ACCESS_AUD, DEMO_OPERATORS, ROLE_MAP đặt trên dashboard hoặc `wrangler secret put` (xem README)
+ACCESS_TEAM_DOMAIN = "bitter-tree-c714.cloudflareaccess.com" # team Cloudflare Access (khóa ký JWT lấy từ /cdn-cgi/access/certs)
+# Tùy chọn, đặt trên dashboard: ACCESS_AUD (chỉ nhận JWT của đúng ứng dụng này), DEMO_OPERATORS, ROLE_MAP (xem README)
 
 [[d1_databases]]
 binding = "DB"
