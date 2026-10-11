@@ -7,14 +7,14 @@ import { mentionsRestricted, redactRestricted } from '../../compliance/controls'
 import { callJson } from '../../agents/llm'
 import { wrapData, type ModelSet, type PromptSet } from '../../agents/prompts'
 import { MOCK } from '../../data/mock'
-import { actor, assertFamily, HttpError, type AppCtx } from '../ctx'
+import { actor, assertFamily, canSeeRun, HttpError, type AppCtx } from '../ctx'
+import { familyImpactId } from '../ids'
+import { redactForRm } from './redact'
 import { activeConfig, activeRestricted, loadConfigs } from './config'
 import { getRun, type RunRec } from './apply'
 import type { EventRec } from './events'
 import type { Family } from '../../shared/types'
 
-export const RM_VISIBLE = ['EFFECTIVE', 'SUPERSEDED', 'WITHDRAWN']
-const visibleTo = (ctx: AppCtx, status: string) => ctx.user.role !== 'RM' || RM_VISIBLE.includes(status)
 
 export async function familyImpacts(ctx: AppCtx, familyId: string) {
   assertFamily(ctx, familyId)
@@ -25,13 +25,13 @@ export async function familyImpacts(ctx: AppCtx, familyId: string) {
   const out = []
   for (const r of rows) {
     const run = runs.get(r.run_id)!
-    if (!visibleTo(ctx, run.status)) continue
+    if (!canSeeRun(ctx, run)) continue
     if (!events.has(run.event_id)) events.set(run.event_id, (await ctx.repo.get<EventRec>('events', run.event_id))!)
     out.push({ run: { id: run.id, status: run.status, view_id: run.view_id, event_id: run.event_id, price_date: run.price_date, effective_at: run.effective_at, config_version_id: run.config_version_id }, event: { id: run.event_id, title: events.get(run.event_id)!.title, type: events.get(run.event_id)!.type }, result: r })
   }
   out.sort((a, b) => (b.run.effective_at ?? '').localeCompare(a.run.effective_at ?? ''))
-  const goalImpacts = (await ctx.repo.list<Record<string, unknown> & { run_id: string }>('goal_impacts', 'family_id = ?', [familyId])).filter(g => runs.has(g.run_id) && visibleTo(ctx, runs.get(g.run_id)!.status)).map(g => ({ ...g, run_status: runs.get(g.run_id)!.status }))
-  return { impacts: out, goal_impacts: goalImpacts }
+  const goalImpacts = (await ctx.repo.list<Record<string, unknown> & { run_id: string }>('goal_impacts', 'family_id = ?', [familyId])).filter(g => runs.has(g.run_id) && canSeeRun(ctx, runs.get(g.run_id)!)).map(g => ({ ...g, run_status: runs.get(g.run_id)!.status }))
+  return redactForRm(ctx, { impacts: out, goal_impacts: goalImpacts })
 }
 
 // FR-701: danh sách gia đình RM phụ trách kèm kết quả theo sự kiện
@@ -39,12 +39,12 @@ export async function familyList(ctx: AppCtx, filter: { event?: string; alert?: 
   let fams = await ctx.repo.list<Family>('families', '', [], 'id')
   if (ctx.user.role === 'RM') fams = fams.filter(f => ctx.user.families.includes(f.id))
   const runs = await ctx.repo.list<RunRec>('application_runs')
-  const visible = runs.filter(r => visibleTo(ctx, r.status))
+  const visible = runs.filter(r => canSeeRun(ctx, r))
   const runIds = new Set(visible.map(r => r.id))
   const impacts = (await ctx.repo.list<FamilyImpactResult & { run_id: string }>('family_impacts')).filter(i => runIds.has(i.run_id))
   const gis = (await ctx.repo.list<{ run_id: string; family_id: string; alert: boolean; delta_pts: string; goal_name: string; level_after: string }>('goal_impacts')).filter(g => runIds.has(g.run_id))
   const events = await ctx.repo.list<EventRec>('events')
-  return fams.map(f => {
+  return redactForRm(ctx, fams.map(f => {
     const rows = impacts.filter(i => i.family_id === f.id).map(i => {
       const r = visible.find(x => x.id === i.run_id)!
       return { run_id: r.id, status: r.status, event_id: r.event_id, event_title: events.find(e => e.id === r.event_id)?.title, impact: i.impact, pct: i.pct, alert: i.alert, illiquid: i.illiquid_impact, net_worth: i.net_worth, effective_at: r.effective_at }
@@ -53,7 +53,7 @@ export async function familyList(ctx: AppCtx, filter: { event?: string; alert?: 
       id: f.id, name: f.name, rm_id: f.rm_id, persona: f.persona, results: rows,
       goal_alerts: gis.filter(g => g.family_id === f.id && g.alert && visible.find(r => r.id === g.run_id)?.status === 'EFFECTIVE').map(g => ({ goal: g.goal_name, delta_pts: g.delta_pts, level_after: g.level_after })),
     }
-  })
+  }))
 }
 
 function mockInterpretation(familyName: string, familyId: string, r: FamilyImpactResult, summary: string, restricted: Set<string>): string {
@@ -72,8 +72,8 @@ function mockInterpretation(familyName: string, familyId: string, r: FamilyImpac
 export async function interpretation(ctx: AppCtx, runId: string, familyId: string) {
   assertFamily(ctx, familyId)
   const run = await getRun(ctx, runId)
-  if (!visibleTo(ctx, run.status)) throw new HttpError(403, 'RM chỉ xem được kết quả đã qua hậu kiểm')
-  const r = await ctx.repo.get<FamilyImpactResult>('family_impacts', `${runId}|${familyId}`)
+  if (!canSeeRun(ctx, run)) throw new HttpError(403, 'RM chỉ xem được kết quả đã qua hậu kiểm')
+  const r = await ctx.repo.get<FamilyImpactResult>('family_impacts', familyImpactId(runId, familyId))
   if (!r) throw new HttpError(404, 'Không có kết quả của gia đình trong lần áp dụng này')
   const fam = (await ctx.repo.get<Family>('families', familyId))!
   const cfg = await loadConfigs(ctx)
@@ -94,8 +94,8 @@ export async function interpretation(ctx: AppCtx, runId: string, familyId: strin
   const shown = blocked ? templateInterpretation(fam.name, r, safeView, restricted) : text
   const now = ctx.now()
   const u = ctx.uow()
-  if (blocked) u.audit({ actor: 'SYSTEM:numbercheck', action: 'interpretation.blocked', object: `${runId}|${familyId}`, data: { violations: check.violations, restricted: restrictedHits, model, llm_text: text } })
-  u.audit({ actor: actor(ctx), action: 'interpretation.viewed', object: `${runId}|${familyId}`, data: { blocked } })
+  if (blocked) u.audit({ actor: 'SYSTEM:numbercheck', action: 'interpretation.blocked', object: familyImpactId(runId, familyId), data: { violations: check.violations, restricted: restrictedHits, model, llm_text: text } })
+  u.audit({ actor: actor(ctx), action: 'interpretation.viewed', object: familyImpactId(runId, familyId), data: { blocked } })
   await u.commit()
   return { text: shown, source: blocked ? 'template' : 'llm', blocked, violations: check.violations, restricted_hits: restrictedHits, label: 'Nội bộ – không gửi khách hàng', watermark: { viewer: ctx.user.name, viewer_id: ctx.user.id, at: now } }
 }

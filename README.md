@@ -123,7 +123,7 @@ Chế độ live **chưa được chạy** trong môi trường xây dựng vì 
 6. **Lãi/lỗ:** giao dịch `FEE` riêng lẻ là thu nhập âm. `CAPITAL_CALL` cộng vào giá vốn; phí bảo hiểm ghi dạng `CAPITAL_CALL`. Tiền gửi VND không có lãi/lỗ vốn. Tiền gửi ngoại tệ có giao dịch nạp thì tính hiệu ứng tỷ giá.
 7. **Quỹ có phần trái phiếu Chính phủ** trong bảng phân bổ dùng kỳ hạn ghi trong phân bổ (mặc định dài hạn).
 8. **Kiểm tra số (BR-13):** số không kèm đơn vị chỉ được phép khi trùng mức độ, số đếm hoặc số có trong chính nhận định đã duyệt. Có dấu trừ hoặc chữ "giảm/tăng" thì so có dấu, không có thì so trị tuyệt đối. Bỏ qua cả số trong "Mục 6.2", "Điều 3 khoản 1".
-9. **Danh sách hạn chế:** diễn giải cho RM và bản tin CIO che tên tổ chức và mã hạn chế (kể cả trong tóm tắt sự kiện). Diễn giải LLM có nhắc tới thì bị chặn như BR-13.
+9. **Danh sách hạn chế:** mọi nội dung văn bản trả cho RM (sự kiện, tin, nhận định, diễn giải, truy vết) và bản tin CIO che tên tổ chức và mã hạn chế, không phân biệt hoa thường; RM không xem được nội dung danh sách hạn chế. Vị thế khách đang nắm giữ (tên mã trong bảng vị thế) vẫn hiển thị vì là dữ kiện danh mục, không phải nhận định. Diễn giải LLM có nhắc tới thì bị chặn như BR-13.
 10. **Quyền xem:** CIO, Tuân thủ, Quản trị xem được mọi gia đình (chỉ đọc). RM chỉ xem gia đình mình phụ trách, chỉ kết quả đã qua hậu kiểm, và không thấy nội dung phản biện trong truy vết.
 11. **Dấu thời gian sự kiện (BR-29)** phản ánh chuỗi đang hiệu lực. Khi một phiên bản mới có hiệu lực, ba mốc *view_ready_at, approved_at, effective_at* được ghi lại theo phiên bản đó, và vẫn kiểm tra thứ tự tăng dần.
 12. **Hậu kiểm `concentration`** bỏ qua tiền gửi.

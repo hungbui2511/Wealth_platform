@@ -56,9 +56,10 @@ export function reactionMs(ts: Partial<Record<TimestampField, string>>): number 
 }
 
 // BR-27 (3): che tên tổ chức và mã hạn chế trong nội dung cho RM và bản tin
+// So khớp không phân biệt hoa thường, sau chuẩn hóa Unicode NFC (cùng cách với restrictedHits)
 export function redactRestricted(text: string, entries: RestrictedEntry[]): string {
-  let out = text
-  const terms = entries.flatMap(e => [e.issuer, ...e.keywords, ...e.instruments]).filter(Boolean).sort((a, b) => b.length - a.length)
-  for (const t of terms) out = out.split(t).join('[tổ chức trong danh sách hạn chế]')
-  return out
+  const terms = entries.flatMap(e => [e.issuer, ...e.keywords, ...e.instruments]).filter(Boolean).map(t => t.normalize('NFC')).sort((a, b) => b.length - a.length)
+  if (!terms.length) return text
+  const re = new RegExp(terms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'giu')
+  return text.normalize('NFC').replace(re, '[tổ chức trong danh sách hạn chế]')
 }

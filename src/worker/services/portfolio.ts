@@ -38,7 +38,9 @@ export interface SnapshotRecord extends PriceSnapshot { created_at: string; stat
 export async function createPriceSnapshot(ctx: AppCtx, opts: { adapters?: Record<PriceAdapter['id'], PriceAdapter>; priceDate?: string } = {}): Promise<SnapshotRecord> {
   const priceDate = opts.priceDate ?? PRICE_DATE
   const [instruments, families] = await Promise.all([loadInstruments(ctx), ctx.repo.list<Family>('families')])
-  const src = await activeConfig<{ agreements: Record<string, string | null>; onemount_compliance_confirmed: boolean }>(ctx, 'PRICE_SOURCE')
+  const src = await activeConfig<{ agreements: Record<string, string | null> }>(ctx, 'PRICE_SOURCE')
+  // Cơ sở dữ liệu nạp trước khi có loại cấu hình này: coi như chưa xác nhận
+  const omConfirmed = await activeConfig<{ confirmed: boolean }>(ctx, 'ONEMOUNT_CONFIRM').then(c => c.content.confirmed === true, () => false)
   const symbolMap = (await activeConfig<Record<string, string>>(ctx, 'SYMBOL_MAP')).content
   for (const [id, sym] of Object.entries(symbolMap)) if (instruments[id]) instruments[id] = { ...instruments[id], market_symbol: sym }
   const stored: Record<string, Bar[]> = {}
@@ -47,7 +49,7 @@ export async function createPriceSnapshot(ctx: AppCtx, opts: { adapters?: Record
   const uow = ctx.uow()
   const agreements = { ...src.content.agreements } as Record<string, string | undefined>
   // BR-22: One Mount live chỉ bật khi Tuân thủ đã xác nhận căn cứ chia sẻ dữ liệu
-  if (!src.content.onemount_compliance_confirmed) agreements.ONEMOUNT = undefined
+  if (!omConfirmed) agreements.ONEMOUNT = undefined
   const { snapshot, status } = await loadPriceSnapshot({
     price_date: priceDate, instruments, families, adapters: opts.adapters ?? makeAdapters(SAMPLE_STORE),
     ctx: {

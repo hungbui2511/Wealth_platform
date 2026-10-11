@@ -104,6 +104,7 @@ export default function ViewDetail() {
           ))}
           {isCio && ['PENDING_APPROVAL', 'PENDING_CHALLENGE'].includes(v.status) && (
             <Card title="Quyết định của CIO">
+              {v.status === 'PENDING_CHALLENGE' && v.unchallenged.length === 0 && !data.challenges.some((c: any) => c.stage === 'pre_approval') && <div className="mb-3"><Note tone="warn">Chưa có báo cáo phản biện (Agent Phản biện lỗi hoặc chưa chạy). Nút Duyệt chỉ mở khi có báo cáo.</Note><div className="mt-2"><Btn onClick={act(() => api(`/api/views/${v.id}/challenge`, { method: 'POST' }))}>Chạy lại phản biện</Btn></div></div>}
               {v.status === 'PENDING_CHALLENGE' && v.unchallenged.length > 0 && <div className="mb-3"><Note tone="warn">Các dòng {v.unchallenged.join(', ')} phải được phản biện lại trước khi nút Duyệt mở.</Note><div className="mt-2"><Btn onClick={act(() => api(`/api/views/${v.id}/rechallenge`, { method: 'POST' }))}>Chạy phản biện lại</Btn></div></div>}
               {!data.conditions.ok && <div className="mb-2"><div className="text-[13px] text-amber mb-1">Điều kiện duyệt còn thiếu (BR-02):</div><ul className="list-disc ml-5 text-[13px] text-amber">{data.conditions.missing.map((m: string) => <li key={m}>{m}</li>)}</ul></div>}
               <textarea rows={2} className="w-full" placeholder="Lý do (tối thiểu 20 ký tự)" value={reason} onChange={e => setReason(e.target.value)} />

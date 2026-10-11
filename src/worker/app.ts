@@ -3,14 +3,16 @@ import { Hono, type Context } from 'hono'
 import { ASSET_CLASS_LABELS, EVENT_TYPE_LABELS, POLICY_TOPIC_LABELS, RUN_STATUS_LABELS, SECTOR_LABELS, VIEW_STATUS_LABELS, DISCLAIMER_SHOCK } from '../shared/catalog'
 import { isWhitelistedUrl } from '../compliance/controls'
 import { TransitionError } from '../engine/states'
-import { actor, HttpError, makeCtx, requireRole, type AppCtx, type Env, type User } from './ctx'
+import { actor, canSeeFamily, canSeeRun, HttpError, makeCtx, requireRole, type AppCtx, type Env, type User } from './ctx'
+import { familyImpactId } from './ids'
+import { redactForRm } from './services/redact'
 import { reseed } from './services/admin'
 import { ConflictError } from './db'
 import { authenticate, authMode, verifiedEmail, roleMap } from './auth'
 import { CONFIG_KINDS, decideConfig, loadConfigs, proposeConfig, redactConfig, activeConfig, type ConfigKind, type ConfigVersion } from './services/config'
 import { createEvent, loadSampleEvents, allowEvent, getEvent, eventNews, setTimestamp, type EventRec } from './services/events'
 import { createPriceSnapshot, currentSnapshot, familyCashflow, familyGoals, familyOverview, familyPnl, PRICE_DATE } from './services/portfolio'
-import { approvalConditions, createManualView, decide, editView, getView, respondFinding, runCioAgent, runReChallenge, viewChallenges, viewResponses, type ViewRec } from './services/views'
+import { approvalConditions, createManualView, decide, editView, getView, respondFinding, retryPreChallenge, runCioAgent, runReChallenge, viewChallenges, viewResponses, type ViewRec } from './services/views'
 import { confirmRun, createApplication, getRun, recompute, withdrawRun, withdrawView, type RunRec } from './services/apply'
 import { addNote, familyImpacts, familyList, interpretation } from './services/rm'
 import { closeGoal, createGoal, updateGoal } from './services/goals'
@@ -85,7 +87,7 @@ export function createApp(opts: AppOptions = {}) {
   app.put('/api/goals/:id', async c => c.json(await updateGoal(X(c), c.req.param('id'), await body(c))))
   app.post('/api/goals/:id/close', async c => c.json(await closeGoal(X(c), c.req.param('id'), String((await body(c)).note ?? ''))))
   app.post('/api/families/:id/notes', async c => c.json(await addNote(X(c), c.req.param('id'), await body(c))))
-  app.get('/api/families/:id/notes', async c => { const ctx = X(c); if (ctx.user.role !== 'RM' || !ctx.user.families.includes(c.req.param('id'))) throw new HttpError(403, 'Chỉ RM phụ trách xem ghi chú'); return c.json(await ctx.repo.list('rm_notes', 'family_id = ? AND user_id = ?', [c.req.param('id'), ctx.user.id], 'id DESC')) })
+  app.get('/api/families/:id/notes', async c => { const ctx = X(c); if (ctx.user.role !== 'RM' || !canSeeFamily(ctx, c.req.param('id'))) throw new HttpError(403, 'Chỉ RM phụ trách xem ghi chú'); return c.json(await ctx.repo.list('rm_notes', 'family_id = ? AND user_id = ?', [c.req.param('id'), ctx.user.id], 'id DESC')) })
 
   // ----- M2: giá -----
   app.get('/api/prices/status', async c => { const s = await currentSnapshot(X(c)); return c.json({ snapshot_id: s.id, price_date: s.price_date, created_at: s.created_at, mode: s.mode, hash: s.hash, status: s.status, missing: s.missing, fallbacks: s.fallbacks, points: s.points }) })
@@ -98,10 +100,10 @@ export function createApp(opts: AppOptions = {}) {
     const views = await ctx.repo.list<ViewRec>('views')
     const runs = await ctx.repo.list<RunRec>('application_runs')
     const hide = ctx.user.role === 'RM'
-    return c.json(events.map(e => ({ ...e, views: hide ? [] : views.filter(v => v.event_id === e.id).map(v => ({ id: v.id, version: v.version, status: v.status })), runs: runs.filter(r => r.event_id === e.id && (!hide || ['EFFECTIVE', 'SUPERSEDED', 'WITHDRAWN'].includes(r.status))).map(r => ({ id: r.id, status: r.status, view_id: r.view_id })) })))
+    return c.json(await redactForRm(ctx, events.map(e => ({ ...e, views: hide ? [] : views.filter(v => v.event_id === e.id).map(v => ({ id: v.id, version: v.version, status: v.status })), runs: runs.filter(r => r.event_id === e.id && canSeeRun(ctx, r)).map(r => ({ id: r.id, status: r.status, view_id: r.view_id })) }))))
   })
   app.post('/api/events', async c => { const b = await body<{ type: string; title?: string; items: never[] }>(c); return c.json(await createEvent(X(c), b)) })
-  app.get('/api/events/:id', async c => { const ctx = X(c); const e = await getEvent(ctx, c.req.param('id')); return c.json({ event: e, news: await eventNews(ctx, e), views: ctx.user.role === 'RM' ? [] : await ctx.repo.list('views', 'event_id = ?', [e.id], 'version') }) })
+  app.get('/api/events/:id', async c => { const ctx = X(c); const e = await getEvent(ctx, c.req.param('id')); return c.json(await redactForRm(ctx, { event: e, news: await eventNews(ctx, e), views: ctx.user.role === 'RM' ? [] : await ctx.repo.list('views', 'event_id = ?', [e.id], 'version') })) })
   app.post('/api/events/:id/run-agent', async c => c.json(await runCioAgent(X(c), c.req.param('id'))))
   app.post('/api/events/:id/allow', async c => c.json(await allowEvent(X(c), c.req.param('id'), String((await body(c)).note ?? ''))))
   app.post('/api/events/:id/timestamps', async c => { const b = await body<{ field: TimestampField; value: string }>(c); return c.json(await setTimestamp(X(c), c.req.param('id'), b.field, b.value)) })
@@ -127,6 +129,7 @@ export function createApp(opts: AppOptions = {}) {
     return c.json({ view: v, event: e, news: await eventNews(ctx, e), challenges: await viewChallenges(ctx, v.id), responses: await viewResponses(ctx, v.id), conditions: await approvalConditions(ctx, v), runs: await ctx.repo.list('application_runs', 'view_id = ?', [v.id]), decisions: await ctx.repo.list('decisions', 'view_id = ?', [v.id]) })
   })
   app.put('/api/views/:id/lines', async c => { const b = await body<{ impacts: never[]; note?: string }>(c); return c.json(await editView(X(c), c.req.param('id'), b.impacts, b.note)) })
+  app.post('/api/views/:id/challenge', async c => c.json(await retryPreChallenge(X(c), c.req.param('id'))))
   app.post('/api/views/:id/rechallenge', async c => c.json(await runReChallenge(X(c), c.req.param('id'))))
   app.post('/api/views/:id/findings/:fid/response', async c => c.json(await respondFinding(X(c), c.req.param('id'), c.req.param('fid'), await body(c))))
   app.post('/api/views/:id/decision', async c => { const ctx = X(c); return c.json(await decide(ctx, c.req.param('id'), await body(c), (v, uow) => createApplication(ctx, v, uow))) })
@@ -148,8 +151,8 @@ export function createApp(opts: AppOptions = {}) {
   app.get('/api/runs/:id/families/:fid', async c => {
     const ctx = X(c)
     const r = await getRun(ctx, c.req.param('id'))
-    if (ctx.user.role === 'RM' && (!ctx.user.families.includes(c.req.param('fid')) || !['EFFECTIVE', 'SUPERSEDED', 'WITHDRAWN'].includes(r.status))) throw new HttpError(403, 'Không xem được kết quả này')
-    return c.json({ run: { ...r, view_body: undefined }, view_body: r.view_body, result: await ctx.repo.get('family_impacts', `${r.id}|${c.req.param('fid')}`) })
+    if (!canSeeFamily(ctx, c.req.param('fid')) || !canSeeRun(ctx, r)) throw new HttpError(403, 'Không xem được kết quả này')
+    return c.json(await redactForRm(ctx, { run: { ...r, view_body: undefined }, view_body: r.view_body, result: await ctx.repo.get('family_impacts', familyImpactId(r.id, c.req.param('fid'))) }))
   })
   app.get('/api/runs/:id/families/:fid/interpretation', async c => c.json(await interpretation(X(c), c.req.param('id'), c.req.param('fid'))))
   app.post('/api/runs/:id/confirm', async c => c.json(await confirmRun(X(c), c.req.param('id'), (await body(c)).reason)))

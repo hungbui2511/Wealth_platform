@@ -59,6 +59,12 @@ export function assertFamily(ctx: AppCtx, familyId: string): void {
   if (!canSeeFamily(ctx, familyId)) throw new HttpError(403, 'RM chỉ xem được gia đình mình phụ trách')
 }
 
+// RM chỉ thấy lần áp dụng đã qua hậu kiểm (đang hiệu lực, hoặc đã thay thế, thu hồi kèm nhãn)
+export const RM_VISIBLE_RUN_STATUSES = ['EFFECTIVE', 'SUPERSEDED', 'WITHDRAWN']
+export function canSeeRun(ctx: AppCtx, run: { status: string }): boolean {
+  return ctx.user.role !== 'RM' || RM_VISIBLE_RUN_STATUSES.includes(run.status)
+}
+
 export const actor = (ctx: AppCtx) => `${ctx.user.role}:${ctx.user.id}${ctx.accessEmail ? ` <${ctx.accessEmail}>` : ''}`
 
 export function minReason(reason: unknown, label = 'Lý do'): string {

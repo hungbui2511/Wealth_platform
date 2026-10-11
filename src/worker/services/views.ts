@@ -18,7 +18,7 @@ import { evNum, nextChallengeNo, nextViewVersion } from '../ids'
 
 export interface ViewRec {
   id: string; event_id: string; version: number; status: string; origin: 'agent' | 'manual'
-  body: ViewBody; ai_body: ViewBody | null; agent_run_id?: string
+  body: ViewBody; ai_body: ViewBody | null; agent_run_id?: string; challenge_error?: string
   unchallenged: string[]; cio_edits: { at: string; by: string; key: string; kind: string; before?: ImpactLine; after?: ImpactLine; note?: string }[]
   removed_restricted: ImpactLine[]; errors?: string[]; instructions?: string; manual_bypass?: boolean
   created_at: string; view_ready_at?: string; approved_at?: string
@@ -136,7 +136,33 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
   uow.insert('views', v as never)
   if (v.removed_restricted.length) uow.audit({ actor: 'SYSTEM', action: 'restricted.line_removed', object: viewId, data: { lines: v.removed_restricted.map(lineKey) } })
   await uow.commit()
-  // FR-401: phản biện chạy tự động khi nhận định qua kiểm tra schema
+  // FR-401: phản biện chạy tự động khi nhận định qua kiểm tra schema. Agent Phản biện lỗi (chế độ live) thì nhận định
+  // giữ trạng thái chờ phản biện, ghi nhật ký và CIO chạy lại bằng /api/views/:id/challenge; không mất nhận định.
+  try { return await runPreChallenge(ctx, viewId) }
+  catch (err) {
+    if (!(err instanceof ChallengerError)) throw err
+    return { ...(await getView(ctx, viewId)), challenge_error: err.message }
+  }
+}
+
+// Agent Phản biện (LLM) lỗi: mạng, hết thời gian, đầu ra không đọc được
+export class ChallengerError extends HttpError {
+  constructor(cause: unknown) { super(502, `Agent Phản biện lỗi, nhận định giữ nguyên trạng thái, chạy lại sau: ${String((cause as Error)?.message ?? cause).slice(0, 300)}`) }
+}
+async function callChallenger(ctx: AppCtx, viewId: string, stage: string, run: () => Promise<{ json: unknown; model: string }>) {
+  try { return await run() }
+  catch (err) {
+    const u = ctx.uow(); u.audit({ actor: 'AGENT:challenger', action: 'agent.challenge_failed', object: viewId, data: { stage, error: String((err as Error)?.message ?? err).slice(0, 1000) } }); await u.commit()
+    throw new ChallengerError(err)
+  }
+}
+
+// Chạy lại phản biện trước duyệt cho nhận định đang chờ phản biện (sau khi Agent Phản biện lỗi)
+export async function retryPreChallenge(ctx: AppCtx, viewId: string): Promise<ViewRec> {
+  requireRole(ctx, 'CIO', 'ADMIN')
+  const v = await getView(ctx, viewId)
+  if (v.status !== 'PENDING_CHALLENGE' || v.unchallenged.length) throw new HttpError(409, 'Nhận định không chờ phản biện trước duyệt')
+  if ((await viewChallenges(ctx, viewId)).some(c => c.stage === 'pre_approval')) throw new HttpError(409, 'Nhận định đã có báo cáo phản biện trước duyệt')
   return runPreChallenge(ctx, viewId)
 }
 
@@ -178,7 +204,7 @@ export async function runPreChallenge(ctx: AppCtx, viewId: string): Promise<View
     const part = v.version >= 2 && m?.pre_v2 ? m.pre_v2 : m?.pre
     llmRaw = part?.findings ?? []; counter = part?.counter_scenario ?? ''
   } else {
-    const r = await callJson(ctx.env, models.content.challenger, prompts.content.challenger.pre, wrapData('gói phản biện trước duyệt', pkg))
+    const r = await callChallenger(ctx, v.id, 'pre_approval', () => callJson(ctx.env, models.content.challenger, prompts.content.challenger.pre, wrapData('gói phản biện trước duyệt', pkg)))
     const j = r.json as { findings?: unknown[]; counter_scenario?: string }
     llmRaw = j.findings ?? []; counter = j.counter_scenario ?? ''; model = r.model
   }
@@ -249,7 +275,7 @@ export async function runReChallenge(ctx: AppCtx, viewId: string): Promise<ViewR
   const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
   let llmRaw: unknown[] = [], model = `mock (${models.content.challenger.model})`
   if (ctx.agentMode === 'mock') llmRaw = [...keys].flatMap(k => MOCK.challenger[mockKey(e)]?.re_challenge?.[k] ?? [])
-  else { const r = await callJson(ctx.env, models.content.challenger, prompts.content.challenger.re_challenge, wrapData('gói phản biện lại', pkg)); llmRaw = (r.json as { findings?: unknown[] }).findings ?? []; model = r.model }
+  else { const r = await callChallenger(ctx, v.id, 're_challenge', () => callJson(ctx.env, models.content.challenger, prompts.content.challenger.re_challenge, wrapData('gói phản biện lại', pkg))); llmRaw = (r.json as { findings?: unknown[] }).findings ?? []; model = r.model }
   const norm = normalizeLlmFindings(llmRaw.map(f => ({ ...(f as object), stage: 're_challenge' })), vctx.newsIds)
   const n = await nextChallengeNo(ctx, v.id, 're_challenge')
   const id = `CH-${evNum(v.event_id)}-v${v.version}-re-${n}`

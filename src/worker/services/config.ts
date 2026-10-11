@@ -15,6 +15,7 @@ export const CONFIG_KINDS = {
   PROMPT: { label: 'Prompt của agent', owner: 'ADMIN', twoPerson: true },
   MODEL: { label: 'Mô hình AI của agent', owner: 'ADMIN', twoPerson: true },
   PRICE_SOURCE: { label: 'Cấu hình nguồn giá (mã thỏa thuận dữ liệu)', owner: 'ADMIN', twoPerson: false },
+  ONEMOUNT_CONFIRM: { label: 'Tuân thủ xác nhận căn cứ chia sẻ dữ liệu với One Mount (BR-22)', owner: 'COMPLIANCE', twoPerson: false },
   SYMBOL_MAP: { label: 'Bảng ánh xạ mã công cụ sang mã thị trường', owner: 'ADMIN', twoPerson: false },
   NEWS_SOURCES: { label: 'Nguồn tin cấu hình', owner: 'ADMIN', twoPerson: false },
 } as const satisfies Record<string, { label: string; owner: Role; twoPerson: boolean }>
@@ -32,7 +33,8 @@ export function initialConfigs(now: string): ConfigVersion[] {
     base('UNIT', DEFAULT_UNIT_TABLE), base('THRESHOLD', DEFAULT_THRESHOLDS), base('ASSUMPTION', DEFAULT_ASSUMPTIONS),
     base('BANNED', DEFAULT_BANNED_PHRASES), base('WHITELIST', SEED.whitelist), base('RESTRICTED', SEED.restricted),
     base('PROMPT', DEFAULT_PROMPTS), base('MODEL', DEFAULT_MODELS),
-    base('PRICE_SOURCE', { agreements: { TCBS_STOCK: null, TCBS_BOND: null, ONEMOUNT: null }, onemount_compliance_confirmed: false }),
+    base('PRICE_SOURCE', { agreements: { TCBS_STOCK: null, TCBS_BOND: null, ONEMOUNT: null } }),
+    base('ONEMOUNT_CONFIRM', { confirmed: false }),
     base('SYMBOL_MAP', {}), base('NEWS_SOURCES', []),
   ]
 }
@@ -88,6 +90,9 @@ function validateContent(kind: ConfigKind, content: unknown) {
   if (kind === 'BANNED' && !(Array.isArray(content) && content.every(x => typeof x === 'string'))) bad('cần danh sách chuỗi')
   if (kind === 'WHITELIST' && !(Array.isArray(content) && content.every(x => typeof (x as { domain?: unknown }).domain === 'string'))) bad('mỗi mục cần domain')
   if (kind === 'RESTRICTED' && !(Array.isArray(content) && content.every(x => Array.isArray((x as { instruments?: unknown }).instruments)))) bad('mỗi mục cần danh sách mã công cụ')
+  if (kind === 'PRICE_SOURCE' && (typeof content !== 'object' || content === null || typeof (content as { agreements?: unknown }).agreements !== 'object')) bad('cần agreements')
+  if (kind === 'PRICE_SOURCE' && 'onemount_compliance_confirmed' in (content as object)) bad('cờ xác nhận One Mount do Tuân thủ đặt trong ONEMOUNT_CONFIRM (BR-22)')
+  if (kind === 'ONEMOUNT_CONFIRM' && typeof (content as { confirmed?: unknown })?.confirmed !== 'boolean') bad('cần confirmed: true hoặc false')
 }
 
 // Đề xuất (và với loại một người: áp dụng ngay) một phiên bản mới
@@ -127,6 +132,8 @@ export async function decideConfig(ctx: AppCtx, id: string, approve: boolean, re
 
 // Lý do đưa vào danh sách hạn chế chỉ Tuân thủ xem được (FR-1009)
 export function redactConfig(ctx: AppCtx, v: ConfigVersion): ConfigVersion {
+  // RM không được biết tổ chức nào nằm trong danh sách hạn chế (BR-27)
+  if (v.kind === 'RESTRICTED' && ctx.user.role === 'RM') return { ...v, content: [] }
   if (v.kind === 'RESTRICTED' && ctx.user.role !== 'COMPLIANCE') return { ...v, content: (v.content as Configs['restricted']).map(({ reason, ...r }) => r) }
   return v
 }
