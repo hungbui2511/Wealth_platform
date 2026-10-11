@@ -9,7 +9,7 @@ export function harness(opts: AppOptions & { env?: Partial<Env> } = {}) {
   let t = Date.parse('2026-10-10T02:00:00.000Z')
   const now = opts.now ?? (() => new Date((t += 1000)).toISOString())
   const app = createApp({ now, fetchFn: opts.fetchFn })
-  const env = { DB, AGENT_MODE: 'mock', PRICE_MODE: 'sample', ...opts.env } as Env
+  const env = { DB, AGENT_MODE: 'mock', PRICE_MODE: 'sample', AUTH_MODE: 'dev', ...opts.env } as Env
   async function call<T = any>(user: string | null, method: string, path: string, body?: unknown): Promise<{ status: number; data: T }> {
     const res = await app.request(path, { method, headers: { 'content-type': 'application/json', ...(user ? { 'x-demo-user': user } : {}) }, body: body === undefined ? undefined : JSON.stringify(body) }, env)
     const text = await res.text()

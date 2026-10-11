@@ -5,6 +5,7 @@ import { isWhitelistedUrl } from '../compliance/controls'
 import { TransitionError } from '../engine/states'
 import { actor, HttpError, makeCtx, requireRole, type AppCtx, type Env, type User } from './ctx'
 import { reseed } from './services/admin'
+import { authenticate, authMode, verifiedEmail, roleMap } from './auth'
 import { CONFIG_KINDS, decideConfig, loadConfigs, proposeConfig, redactConfig, activeConfig, type ConfigKind, type ConfigVersion } from './services/config'
 import { createEvent, loadSampleEvents, allowEvent, getEvent, eventNews, setTimestamp, type EventRec } from './services/events'
 import { createPriceSnapshot, currentSnapshot, familyCashflow, familyGoals, familyOverview, familyPnl, PRICE_DATE } from './services/portfolio'
@@ -18,7 +19,7 @@ import { agentCatalog, agentRunTrace, auditExport, auditList, traceFamily, verif
 import type { FamilyImpactResult } from '../engine/apply'
 import type { TimestampField } from '../compliance/controls'
 
-type Vars = { ctx: AppCtx }
+type Vars = { ctx: AppCtx; operator: boolean }
 export interface AppOptions { now?: () => string; fetchFn?: typeof fetch }
 
 export function createApp(opts: AppOptions = {}) {
@@ -33,26 +34,30 @@ export function createApp(opts: AppOptions = {}) {
 
   // Không cần đăng nhập: danh sách người dùng demo và danh mục cố định
   app.get('/api/health', c => c.json({ ok: true, agent_mode: c.env.AGENT_MODE ?? 'mock', price_mode: c.env.PRICE_MODE ?? 'sample', price_date: PRICE_DATE }))
+  const fetchFn = () => opts.fetchFn ?? fetch
+  // Danh sách vai trò được chọn: người vận hành demo thấy tất cả; người được gán cố định chỉ thấy vai trò của mình
   app.get('/api/users', async c => {
+    const who = await verifiedEmail(c.req.raw, c.env, fetchFn())
     const r = await c.env.DB.prepare('SELECT data FROM users ORDER BY id').all<{ data: string }>().catch(() => ({ results: [] as { data: string }[] }))
-    return c.json(r.results.map(x => JSON.parse(x.data)))
+    const users = r.results.map(x => JSON.parse(x.data) as User)
+    if (who.operator) return c.json(users)
+    const own = roleMap(c.env).get(who.email!)
+    return c.json(users.filter(u => u.id === own))
   })
   app.get('/api/catalog', c => c.json({ asset_classes: ASSET_CLASS_LABELS, sectors: SECTOR_LABELS, event_types: EVENT_TYPE_LABELS, policy_topics: POLICY_TOPIC_LABELS, view_status: VIEW_STATUS_LABELS, run_status: RUN_STATUS_LABELS, disclaimer: DISCLAIMER_SHOCK, price_date: PRICE_DATE }))
   // Khởi tạo lần đầu khi cơ sở dữ liệu còn trống (chưa có người dùng)
   app.post('/api/bootstrap', async c => {
+    const who = await verifiedEmail(c.req.raw, c.env, fetchFn())
+    if (!who.operator) throw new HttpError(403, 'Chỉ người vận hành demo (DEMO_OPERATORS) được nạp dữ liệu lần đầu')
     const n = await c.env.DB.prepare('SELECT count(*) AS n FROM users').first<{ n: number }>()
     if (n && n.n > 0) throw new HttpError(409, 'Dữ liệu đã được nạp; dùng chức năng Nạp lại dữ liệu mẫu của Quản trị')
-    const ctx = makeCtx(c.env, { id: 'SYSTEM', name: 'Khởi tạo', role: 'ADMIN', families: [] }, opts)
+    const ctx = makeCtx(c.env, { id: 'SYSTEM', name: 'Khởi tạo', role: 'ADMIN', families: [] }, { ...opts, accessEmail: who.email })
     return c.json(await reseed(ctx, { skipAuth: true }))
   })
 
   app.use('/api/*', async (c, next) => {
-    const id = c.req.header('x-demo-user') ?? c.req.query('as')
-    if (!id) throw new HttpError(401, 'Chưa chọn vai trò đăng nhập')
-    const row = await c.env.DB.prepare('SELECT data FROM users WHERE id = ?').bind(id).first<{ data: string }>()
-    if (!row) throw new HttpError(401, `Không có người dùng ${id}`)
-    const user = JSON.parse(row.data) as User
-    const accessEmail = c.req.header('cf-access-authenticated-user-email') ?? undefined
+    const { user, email: accessEmail, operator } = await authenticate(c.req.raw, c.env, fetchFn())
+    c.set('operator', operator)
     let background: ((p: Promise<unknown>) => void) | undefined
     try { const ec = c.executionCtx; background = p => ec.waitUntil(p) } catch { background = undefined }
     c.set('ctx', makeCtx(c.env, user, { ...opts, accessEmail, background }))
@@ -61,7 +66,7 @@ export function createApp(opts: AppOptions = {}) {
   const X = (c: Context<{ Bindings: Env; Variables: Vars }>) => c.get('ctx')
   const body = async <T = Record<string, unknown>>(c: Context) => (await c.req.json().catch(() => ({}))) as T
 
-  app.get('/api/me', c => c.json(X(c).user))
+  app.get('/api/me', c => c.json({ ...X(c).user, email: X(c).accessEmail ?? null, can_switch: c.get('operator'), auth_mode: authMode(c.env) }))
 
   // ----- Quản trị -----
   app.post('/api/admin/reseed', async c => c.json(await reseed(X(c))))

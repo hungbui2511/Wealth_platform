@@ -30,11 +30,11 @@ Phát triển giao diện có hot reload: chạy `wrangler dev` ở một termin
 
 | Lệnh | Việc |
 |---|---|
-| `npm test` | 67 kiểm thử: ví dụ tính tay, engine, schema, máy trạng thái, và tiêu chí chấp nhận AC-01..AC-39 ở chế độ mock |
+| `npm test` | Kiểm thử: ví dụ tính tay, engine, schema, máy trạng thái, và tiêu chí chấp nhận AC-01..AC-39 ở chế độ mock |
 | `npm run typecheck` | Kiểm tra kiểu cho Worker và giao diện |
 | `npm run seed:gen` | Sinh lại dữ liệu giả lập, đầu ra agent mock và `data/seed.sql` (xác định, có hạt giống cố định) |
 | `npm run seed:local` / `seed:remote` | Nạp lại dữ liệu mẫu từ đầu vào D1 cục bộ hoặc từ xa |
-| `npm run smoke -- <url> [EV-…]` | Kiểm tra khói: chạy Agent CIO, kiểm tra schema và mã nguồn |
+| `npm run smoke -- <url> [EV-…]` | Kiểm tra khói: chạy Agent CIO, kiểm tra schema và mã nguồn. Bản deploy sau Access: đặt `CF_ACCESS_CLIENT_ID`, `CF_ACCESS_CLIENT_SECRET` của một service token |
 
 ## 3. Triển khai lên Cloudflare (Mục 11.7)
 
@@ -45,7 +45,19 @@ npm run deploy                              # build + migration D1 từ xa + wra
 npm run seed:remote                         # nạp dữ liệu mẫu (hoặc bấm "Nạp dữ liệu mẫu" trên giao diện)
 ```
 
-- **Cloudflare Access (NFR-21):** trong Zero Trust → Access → Applications, tạo ứng dụng *Self-hosted* cho đường dẫn `wealth-mvp1.<tài-khoản>.workers.dev` với chính sách *Allow* theo danh sách email được mời. Kiểm tra bằng cửa sổ ẩn danh rằng người ngoài danh sách bị chặn. Phân quyền vai trò của ứng dụng vẫn áp dụng sau lớp này; email Access (`cf-access-authenticated-user-email`) được ghi kèm tác nhân trong nhật ký.
+- **Cloudflare Access và phân quyền (NFR-08, NFR-21):** bản deploy chạy `AUTH_MODE=access`: Worker chỉ tin JWT trong header `Cf-Access-Jwt-Assertion`, tự kiểm chữ ký bằng khóa công khai của team, kiểm `aud`, `iss`, hạn dùng. Header `x-demo-user` chỉ là lựa chọn vai trò, không phải định danh. Thiếu cấu hình thì API trả 503 (đóng, không mở).
+  1. Worker → **Settings → Domains & Routes** → `workers.dev` → **Enable Cloudflare Access**, chính sách *Allow* theo danh sách email được mời. Kiểm tra bằng cửa sổ ẩn danh rằng người ngoài danh sách bị chặn.
+  2. Trong Zero Trust → Access → Applications, mở ứng dụng vừa tạo, chép **Application Audience (AUD) Tag**; tên team ở Zero Trust → Settings (dạng `<team>.cloudflareaccess.com`).
+  3. Worker → **Settings → Variables and Secrets** (giữ lại khi deploy nhờ `keep_vars = true`):
+
+     | Biến | Giá trị |
+     |---|---|
+     | `ACCESS_TEAM_DOMAIN` | `<team>.cloudflareaccess.com` |
+     | `ACCESS_AUD` | AUD tag ở bước 2 |
+     | `DEMO_OPERATORS` | Email (cách nhau dấu phẩy) được chuyển vai trò trên màn hình đăng nhập và nạp dữ liệu lần đầu; thêm `service:<Client ID>` nếu chạy kiểm tra khói bằng service token |
+     | `ROLE_MAP` | Tùy chọn: gán cố định `email=CIO1,email2=RM1`; người này chỉ dùng được đúng vai trò đó |
+
+  Email Access đã xác minh được ghi kèm tác nhân trong nhật ký. `AUTH_MODE=dev` (chọn vai trò không cần Access) chỉ dùng trên máy: `npm run dev` tự bật, hoặc đặt trong `.dev.vars`.
 - **Bí mật (NFR-02, NFR-16):** `wrangler secret put ANTHROPIC_API_KEY` (chỉ khi `AGENT_MODE=live`); `TCBS_*`, `ONEMOUNT_*` chỉ khi đã có thỏa thuận dữ liệu. Mẫu biến khi chạy trên máy: `.dev.vars.example`.
 - **Tắt hoặc xóa toàn bộ demo bằng một lệnh:** `npm run demo:delete` (xóa Worker và cơ sở dữ liệu D1).
 - **Giới hạn D1 (NFR-22):** mọi lệnh ghi của một yêu cầu gom vào một lô (`INSERT … SELECT FROM json_each(?)`, một câu lệnh cho mỗi bảng). Số truy vấn đo được lớn nhất là 30/yêu cầu (chạy Agent CIO), áp dụng cho 20 gia đình là 25, nên vừa giới hạn 50 truy vấn của gói miễn phí.

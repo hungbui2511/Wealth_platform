@@ -1,8 +1,7 @@
 import { Fragment, useState } from 'react'
-import { getUserId } from '../api'
+import { api, download } from '../api'
 import { useUser } from '../App'
 import { Badge, Btn, Card, ErrorBox, Loading, ts, useApi } from '../ui'
-import { api } from '../api'
 
 export default function Audit() {
   const user = useUser()
@@ -20,7 +19,7 @@ export default function Audit() {
         <input placeholder="Lọc hành động (ví dụ decision., agent., run.)" value={action} onChange={e => setAction(e.target.value)} />
         <input placeholder="Đối tượng (ví dụ VW-0002-v1)" value={object} onChange={e => setObject(e.target.value)} />
         {(user.role === 'COMPLIANCE' || user.role === 'ADMIN') && <Btn kind="secondary" onClick={async () => setVerify(await api('/api/audit/verify'))}>Kiểm tra chuỗi mã băm</Btn>}
-        {user.role === 'COMPLIANCE' && <><a className="text-primary text-sm hover:underline" href={`/api/audit/export?format=csv&as=${getUserId()}`}>Xuất CSV</a><a className="text-primary text-sm hover:underline" href={`/api/audit/export?format=json&as=${getUserId()}`}>Xuất JSON</a></>}
+        {user.role === 'COMPLIANCE' && <><Btn kind="secondary" onClick={() => download('/api/audit/export?format=csv', 'audit_log.csv')}>Xuất CSV</Btn><Btn kind="secondary" onClick={() => download('/api/audit/export?format=json', 'audit_log.json')}>Xuất JSON</Btn></>}
         {verify && (verify.ok ? <Badge tone="green">Chuỗi hợp lệ – {verify.count} bản ghi</Badge> : <Badge tone="red">Chuỗi bị phá ở bản ghi {verify.broken_at}</Badge>)}
       </div>
       {error ? <ErrorBox error={error} /> : !data ? <Loading /> : (

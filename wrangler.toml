@@ -3,10 +3,14 @@ name = "wealth-mvp1"
 main = "src/worker/index.ts"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
+# Giữ biến đặt trên dashboard (ACCESS_*, DEMO_OPERATORS, ROLE_MAP) khi deploy lại
+keep_vars = true
 
 [vars]
 AGENT_MODE = "mock"   # mock | live (live cần ANTHROPIC_API_KEY qua `wrangler secret put`)
 PRICE_MODE = "sample" # sample | live (live cần thỏa thuận dữ liệu và thông tin truy cập nguồn)
+AUTH_MODE = "access"  # access: chỉ tin JWT Cloudflare Access đã xác minh. dev: chỉ dùng trên máy (.dev.vars)
+# ACCESS_TEAM_DOMAIN, ACCESS_AUD, DEMO_OPERATORS, ROLE_MAP đặt trên dashboard hoặc `wrangler secret put` (xem README)
 
 [[d1_databases]]
 binding = "DB"

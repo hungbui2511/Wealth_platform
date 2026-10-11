@@ -13,3 +13,13 @@ export async function api<T = any>(path: string, opts: { method?: string; body?:
   if (!res.ok) throw new ApiError(res.status, data?.error ?? `Lỗi ${res.status}`, data?.details)
   return data as T
 }
+
+// Tải file qua API (gửi kèm header vai trò; không đưa định danh lên URL)
+export async function download(path: string, filename: string) {
+  const uid = getUserId()
+  const res = await fetch(path, { headers: uid ? { 'x-demo-user': uid } : {} })
+  if (!res.ok) throw new ApiError(res.status, `Lỗi ${res.status}`)
+  const url = URL.createObjectURL(await res.blob())
+  const a = document.createElement('a'); a.href = url; a.download = filename; a.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}

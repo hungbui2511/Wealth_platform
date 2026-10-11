@@ -1,4 +1,6 @@
 # Sao chép thành .dev.vars khi chạy trên máy (không commit .dev.vars). Trên Cloudflare dùng `wrangler secret put <TÊN>`.
+# Trên máy: chọn vai trò demo không cần Cloudflare Access. Không bao giờ đặt dev trên bản deploy.
+AUTH_MODE=dev
 # Chỉ cần khi AGENT_MODE=live
 ANTHROPIC_API_KEY=
 # Chỉ cần khi PRICE_MODE=live và đã có thỏa thuận dữ liệu (mã thỏa thuận ghi trong cấu hình PRICE_SOURCE)

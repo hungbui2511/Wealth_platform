@@ -1,9 +1,12 @@
 // Kiểm tra khói (BRD Mục 9.1): chạy Agent CIO cho một sự kiện trên một bản demo đang chạy và kiểm tra schema, mã nguồn.
 // Dùng: npm run smoke -- http://localhost:8787 [EV-2026-0002]
+// Bản deploy sau Cloudflare Access: đặt CF_ACCESS_CLIENT_ID, CF_ACCESS_CLIENT_SECRET (service token) và thêm
+// service:<Client ID> vào DEMO_OPERATORS của Worker.
 const base = process.argv[2] ?? 'http://localhost:8787'
 const ev = process.argv[3] ?? 'EV-2026-0002'
+const access: Record<string, string> = process.env.CF_ACCESS_CLIENT_ID ? { 'CF-Access-Client-Id': process.env.CF_ACCESS_CLIENT_ID, 'CF-Access-Client-Secret': process.env.CF_ACCESS_CLIENT_SECRET ?? '' } : {}
 const call = async (user: string, method: string, path: string) => {
-  const r = await fetch(base + path, { method, headers: { 'x-demo-user': user, 'content-type': 'application/json' } })
+  const r = await fetch(base + path, { method, headers: { 'x-demo-user': user, 'content-type': 'application/json', ...access } })
   const d = await r.json() as any
   if (!r.ok) throw new Error(`${method} ${path} → ${r.status}: ${JSON.stringify(d)}`)
   return d
