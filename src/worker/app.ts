@@ -3,7 +3,7 @@ import { Hono, type Context } from 'hono'
 import { ASSET_CLASS_LABELS, EVENT_TYPE_LABELS, POLICY_TOPIC_LABELS, RUN_STATUS_LABELS, SECTOR_LABELS, VIEW_STATUS_LABELS, DISCLAIMER_SHOCK } from '../shared/catalog'
 import { isWhitelistedUrl } from '../compliance/controls'
 import { TransitionError } from '../engine/states'
-import { actor, canSeeFamily, canSeeRun, HttpError, makeCtx, requireRole, type AppCtx, type Env, type User } from './ctx'
+import { actor, canSeeFamily, canSeeRun, HttpError, makeCtx, requireRole, resolveAgentMode, type AppCtx, type Env, type User } from './ctx'
 import { familyImpactId } from './ids'
 import { redactForRm } from './services/redact'
 import { reseed } from './services/admin'
@@ -38,7 +38,7 @@ export function createApp(opts: AppOptions = {}) {
   })
 
   // Không cần đăng nhập: danh sách người dùng demo và danh mục cố định
-  app.get('/api/health', c => c.json({ ok: true, agent_mode: c.env.AGENT_MODE ?? 'mock', price_mode: c.env.PRICE_MODE ?? 'sample', price_date: PRICE_DATE, background_jobs: !!c.env.AGENT_JOBS, llm_key: !!c.env.ANTHROPIC_API_KEY }))
+  app.get('/api/health', c => c.json({ ok: true, agent_mode: resolveAgentMode(c.env), agent_mode_setting: c.env.AGENT_MODE ?? 'mock', price_mode: c.env.PRICE_MODE ?? 'sample', price_date: PRICE_DATE, background_jobs: !!c.env.AGENT_JOBS, llm_key: !!c.env.ANTHROPIC_API_KEY }))
   const fetchFn = () => opts.fetchFn ?? fetch
   // Danh sách vai trò được chọn: người vận hành demo thấy tất cả; người được gán cố định chỉ thấy vai trò của mình
   app.get('/api/users', async c => {

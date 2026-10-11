@@ -102,3 +102,12 @@ describe('Tác vụ chạy nền (Workflows) ở chế độ live', () => {
     expect(String(done.result!.event_id)).toMatch(/^EV-/)
   })
 })
+
+describe('AGENT_MODE=auto', () => {
+  it('chưa có khóa API: chạy mock; có khóa: chạy live', async () => {
+    const a = harness({ env: { AGENT_MODE: 'auto' } })
+    expect((await a.ok('x', 'GET', '/api/health')).agent_mode).toBe('mock')
+    const b = harness({ env: { AGENT_MODE: 'auto', ANTHROPIC_API_KEY: 'sk-test' } })
+    expect((await b.ok('x', 'GET', '/api/health')).agent_mode).toBe('live')
+  })
+})
