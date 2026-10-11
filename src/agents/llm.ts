@@ -16,7 +16,7 @@ export function extractJson(text: string): unknown {
 export async function callJson(env: { ANTHROPIC_API_KEY?: string }, cfg: ModelCfg, system: string, user: string, fetchFn?: typeof fetch): Promise<LlmResult> {
   if (cfg.provider !== 'anthropic') throw new LlmError(`Nhà cung cấp ${cfg.provider} chưa được cài đặt trong bản demo`)
   if (!env.ANTHROPIC_API_KEY) throw new LlmError('Thiếu ANTHROPIC_API_KEY cho AGENT_MODE=live')
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 2, timeout: 5 * 60 * 1000, ...(fetchFn ? { fetch: fetchFn } : {}) })
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 2, timeout: 5 * 60 * 1000, ...(fetchFn ? { fetch: (input: RequestInfo | URL, init?: RequestInit) => fetchFn(input, init) } : {}) })
   const res = await client.beta.messages.create({
     model: cfg.model,
     max_tokens: cfg.max_tokens,

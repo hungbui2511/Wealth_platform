@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 import { BookOpen, Bot, ClipboardCheck, Database, FileText, Gauge, Landmark, LogOut, Newspaper, Radar, ScrollText, Settings, Users } from 'lucide-react'
-import { api, getUserId, setUserId } from './api'
+import { api, getUserId, setUserId, stepLabel } from './api'
 import { Badge, Btn, Card, ErrorBox, Loading } from './ui'
 import Home from './pages/Home'
 import Families from './pages/Families'
@@ -67,6 +67,35 @@ function Login({ onLogin }: { onLogin: (u: User) => void }) {
   )
 }
 
+// Trạng thái AI và tác vụ agent đang chạy nền (chế độ live); làm mới mỗi 5 giây khi có tác vụ
+function AgentStatus({ user }: { user: User }) {
+  const [health, setHealth] = useState<any>(null)
+  const [jobs, setJobs] = useState<any[]>([])
+  const [open, setOpen] = useState(false)
+  const staff = user.role !== 'RM'
+  useEffect(() => { api('/api/health').then(setHealth).catch(() => {}) }, [])
+  useEffect(() => {
+    if (!staff) return
+    let alive = true
+    const tick = () => api<any[]>('/api/jobs?active=1').then(j => { if (alive) setJobs(j) }).catch(() => {})
+    tick(); const t = setInterval(tick, 5000)
+    return () => { alive = false; clearInterval(t) }
+  }, [staff])
+  if (!health) return null
+  const live = health.agent_mode === 'live'
+  return (
+    <div className="relative flex items-center gap-2">
+      <Badge tone={live ? (health.llm_key ? 'green' : 'red') : 'low'} title={live ? 'Agent gọi Claude qua API' : 'Chưa bật AI thật: sự kiện mẫu dùng đầu ra ghi sẵn, tin mới dùng luật từ khóa'}>{live ? (health.llm_key ? 'AI: Claude (live)' : 'AI live: thiếu khóa API') : 'AI: mô phỏng'}</Badge>
+      {staff && jobs.length > 0 && <button onClick={() => setOpen(!open)} className="inline-flex items-center gap-1 text-primary"><Bot size={14} className="animate-pulse" />{jobs.length} tác vụ AI đang chạy</button>}
+      {open && jobs.length > 0 && (
+        <div className="absolute right-0 top-7 z-50 w-80 bg-card border border-border rounded-md p-3 shadow-lg text-[13px] space-y-2">
+          {jobs.map(j => <div key={j.id}><div className="font-medium">{({ cio_run: 'Agent CIO', challenge_retry: 'Agent Phản biện', rechallenge: 'Phản biện lại', policy_analyze: 'Agent Chính sách' } as Record<string, string>)[j.kind] ?? j.kind} · <span className="mono">{j.subject}</span></div><div className="text-fgm">{j.status === 'QUEUED' ? 'Đang chờ chạy' : j.steps.length ? `Đang: ${stepLabel(j.steps[j.steps.length - 1].step)} (${j.steps.length} bước)` : 'Đang chuẩn bị dữ liệu'}</div></div>)}
+        </div>
+      )}
+    </div>
+  )
+}
+
 export default function App() {
   const [user, setUser] = useState<User | null>(null)
   const [checked, setChecked] = useState(false)
@@ -81,7 +110,7 @@ export default function App() {
       {/* Nhãn cố định NFR-11 – không ẩn được */}
       <div className="sticky top-0 z-40 flex flex-wrap items-center gap-2 justify-between px-4 py-1.5 bg-[#1a1408] border-b border-amber/40 text-[12px]">
         <div className="flex gap-2"><Badge tone="amber">Demo – khách hư cấu, mã thật, giá mẫu</Badge><Badge tone="red">Nội bộ – không gửi khách hàng</Badge></div>
-        {user && <div className="flex items-center gap-3 text-fgm"><span>{user.name}</span><Badge tone="primary">{ROLE_LABEL[user.role]}</Badge><button onClick={logout} className="inline-flex items-center gap-1 hover:text-fg"><LogOut size={14} />Đổi vai trò</button></div>}
+        {user && <div className="flex items-center gap-3 text-fgm"><AgentStatus user={user} /><span>{user.name}</span><Badge tone="primary">{ROLE_LABEL[user.role]}</Badge><button onClick={logout} className="inline-flex items-center gap-1 hover:text-fg"><LogOut size={14} />Đổi vai trò</button></div>}
       </div>
       {!checked ? <Loading /> : !user ? <Login onLogin={u => { setUserId(u.id); setUser(u); nav('/') }} /> : (
         <Ctx.Provider value={{ user, logout }}>

@@ -47,7 +47,8 @@ export function makeCtx(env: Env, user: User, opts: { now?: () => string; fetchF
     uow: () => new UnitOfWork(repo, now),
     agentMode: env.AGENT_MODE === 'live' ? 'live' : 'mock',
     priceMode: env.PRICE_MODE === 'live' ? 'live' : 'sample',
-    fetchFn: opts.fetchFn ?? fetch,
+    // Gói lại fetch gốc: gọi như phương thức của đối tượng khác (ctx.fetchFn(...)) gây lỗi Illegal invocation trên workerd
+    fetchFn: opts.fetchFn ?? ((input: RequestInfo | URL, init?: RequestInit) => fetch(input, init)),
     background: opts.background,
     progress: opts.progress,
   }

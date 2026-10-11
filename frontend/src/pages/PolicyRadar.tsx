@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { api } from '../api'
+import { api, apiJob } from '../api'
 import { useUser } from '../App'
 import { Badge, Btn, Card, duration, ErrorBox, Loading, Note, ts, useApi } from '../ui'
 
@@ -25,7 +25,7 @@ export default function PolicyRadar() {
         <Card key={d.id} title={<span className="flex flex-wrap items-center gap-2"><span className="mono text-fgm">{d.id}</span>{d.title}</span>} actions={<>
           <Badge tone={STATE[d.state][0]}>{STATE[d.state][1]}</Badge>
           {user.role === 'COMPLIANCE' && d.state === 'PENDING_SOURCE_CONFIRM' && <Btn small onClick={act(() => api(`/api/policies/${d.id}/confirm-source`, { method: 'POST', body: { note: 'Đã kiểm tra đường dẫn công khai và ngày công bố' } }))}>Xác nhận nguồn công khai</Btn>}
-          {(user.role === 'ADMIN' || user.role === 'CIO') && d.state === 'SOURCE_CONFIRMED' && <Btn small onClick={act(() => api(`/api/policies/${d.id}/analyze`, { method: 'POST' }))}>Chạy Agent Chính sách</Btn>}
+          {(user.role === 'ADMIN' || user.role === 'CIO') && d.state === 'SOURCE_CONFIRMED' && <Btn small onClick={act(() => apiJob(`/api/policies/${d.id}/analyze`, { method: 'POST' }))}>Chạy Agent Chính sách</Btn>}
         </>}>
           <div className="grid md:grid-cols-4 gap-3 text-[13px]">
             <div><div className="text-fgm">Cơ quan</div>{d.agency}</div>

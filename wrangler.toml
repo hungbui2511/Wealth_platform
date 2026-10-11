@@ -15,7 +15,7 @@ ACCESS_TEAM_DOMAIN = "bitter-tree-c714.cloudflareaccess.com" # team Cloudflare A
 
 [[d1_databases]]
 binding = "DB"
-database_name = "wealth-platform" # trùng tên Worker đã tạo trên dashboard (Workers Builds)
+database_name = "wealth-mvp1" # tên D1 trên tài khoản Cloudflare (khớp các lệnh npm run db:*, seed:*)
 # D1 đã tạo trên tài khoản Cloudflare (APAC); schema 0001 đã áp dụng
 database_id = "792b4d3a-39fc-498c-b6a2-4d3d7ebe234c"
 migrations_dir = "migrations"

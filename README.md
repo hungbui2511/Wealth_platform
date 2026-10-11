@@ -1,8 +1,18 @@
 # Wealth Platform 2036 – MVP1 (bản demo)
 
-Bản đồ tài sản gia đình và AI Agent CIO, dựng theo **BRD v0.5** (09–10/10/2026). Công cụ hỗ trợ ra quyết định **nội bộ**: không có kênh nào gửi nội dung tới khách hàng, và **chỉ dùng dữ liệu giả lập** (20 gia đình hư cấu, mã công cụ `DM…`, tổ chức lưu ký "Ngân hàng Demo A/B").
+Bản đồ tài sản gia đình và AI Agent CIO, dựng theo **BRD v0.5** (09–10/10/2026). Công cụ hỗ trợ ra quyết định **nội bộ**: không có kênh nào gửi nội dung tới khách hàng. 20 gia đình là **hư cấu**; mã cổ phiếu, trái phiếu, chứng chỉ quỹ, vàng, dự án bất động sản là **mã thật**, còn **giá là giá mẫu** gần mặt bằng thị trường (chưa có thỏa thuận dữ liệu với TCBS, One Mount). Mã duy nhất còn hư cấu là `DMXYZ` (Công ty Demo X) của kịch bản danh sách hạn chế.
 
-> Demo – dữ liệu giả lập · Nội bộ – không gửi khách hàng
+> Demo – khách hư cấu, mã thật, giá mẫu · Nội bộ – không gửi khách hàng
+
+## 0. Chạy "như thật" (bản 11/10/2026)
+
+| Phần | Cách chạy |
+|---|---|
+| **AI thật (Claude)** | Đặt `AGENT_MODE=live` và bí mật `ANTHROPIC_API_KEY` (khóa API tạo trên console.anthropic.com; gói Claude Pro/Max không dùng cho API). Các lượt Agent CIO, Phản biện, Chính sách chạy nền bằng **Cloudflare Workflows** (`AGENT_JOBS`, `src/worker/workflow.ts`), giao diện hiện tiến độ từng bước. Chưa có khóa thì để `mock`. |
+| **Tin tự động** | Cron mỗi 30 phút đọc RSS của báo chính thống (cấu hình `NEWS_SOURCES`, mặc định trong `src/news/sources.ts`), lọc tin liên quan, tin trùng, tin quá 3 ngày, tin ngoài danh sách nguồn công khai, đưa vào **Hộp tin mới** ở trang Sự kiện. CIO hoặc Quản trị chọn tin để lập sự kiện; agent chỉ chạy trên sự kiện. |
+| **Chế độ mock với tin mới** | Sự kiện của gói mẫu dùng đầu ra ghi sẵn. Sự kiện lập từ tin thật dùng **nhận định mô phỏng theo từ khóa** (`src/agents/keywordView.ts`), mức tối đa ±2, độ tin cậy thấp, ghi rõ "không phải AI". |
+| **Dữ liệu** | Sau khi deploy bản này, vào vai trò Quản trị → **Nạp lại dữ liệu mẫu từ đầu** để có mã thật, danh sách nguồn công khai mới và nguồn tin mặc định. |
+
 
 ## 1. Nền tảng đã chọn (D17)
 

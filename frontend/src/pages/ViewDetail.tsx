@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { ASSET_CLASSES, ASSET_CLASS_LABELS, SECTORS } from '../../../src/shared/catalog'
-import { api } from '../api'
+import { api, apiJob } from '../api'
 import { useUser } from '../App'
 import { Badge, Btn, Card, ErrorBox, Loading, Note, SevBadge, StatusBadge, ts, useApi } from '../ui'
 
@@ -104,14 +104,14 @@ export default function ViewDetail() {
           ))}
           {isCio && ['PENDING_APPROVAL', 'PENDING_CHALLENGE'].includes(v.status) && (
             <Card title="Quyết định của CIO">
-              {v.status === 'PENDING_CHALLENGE' && v.unchallenged.length === 0 && !data.challenges.some((c: any) => c.stage === 'pre_approval') && <div className="mb-3"><Note tone="warn">Chưa có báo cáo phản biện (Agent Phản biện lỗi hoặc chưa chạy). Nút Duyệt chỉ mở khi có báo cáo.</Note><div className="mt-2"><Btn onClick={act(() => api(`/api/views/${v.id}/challenge`, { method: 'POST' }))}>Chạy lại phản biện</Btn></div></div>}
-              {v.status === 'PENDING_CHALLENGE' && v.unchallenged.length > 0 && <div className="mb-3"><Note tone="warn">Các dòng {v.unchallenged.join(', ')} phải được phản biện lại trước khi nút Duyệt mở.</Note><div className="mt-2"><Btn onClick={act(() => api(`/api/views/${v.id}/rechallenge`, { method: 'POST' }))}>Chạy phản biện lại</Btn></div></div>}
+              {v.status === 'PENDING_CHALLENGE' && v.unchallenged.length === 0 && !data.challenges.some((c: any) => c.stage === 'pre_approval') && <div className="mb-3"><Note tone="warn">Chưa có báo cáo phản biện (Agent Phản biện lỗi hoặc chưa chạy). Nút Duyệt chỉ mở khi có báo cáo.</Note><div className="mt-2"><Btn onClick={act(() => apiJob(`/api/views/${v.id}/challenge`, { method: 'POST' }))}>Chạy lại phản biện</Btn></div></div>}
+              {v.status === 'PENDING_CHALLENGE' && v.unchallenged.length > 0 && <div className="mb-3"><Note tone="warn">Các dòng {v.unchallenged.join(', ')} phải được phản biện lại trước khi nút Duyệt mở.</Note><div className="mt-2"><Btn onClick={act(() => apiJob(`/api/views/${v.id}/rechallenge`, { method: 'POST' }))}>Chạy phản biện lại</Btn></div></div>}
               {!data.conditions.ok && <div className="mb-2"><div className="text-[13px] text-amber mb-1">Điều kiện duyệt còn thiếu (BR-02):</div><ul className="list-disc ml-5 text-[13px] text-amber">{data.conditions.missing.map((m: string) => <li key={m}>{m}</li>)}</ul></div>}
               <textarea rows={2} className="w-full" placeholder="Lý do (tối thiểu 20 ký tự)" value={reason} onChange={e => setReason(e.target.value)} />
               <label className="flex items-center gap-2 text-[13px] my-2"><input type="checkbox" checked={includeCh} onChange={e => setIncludeCh(e.target.checked)} />Khi Làm lại: gửi kèm phản biện cho Agent CIO</label>
               <div className="flex flex-wrap gap-2">
                 <Btn disabled={!data.conditions.ok || reason.trim().length < 20} title={!data.conditions.ok ? data.conditions.missing.join('; ') : undefined} onClick={act(async () => { const r = await api(`/api/views/${v.id}/decision`, { method: 'POST', body: { action: 'APPROVE', reason } }); if (r.run_id) nav(`/runs/${r.run_id}`) })}>Duyệt và áp dụng</Btn>
-                <Btn kind="secondary" onClick={act(async () => { const r = await api(`/api/views/${v.id}/decision`, { method: 'POST', body: { action: 'REWORK', reason, include_challenge: includeCh } }); if (r.new_view?.id) nav(`/views/${r.new_view.id}`) })}>Làm lại</Btn>
+                <Btn kind="secondary" onClick={act(async () => { const r: any = await apiJob(`/api/views/${v.id}/decision`, { method: 'POST', body: { action: 'REWORK', reason, include_challenge: includeCh } }); const nid = r.new_view?.id ?? r.view_id; if (nid && nid !== v.id) nav(`/views/${nid}`) })}>Làm lại</Btn>
                 <Btn kind="danger" onClick={act(() => api(`/api/views/${v.id}/decision`, { method: 'POST', body: { action: 'REJECT', reason } }))}>Bác</Btn>
               </div>
               <p className="text-fgm text-xs mt-2">Thử bấm Duyệt khi điều kiện chưa đủ: máy chủ từ chối và liệt kê điều kiện thiếu.</p>
