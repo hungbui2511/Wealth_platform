@@ -7,7 +7,7 @@ import { Btn, Card, ErrorBox, Note, StatusBadge, useApi } from '../ui'
 const SCRIPT = [
   ['Quản trị', 'Nạp dữ liệu mẫu và gói sự kiện mẫu (nút bên dưới).'],
   ['CIO / RM', 'Mở Bản đồ tài sản DEMO-F03 và DEMO-F08: cùng khoảng 15% cổ phiếu nhưng khác ngành.'],
-  ['CIO / RM', 'DEMO-F01: tab Lãi/lỗ (DMNGA lãi 2,48 tỷ; tiền gửi USD tách hiệu ứng tỷ giá), tab Dòng tiền (gọi vốn tháng thứ 5). DEMO-F09: thiếu hụt tiền mức Đỏ.'],
+  ['CIO / RM', 'DEMO-F01: tab Lãi/lỗ (MBB lãi 2,48 tỷ; tiền gửi USD tách hiệu ứng tỷ giá), tab Dòng tiền (gọi vốn tháng thứ 5). DEMO-F09: thiếu hụt tiền mức Đỏ.'],
   ['CIO', 'Sự kiện → chạy Agent CIO cho EV-2026-0002; mở vết chạy (bốn nhóm phân tích, tranh luận, tổng hợp).'],
   ['CIO', 'Bàn duyệt: Agent Phản biện chỉ ra tác động bậc hai lên trái phiếu doanh nghiệp bất động sản (Nghiêm trọng).'],
   ['CIO', 'Thử Duyệt → bị chặn. Thêm dòng ngành (CORP_BOND, REAL_ESTATE), phản biện lại, phản hồi "Chấp nhận – đã sửa", rồi Duyệt.'],

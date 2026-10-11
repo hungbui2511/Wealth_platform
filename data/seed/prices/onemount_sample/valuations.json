@@ -1,10 +1,10 @@
 {
-  "_note": "DỮ LIỆU MẪU – không phải giá thật. Cấu trúc đặt theo dữ liệu của nguồn tương ứng; mã là hư cấu. Định giá căn hộ theo cấu trúc kết quả định giá tự động.",
+  "_note": "DỮ LIỆU MẪU – không phải giá thật. Mã chứng khoán, trái phiếu, chứng chỉ quỹ là mã thật; giá là giá mẫu gần mặt bằng thị trường. Cấu trúc đặt theo dữ liệu của nguồn tương ứng. Định giá căn hộ theo cấu trúc kết quả định giá tự động.",
   "valuations": [
     {
       "request": {
-        "project": "Khu đô thị Demo Sông Xanh",
-        "building": "Tòa S2",
+        "project": "Vinhomes Ocean Park (Gia Lâm, Hà Nội)",
+        "building": "Tòa S2.02",
         "floor": 18,
         "unit": "1806",
         "area_m2": "120",
@@ -20,8 +20,8 @@
     },
     {
       "request": {
-        "project": "Khu đô thị Demo Sông Xanh",
-        "building": "Tòa S5",
+        "project": "Vinhomes Ocean Park (Gia Lâm, Hà Nội)",
+        "building": "Tòa S1.05",
         "floor": 25,
         "unit": "2508",
         "area_m2": "150",
@@ -37,8 +37,8 @@
     },
     {
       "request": {
-        "project": "Khu đô thị Demo Sông Xanh",
-        "building": "Tòa S7",
+        "project": "Vinhomes Ocean Park (Gia Lâm, Hà Nội)",
+        "building": "Tòa S2.09",
         "floor": 12,
         "unit": "1203",
         "area_m2": "110",
@@ -54,8 +54,8 @@
     },
     {
       "request": {
-        "project": "Khu đô thị Demo Sông Xanh",
-        "building": "Tòa S1",
+        "project": "Vinhomes Ocean Park (Gia Lâm, Hà Nội)",
+        "building": "Tòa S1.01",
         "floor": 35,
         "unit": "3501",
         "area_m2": "200",
@@ -71,8 +71,8 @@
     },
     {
       "request": {
-        "project": "Khu đô thị Demo Sông Xanh",
-        "building": "Tòa S3",
+        "project": "Vinhomes Ocean Park (Gia Lâm, Hà Nội)",
+        "building": "Tòa S2.15",
         "floor": 22,
         "unit": "2205",
         "area_m2": "140",

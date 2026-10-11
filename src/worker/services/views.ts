@@ -56,7 +56,7 @@ async function marketPack(ctx: AppCtx) {
   const series = SAMPLE_STORE.sample.series
   const tail = (k: string) => { const s = series[k] ?? []; const last = s[s.length - 1]; const first = s[Math.max(0, s.length - 20)]; return last ? { date: last.date, value: last.value, change_20_sessions_pct: first ? Math.round((last.value / first.value - 1) * 10000) / 100 : null } : null }
   const listed = snap.points.filter(p => !p.key.includes('-') && !p.key.startsWith('FX:')).map(p => ({ key: p.key, price: p.price, date: p.date, source: p.source }))
-  return { price_date: snap.price_date, snapshot_id: snap.id, index: tail('IDX:DEMO-INDEX'), gold_world_usd: tail('GOLD:WORLD_USD'), policy_rate: tail('RATE:POLICY'), deposit_rate_12m: tail('RATE:DEPOSIT_12M'), fx: snap.fx, listed }
+  return { price_date: snap.price_date, snapshot_id: snap.id, index: tail('IDX:VNINDEX'), gold_world_usd: tail('GOLD:WORLD_USD'), policy_rate: tail('RATE:POLICY'), deposit_rate_12m: tail('RATE:DEPOSIT_12M'), fx: snap.fx, listed }
 }
 
 function fillSources(v: unknown, news: NewsItem[]): unknown {

@@ -1,7 +1,7 @@
 [
   {
-    "id": "DMNGA",
-    "name": "Ngân hàng Demo NGA",
+    "id": "MBB",
+    "name": "Ngân hàng TMCP Quân đội (MB)",
     "asset_class": "EQ_VN",
     "sector": "BANK",
     "currency": "VND",
@@ -9,8 +9,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMNGB",
-    "name": "Ngân hàng Demo NGB",
+    "id": "VPB",
+    "name": "Ngân hàng TMCP Việt Nam Thịnh Vượng (VPBank)",
     "asset_class": "EQ_VN",
     "sector": "BANK",
     "currency": "VND",
@@ -18,8 +18,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMNGC",
-    "name": "Ngân hàng Demo NGC",
+    "id": "SHB",
+    "name": "Ngân hàng TMCP Sài Gòn – Hà Nội (SHB)",
     "asset_class": "EQ_VN",
     "sector": "BANK",
     "currency": "VND",
@@ -27,8 +27,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMBDS",
-    "name": "Địa ốc Demo BDS",
+    "id": "NLG",
+    "name": "CTCP Đầu tư Nam Long",
     "asset_class": "EQ_VN",
     "sector": "REAL_ESTATE",
     "currency": "VND",
@@ -36,8 +36,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMBDT",
-    "name": "Địa ốc Demo BDT",
+    "id": "DXG",
+    "name": "CTCP Tập đoàn Đất Xanh",
     "asset_class": "EQ_VN",
     "sector": "REAL_ESTATE",
     "currency": "VND",
@@ -45,8 +45,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMBDV",
-    "name": "Địa ốc Demo BDV",
+    "id": "KDH",
+    "name": "CTCP Đầu tư và Kinh doanh Nhà Khang Điền",
     "asset_class": "EQ_VN",
     "sector": "REAL_ESTATE",
     "currency": "VND",
@@ -54,8 +54,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMCKA",
-    "name": "Chứng khoán Demo CKA",
+    "id": "SSI",
+    "name": "CTCP Chứng khoán SSI",
     "asset_class": "EQ_VN",
     "sector": "SECURITIES",
     "currency": "VND",
@@ -63,8 +63,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMTHP",
-    "name": "Thép Demo THP",
+    "id": "HPG",
+    "name": "CTCP Tập đoàn Hòa Phát",
     "asset_class": "EQ_VN",
     "sector": "STEEL_MATERIALS",
     "currency": "VND",
@@ -72,8 +72,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMBLE",
-    "name": "Bán lẻ Demo BLE",
+    "id": "MWG",
+    "name": "CTCP Đầu tư Thế Giới Di Động",
     "asset_class": "EQ_VN",
     "sector": "RETAIL",
     "currency": "VND",
@@ -81,8 +81,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMCNT",
-    "name": "Công nghệ Demo CNT",
+    "id": "FPT",
+    "name": "CTCP FPT",
     "asset_class": "EQ_VN",
     "sector": "TECH",
     "currency": "VND",
@@ -90,8 +90,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMNLG",
-    "name": "Năng lượng Demo NLG",
+    "id": "PLX",
+    "name": "Tập đoàn Xăng dầu Việt Nam (Petrolimex)",
     "asset_class": "EQ_VN",
     "sector": "ENERGY",
     "currency": "VND",
@@ -99,8 +99,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMTDG",
-    "name": "Tiêu dùng Demo TDG",
+    "id": "VNM",
+    "name": "CTCP Sữa Việt Nam (Vinamilk)",
     "asset_class": "EQ_VN",
     "sector": "CONSUMER",
     "currency": "VND",
@@ -108,8 +108,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMCNP",
-    "name": "Công nghiệp Demo CNP",
+    "id": "GMD",
+    "name": "CTCP Gemadept",
     "asset_class": "EQ_VN",
     "sector": "INDUSTRIAL",
     "currency": "VND",
@@ -117,8 +117,8 @@
     "price_source": "TCBS_STOCK"
   },
   {
-    "id": "DMDNC",
-    "name": "Điện nước Demo DNC",
+    "id": "NT2",
+    "name": "CTCP Điện lực Dầu khí Nhơn Trạch 2",
     "asset_class": "EQ_VN",
     "sector": "UTILITIES",
     "currency": "VND",
@@ -127,7 +127,7 @@
   },
   {
     "id": "DMXYZ",
-    "name": "Công ty Demo X",
+    "name": "Công ty Demo X (hư cấu, kịch bản danh sách hạn chế)",
     "asset_class": "EQ_VN",
     "sector": "INDUSTRIAL",
     "currency": "VND",
@@ -136,53 +136,53 @@
     "issuer": "Công ty Demo X"
   },
   {
-    "id": "DMBDA",
-    "name": "Trái phiếu Địa ốc Demo A",
+    "id": "VHM12613",
+    "name": "Trái phiếu Vinhomes VHM12613 (12,5%/năm, đáo hạn 10/07/2029)",
     "asset_class": "CORP_BOND",
     "sector": "REAL_ESTATE",
     "currency": "VND",
     "listed": true,
     "price_source": "TCBS_BOND",
     "bond": {
-      "par": "100000",
-      "coupon_rate": "0.09",
+      "par": "100000000",
+      "coupon_rate": "0.125",
       "freq": 2,
-      "maturity": "2029-03-15"
+      "maturity": "2029-07-10"
     }
   },
   {
-    "id": "DMBNB",
-    "name": "Trái phiếu Ngân hàng Demo B",
+    "id": "VIB12508",
+    "name": "Trái phiếu VIB VIB12508 (6,9%/năm, đáo hạn 05/12/2028)",
     "asset_class": "CORP_BOND",
     "sector": "BANK",
     "currency": "VND",
     "listed": true,
     "price_source": "TCBS_BOND",
     "bond": {
-      "par": "100000",
-      "coupon_rate": "0.07",
+      "par": "1000000000",
+      "coupon_rate": "0.069",
       "freq": 1,
-      "maturity": "2028-06-20"
+      "maturity": "2028-12-05"
     }
   },
   {
-    "id": "DMBNC",
-    "name": "Trái phiếu Năng lượng Demo C",
+    "id": "VIC12510",
+    "name": "Trái phiếu Vingroup VIC12510 (11%/năm, đáo hạn 30/09/2027)",
     "asset_class": "CORP_BOND",
-    "sector": "ENERGY",
+    "sector": "INDUSTRIAL",
     "currency": "VND",
     "listed": true,
     "price_source": "TCBS_BOND",
     "bond": {
-      "par": "100000",
-      "coupon_rate": "0.085",
-      "freq": 2,
-      "maturity": "2030-08-10"
+      "par": "100000000",
+      "coupon_rate": "0.11",
+      "freq": 1,
+      "maturity": "2027-09-30"
     }
   },
   {
-    "id": "DMCPN",
-    "name": "Trái phiếu Chính phủ giả lập kỳ hạn ngắn",
+    "id": "TPCP5N",
+    "name": "Trái phiếu Chính phủ kỳ hạn 5 năm (đấu thầu qua HNX)",
     "asset_class": "GOV_BOND",
     "currency": "VND",
     "listed": true,
@@ -195,8 +195,8 @@
     }
   },
   {
-    "id": "DMCPD",
-    "name": "Trái phiếu Chính phủ giả lập kỳ hạn dài",
+    "id": "TPCP10N",
+    "name": "Trái phiếu Chính phủ kỳ hạn 10 năm (đấu thầu qua HNX)",
     "asset_class": "GOV_BOND",
     "currency": "VND",
     "listed": true,
@@ -209,8 +209,8 @@
     }
   },
   {
-    "id": "DMQCP",
-    "name": "Quỹ cổ phiếu Demo QCP",
+    "id": "VEOF",
+    "name": "Quỹ Đầu tư Cổ phiếu Hưng Thịnh VinaCapital (VEOF)",
     "asset_class": "FUND",
     "currency": "VND",
     "listed": false,
@@ -229,8 +229,8 @@
     ]
   },
   {
-    "id": "DMQTP",
-    "name": "Quỹ trái phiếu Demo QTP",
+    "id": "VFF",
+    "name": "Quỹ Đầu tư Trái phiếu Bảo Thịnh VinaCapital (VFF)",
     "asset_class": "FUND",
     "currency": "VND",
     "listed": false,
@@ -249,8 +249,8 @@
     ]
   },
   {
-    "id": "DMQCB",
-    "name": "Quỹ cân bằng Demo QCB",
+    "id": "VIBF",
+    "name": "Quỹ Đầu tư Cân bằng Tuệ Sáng VinaCapital (VIBF)",
     "asset_class": "FUND",
     "currency": "VND",
     "listed": false,
@@ -274,16 +274,16 @@
     ]
   },
   {
-    "id": "DMQKA",
-    "name": "Quỹ mở Demo QKA",
+    "id": "SSISCA",
+    "name": "Quỹ Đầu tư Lợi thế Cạnh tranh Bền vững SSI (SSISCA)",
     "asset_class": "FUND",
     "currency": "VND",
     "listed": false,
     "price_source": "SAMPLE"
   },
   {
-    "id": "DMGLA",
-    "name": "ETF quốc tế Demo GLA",
+    "id": "VT",
+    "name": "Vanguard Total World Stock ETF (VT)",
     "asset_class": "EQ_INTL",
     "sector": "OTHER",
     "currency": "USD",
@@ -291,8 +291,8 @@
     "price_source": "SAMPLE"
   },
   {
-    "id": "DMGLB",
-    "name": "Cổ phiếu quốc tế Demo GLB",
+    "id": "AAPL",
+    "name": "Apple Inc. (AAPL)",
     "asset_class": "EQ_INTL",
     "sector": "TECH",
     "currency": "USD",
@@ -300,16 +300,16 @@
     "price_source": "SAMPLE"
   },
   {
-    "id": "DMVGM",
-    "name": "Vàng miếng Demo (lượng)",
+    "id": "SJC",
+    "name": "Vàng miếng SJC (lượng)",
     "asset_class": "GOLD",
     "currency": "VND",
     "listed": false,
     "price_source": "SAMPLE"
   },
   {
-    "id": "DMKTA",
-    "name": "Tài sản mã hóa Demo KTA",
+    "id": "BTC",
+    "name": "Bitcoin (BTC)",
     "asset_class": "CRYPTO",
     "currency": "VND",
     "listed": false,

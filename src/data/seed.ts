@@ -35,5 +35,5 @@ export const PROVIDED_POLICIES = provided as unknown as PolicyDocSeed[]
 
 export const SAMPLE_STORE = { tcbsStocks, tcbsBonds, onemount, sample } as unknown as SampleStore
 
-export const SESSIONS: string[] = (sample as unknown as SampleStore['sample']).series['IDX:DEMO-INDEX'].map(b => b.date)
+export const SESSIONS: string[] = (sample as unknown as SampleStore['sample']).series['IDX:VNINDEX'].map(b => b.date)
 export const PRICE_DATE = SESSIONS[SESSIONS.length - 1]

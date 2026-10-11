@@ -32,7 +32,7 @@ describe('Áp dụng nhập tay và ví dụ Mục 6.2 trên dữ liệu mẫu',
     expect(f1.impact).toBe('-488000000')
     expect(D(f1.pct).times(100).toFixed(3)).toBe('-0.976')
     expect(f1.alert).toBe('YELLOW')
-    const qcp = f1.positions.filter((p: any) => p.instrument_id === 'DMQCP')
+    const qcp = f1.positions.filter((p: any) => p.instrument_id === 'VEOF')
     expect(qcp.map((p: any) => [p.rule, p.impact])).toEqual([['asset_class', '-50000000'], ['sector', '-150000000']])
     const v = await h.ok('CIO1', 'GET', `/api/views/${r.view.id}`)
     expect(v.view.manual_bypass).toBe(true)
@@ -55,15 +55,15 @@ describe('Áp dụng nhập tay và ví dụ Mục 6.2 trên dữ liệu mẫu',
 describe('Lãi/lỗ, dòng tiền, mục tiêu trên dữ liệu mẫu', () => {
   let h: ReturnType<typeof harness>
   beforeAll(async () => { h = await boot() })
-  it('AC-21: lãi/lỗ DMNGA của DEMO-F01 đúng từng đồng', async () => {
+  it('AC-21: lãi/lỗ MBB của DEMO-F01 đúng từng đồng', async () => {
     const p = await h.ok('RM1', 'GET', '/api/families/DEMO-F01/pnl')
-    const n = p.rows.find((r: any) => r.instrument_id === 'DMNGA')
+    const n = p.rows.find((r: any) => r.instrument_id === 'MBB')
     expect([n.realized_vnd, n.unrealized_vnd, n.income_vnd, n.total_vnd]).toEqual(['471620000', '1507280000', '500000000', '2478900000'])
     expect((Number(n.unrealized_pct) * 100).toFixed(2)).toBe('17.75')
   })
   it('AC-22: tách hiệu ứng giá và tỷ giá; tiền gửi USD qua pháp nhân cho phần gia đình 48.000.000', async () => {
     const p17 = await h.ok('RM3', 'GET', '/api/families/DEMO-F17/pnl')
-    const g = p17.rows.find((r: any) => r.instrument_id === 'DMGLA')
+    const g = p17.rows.find((r: any) => r.instrument_id === 'VT')
     expect([g.price_effect_vnd, g.fx_effect_vnd, g.unrealized_vnd]).toEqual(['240000000', '110000000', '350000000'])
     const p1 = await h.ok('RM1', 'GET', '/api/families/DEMO-F01/pnl')
     expect(p1.rows.find((r: any) => r.instrument_id === 'CASH-USD').fx_effect_vnd).toBe('80000000')
@@ -71,14 +71,15 @@ describe('Lãi/lỗ, dòng tiền, mục tiêu trên dữ liệu mẫu', () => {
   })
   it('FR-120: vị thế thiếu giao dịch mua được loại khỏi tổng và ghi rõ', async () => {
     const p = await h.ok('RM2', 'GET', '/api/families/DEMO-F11/pnl')
-    expect(p.rows.find((r: any) => r.instrument_id === 'DMCNT').insufficient_cost).toBe(true)
+    expect(p.rows.find((r: any) => r.instrument_id === 'FPT').insufficient_cost).toBe(true)
     expect(p.total.excluded).toBe(1)
   })
   it('AC-23: dòng tiền 12 tháng của DEMO-F01', async () => {
     const c = await h.ok('RM1', 'GET', '/api/families/DEMO-F01/cashflow')
-    expect(c.short.totals).toEqual({ inflow: '1330000000', outflow: '4115250000', net: '-2785250000' })
+    // Trái phiếu VHM12613 (5 tỷ, 12,5%/năm, trả lãi 6 tháng/lần): hai kỳ coupon 312,5 triệu; Mục 6.5 của BRD dùng trái phiếu mẫu 9% (1.330 triệu)
+    expect(c.short.totals).toEqual({ inflow: '1505000000', outflow: '4115250000', net: '-2610250000' })
     expect(c.short.by_category.find((x: any) => x.category === 'loan_interest').total).toBe('515250000')
-    expect(D(c.short.coverage).toFixed(2)).toBe('1.44')
+    expect(D(c.short.coverage).toFixed(2)).toBe('1.53') // tiền đầu kỳ ÷ |dòng tiền thuần âm|
     const lo = c.short.alerts.filter((a: any) => a.code === 'large_outflow')
     expect(lo.map((a: any) => a.k)).toEqual([5])
   })
@@ -122,7 +123,7 @@ describe('Lãi/lỗ, dòng tiền, mục tiêu trên dữ liệu mẫu', () => {
   })
   it('FR-902/903: RM nhập mục tiêu thay khách; tổng % dành riêng mỗi vị thế ≤ 100%', async () => {
     const holdings = (await h.ok('RM1', 'GET', '/api/families/DEMO-F01/goals')).holdings
-    const qcp = holdings.find((x: any) => x.instrument_id === 'DMQCP').id
+    const qcp = holdings.find((x: any) => x.instrument_id === 'VEOF').id
     const bad = await h.call('RM1', 'POST', '/api/families/DEMO-F01/goals', { name: 'Nghỉ hưu', type: 'retirement', year: 2040, month: 1, amount: '20000000000', basis: 'today', cost_growth: '0.04', spend: { kind: 'multi', years: 20 }, priority: 'essential', source_note: 'Theo trao đổi với khách ngày 01/10/2026', earmarks: [{ holding_id: qcp, pct: '0.5' }] })
     expect(bad.status).toBe(422)
     const g = await h.ok('RM1', 'POST', '/api/families/DEMO-F01/goals', { name: 'Nghỉ hưu', type: 'retirement', year: 2040, month: 1, amount: '20000000000', basis: 'today', cost_growth: '0.04', spend: { kind: 'multi', years: 20 }, priority: 'essential', source_note: 'Theo trao đổi với khách ngày 01/10/2026', earmarks: [] })
@@ -140,18 +141,18 @@ describe('Nguồn giá', () => {
       ...base.TCBS_STOCK,
       async history(reqs, from, to, ctx) {
         const out = await base.TCBS_STOCK.history(reqs, from, to, ctx)
-        out.DMNGA = (out.DMNGA ?? []).filter(b => b.date <= s2)
-        out.DMBDS = []
+        out.MBB = (out.MBB ?? []).filter(b => b.date <= s2)
+        out.NLG = []
         return out
       },
     }
-    // Ca kiểm thử riêng: DMBDS chỉ có giá 7 phiên trước trong lịch sử đã lưu
-    await h.DB.prepare("DELETE FROM price_points WHERE key = 'DMBDS'").run()
-    await h.DB.prepare('INSERT INTO price_points (id, key, date, data) VALUES (?, ?, ?, ?)').bind(`DMBDS|${s7}`, 'DMBDS', s7, JSON.stringify({ key: 'DMBDS', date: s7, price: '40000', source_ref: 'DMBDS' })).run()
+    // Ca kiểm thử riêng: NLG chỉ có giá 7 phiên trước trong lịch sử đã lưu
+    await h.DB.prepare("DELETE FROM price_points WHERE key = 'NLG'").run()
+    await h.DB.prepare('INSERT INTO price_points (id, key, date, data) VALUES (?, ?, ?, ?)').bind(`NLG|${s7}`, 'NLG', s7, JSON.stringify({ key: 'NLG', date: s7, price: '40000', source_ref: 'NLG' })).run()
     const snap = await createPriceSnapshot(adminCtx(h), { adapters: { ...base, TCBS_STOCK: failing } })
-    expect(snap.fallbacks).toContain('DMNGA')
-    expect(snap.missing).toContain('DMBDS')
-    expect(snap.points.find(p => p.key === 'DMNGA')!.date).toBe(s2)
+    expect(snap.fallbacks).toContain('MBB')
+    expect(snap.missing).toContain('NLG')
+    expect(snap.points.find(p => p.key === 'MBB')!.date).toBe(s2)
     const { event_id: _e, view_id: _v, event_type: _t, ...view } = exampleView()
     const r = await h.ok('CIO1', 'POST', '/api/manual-apply', { event_id: 'EV-2026-0002', view })
     const run = await h.ok('CIO1', 'GET', `/api/runs/${r.run_id}`)

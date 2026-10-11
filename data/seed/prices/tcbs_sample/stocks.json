@@ -1,7 +1,7 @@
 {
-  "_note": "DỮ LIỆU MẪU – không phải giá thật. Cấu trúc đặt theo dữ liệu của nguồn tương ứng; mã là hư cấu.",
+  "_note": "DỮ LIỆU MẪU – không phải giá thật. Mã chứng khoán, trái phiếu, chứng chỉ quỹ là mã thật; giá là giá mẫu gần mặt bằng thị trường. Cấu trúc đặt theo dữ liệu của nguồn tương ứng.",
   "data": {
-    "DMNGA": [
+    "MBB": [
       {
         "tradingDate": "2026-07-20",
         "open": 27354,
@@ -483,7 +483,7 @@
         "volume": 1351551
       }
     ],
-    "DMNGB": [
+    "VPB": [
       {
         "tradingDate": "2026-07-20",
         "open": 28343,
@@ -965,7 +965,7 @@
         "volume": 659466
       }
     ],
-    "DMNGC": [
+    "SHB": [
       {
         "tradingDate": "2026-07-20",
         "open": 18816,
@@ -1447,7 +1447,7 @@
         "volume": 2020274
       }
     ],
-    "DMBDS": [
+    "NLG": [
       {
         "tradingDate": "2026-07-20",
         "open": 42962,
@@ -1929,7 +1929,7 @@
         "volume": 632901
       }
     ],
-    "DMBDT": [
+    "DXG": [
       {
         "tradingDate": "2026-07-20",
         "open": 15905,
@@ -2411,7 +2411,7 @@
         "volume": 747256
       }
     ],
-    "DMBDV": [
+    "KDH": [
       {
         "tradingDate": "2026-07-20",
         "open": 32642,
@@ -2893,7 +2893,7 @@
         "volume": 1704435
       }
     ],
-    "DMCKA": [
+    "SSI": [
       {
         "tradingDate": "2026-07-20",
         "open": 24085,
@@ -3375,7 +3375,7 @@
         "volume": 2057534
       }
     ],
-    "DMTHP": [
+    "HPG": [
       {
         "tradingDate": "2026-07-20",
         "open": 26090,
@@ -3857,7 +3857,7 @@
         "volume": 858259
       }
     ],
-    "DMBLE": [
+    "MWG": [
       {
         "tradingDate": "2026-07-20",
         "open": 53058,
@@ -4339,7 +4339,7 @@
         "volume": 1227694
       }
     ],
-    "DMCNT": [
+    "FPT": [
       {
         "tradingDate": "2026-07-20",
         "open": 86887,
@@ -4821,7 +4821,7 @@
         "volume": 189818
       }
     ],
-    "DMNLG": [
+    "PLX": [
       {
         "tradingDate": "2026-07-20",
         "open": 37240,
@@ -5303,7 +5303,7 @@
         "volume": 660584
       }
     ],
-    "DMTDG": [
+    "VNM": [
       {
         "tradingDate": "2026-07-20",
         "open": 79495,
@@ -5785,7 +5785,7 @@
         "volume": 1851264
       }
     ],
-    "DMCNP": [
+    "GMD": [
       {
         "tradingDate": "2026-07-20",
         "open": 42565,
@@ -6267,485 +6267,485 @@
         "volume": 516115
       }
     ],
-    "DMDNC": [
+    "NT2": [
       {
         "tradingDate": "2026-07-20",
-        "open": 31600,
-        "high": 32077,
-        "low": 31441,
-        "close": 31759,
+        "open": 23174,
+        "high": 23523,
+        "low": 23057,
+        "close": 23290,
         "volume": 1097617
       },
       {
         "tradingDate": "2026-07-21",
-        "open": 31043,
-        "high": 31511,
-        "low": 30887,
-        "close": 31199,
+        "open": 22765,
+        "high": 23108,
+        "low": 22650,
+        "close": 22879,
         "volume": 1681339
       },
       {
         "tradingDate": "2026-07-22",
-        "open": 31296,
-        "high": 31768,
-        "low": 31138,
-        "close": 31453,
+        "open": 22950,
+        "high": 23296,
+        "low": 22834,
+        "close": 23065,
         "volume": 377328
       },
       {
         "tradingDate": "2026-07-23",
-        "open": 31543,
-        "high": 32019,
-        "low": 31385,
-        "close": 31702,
+        "open": 23132,
+        "high": 23480,
+        "low": 23016,
+        "close": 23248,
         "volume": 459086
       },
       {
         "tradingDate": "2026-07-24",
-        "open": 31503,
-        "high": 31978,
-        "low": 31344,
-        "close": 31661,
+        "open": 23102,
+        "high": 23450,
+        "low": 22986,
+        "close": 23218,
         "volume": 1895038
       },
       {
         "tradingDate": "2026-07-27",
-        "open": 31991,
-        "high": 32474,
-        "low": 31830,
-        "close": 32152,
+        "open": 23460,
+        "high": 23814,
+        "low": 23342,
+        "close": 23578,
         "volume": 876056
       },
       {
         "tradingDate": "2026-07-28",
-        "open": 31548,
-        "high": 32024,
-        "low": 31390,
-        "close": 31707,
+        "open": 23136,
+        "high": 23485,
+        "low": 23019,
+        "close": 23252,
         "volume": 255196
       },
       {
         "tradingDate": "2026-07-29",
-        "open": 31948,
-        "high": 32430,
-        "low": 31788,
-        "close": 32109,
+        "open": 23429,
+        "high": 23782,
+        "low": 23312,
+        "close": 23547,
         "volume": 617118
       },
       {
         "tradingDate": "2026-07-30",
-        "open": 32468,
-        "high": 32957,
-        "low": 32305,
-        "close": 32631,
+        "open": 23809,
+        "high": 24168,
+        "low": 23690,
+        "close": 23929,
         "volume": 1805186
       },
       {
         "tradingDate": "2026-07-31",
-        "open": 32299,
-        "high": 32786,
-        "low": 32136,
-        "close": 32461,
+        "open": 23686,
+        "high": 24043,
+        "low": 23567,
+        "close": 23805,
         "volume": 516069
       },
       {
         "tradingDate": "2026-08-03",
-        "open": 32443,
-        "high": 32932,
-        "low": 32280,
-        "close": 32606,
+        "open": 23791,
+        "high": 24150,
+        "low": 23672,
+        "close": 23911,
         "volume": 2009984
       },
       {
         "tradingDate": "2026-08-04",
-        "open": 31930,
-        "high": 32411,
-        "low": 31769,
-        "close": 32090,
+        "open": 23414,
+        "high": 23767,
+        "low": 23297,
+        "close": 23532,
         "volume": 977842
       },
       {
         "tradingDate": "2026-08-05",
-        "open": 32377,
-        "high": 32865,
-        "low": 32215,
-        "close": 32540,
+        "open": 23744,
+        "high": 24102,
+        "low": 23624,
+        "close": 23863,
         "volume": 1413658
       },
       {
         "tradingDate": "2026-08-06",
-        "open": 32444,
-        "high": 32933,
-        "low": 32281,
-        "close": 32607,
+        "open": 23792,
+        "high": 24151,
+        "low": 23673,
+        "close": 23912,
         "volume": 1284020
       },
       {
         "tradingDate": "2026-08-07",
-        "open": 32125,
-        "high": 32609,
-        "low": 31963,
-        "close": 32286,
+        "open": 23558,
+        "high": 23913,
+        "low": 23439,
+        "close": 23676,
         "volume": 1053012
       },
       {
         "tradingDate": "2026-08-10",
-        "open": 31639,
-        "high": 32116,
-        "low": 31480,
-        "close": 31798,
+        "open": 23202,
+        "high": 23552,
+        "low": 23086,
+        "close": 23319,
         "volume": 267456
       },
       {
         "tradingDate": "2026-08-11",
-        "open": 31636,
-        "high": 32113,
-        "low": 31477,
-        "close": 31795,
+        "open": 23199,
+        "high": 23549,
+        "low": 23083,
+        "close": 23316,
         "volume": 1578476
       },
       {
         "tradingDate": "2026-08-12",
-        "open": 31880,
-        "high": 32360,
-        "low": 31720,
-        "close": 32040,
+        "open": 23379,
+        "high": 23731,
+        "low": 23261,
+        "close": 23496,
         "volume": 345521
       },
       {
         "tradingDate": "2026-08-13",
-        "open": 31755,
-        "high": 32234,
-        "low": 31596,
-        "close": 31915,
+        "open": 23288,
+        "high": 23639,
+        "low": 23171,
+        "close": 23405,
         "volume": 1852656
       },
       {
         "tradingDate": "2026-08-14",
-        "open": 31199,
-        "high": 31670,
-        "low": 31042,
-        "close": 31356,
+        "open": 22879,
+        "high": 23224,
+        "low": 22764,
+        "close": 22994,
         "volume": 1608080
       },
       {
         "tradingDate": "2026-08-17",
-        "open": 31278,
-        "high": 31749,
-        "low": 31121,
-        "close": 31435,
+        "open": 22937,
+        "high": 23283,
+        "low": 22821,
+        "close": 23052,
         "volume": 1632753
       },
       {
         "tradingDate": "2026-08-18",
-        "open": 30830,
-        "high": 31295,
-        "low": 30675,
-        "close": 30985,
+        "open": 22609,
+        "high": 22950,
+        "low": 22496,
+        "close": 22723,
         "volume": 1487756
       },
       {
         "tradingDate": "2026-08-19",
-        "open": 30683,
-        "high": 31145,
-        "low": 30529,
-        "close": 30837,
+        "open": 22500,
+        "high": 22839,
+        "low": 22387,
+        "close": 22613,
         "volume": 192276
       },
       {
         "tradingDate": "2026-08-20",
-        "open": 30416,
-        "high": 30875,
-        "low": 30263,
-        "close": 30569,
+        "open": 22305,
+        "high": 22641,
+        "low": 22193,
+        "close": 22417,
         "volume": 512333
       },
       {
         "tradingDate": "2026-08-21",
-        "open": 30274,
-        "high": 30730,
-        "low": 30122,
-        "close": 30426,
+        "open": 22200,
+        "high": 22535,
+        "low": 22089,
+        "close": 22312,
         "volume": 543157
       },
       {
         "tradingDate": "2026-08-24",
-        "open": 30676,
-        "high": 31138,
-        "low": 30522,
-        "close": 30830,
+        "open": 22495,
+        "high": 22834,
+        "low": 22382,
+        "close": 22608,
         "volume": 248963
       },
       {
         "tradingDate": "2026-08-25",
-        "open": 30603,
-        "high": 31065,
-        "low": 30449,
-        "close": 30757,
+        "open": 22442,
+        "high": 22781,
+        "low": 22329,
+        "close": 22555,
         "volume": 1707171
       },
       {
         "tradingDate": "2026-08-26",
-        "open": 30479,
-        "high": 30938,
-        "low": 30326,
-        "close": 30632,
+        "open": 22352,
+        "high": 22689,
+        "low": 22239,
+        "close": 22464,
         "volume": 769710
       },
       {
         "tradingDate": "2026-08-27",
-        "open": 30019,
-        "high": 30472,
-        "low": 29868,
-        "close": 30170,
+        "open": 22014,
+        "high": 22346,
+        "low": 21904,
+        "close": 22125,
         "volume": 2030281
       },
       {
         "tradingDate": "2026-08-28",
-        "open": 30308,
-        "high": 30765,
-        "low": 30155,
-        "close": 30460,
+        "open": 22225,
+        "high": 22560,
+        "low": 22114,
+        "close": 22337,
         "volume": 1035520
       },
       {
         "tradingDate": "2026-08-31",
-        "open": 30068,
-        "high": 30521,
-        "low": 29917,
-        "close": 30219,
+        "open": 22050,
+        "high": 22383,
+        "low": 21939,
+        "close": 22161,
         "volume": 1056065
       },
       {
         "tradingDate": "2026-09-01",
-        "open": 29848,
-        "high": 30298,
-        "low": 29698,
-        "close": 29998,
+        "open": 21889,
+        "high": 22219,
+        "low": 21779,
+        "close": 21999,
         "volume": 1224175
       },
       {
         "tradingDate": "2026-09-02",
-        "open": 30024,
-        "high": 30477,
-        "low": 29873,
-        "close": 30175,
+        "open": 22018,
+        "high": 22350,
+        "low": 21908,
+        "close": 22129,
         "volume": 1998809
       },
       {
         "tradingDate": "2026-09-03",
-        "open": 29803,
-        "high": 30253,
-        "low": 29653,
-        "close": 29953,
+        "open": 21856,
+        "high": 22186,
+        "low": 21746,
+        "close": 21966,
         "volume": 927907
       },
       {
         "tradingDate": "2026-09-04",
-        "open": 29954,
-        "high": 30406,
-        "low": 29804,
-        "close": 30105,
+        "open": 21967,
+        "high": 22298,
+        "low": 21856,
+        "close": 22077,
         "volume": 1189927
       },
       {
         "tradingDate": "2026-09-07",
-        "open": 29483,
-        "high": 29927,
-        "low": 29335,
-        "close": 29631,
+        "open": 21620,
+        "high": 21946,
+        "low": 21512,
+        "close": 21729,
         "volume": 1791558
       },
       {
         "tradingDate": "2026-09-08",
-        "open": 29679,
-        "high": 30126,
-        "low": 29530,
-        "close": 29828,
+        "open": 21765,
+        "high": 22093,
+        "low": 21655,
+        "close": 21874,
         "volume": 1803400
       },
       {
         "tradingDate": "2026-09-09",
-        "open": 30092,
-        "high": 30545,
-        "low": 29941,
-        "close": 30243,
+        "open": 22067,
+        "high": 22400,
+        "low": 21956,
+        "close": 22178,
         "volume": 1449885
       },
       {
         "tradingDate": "2026-09-10",
-        "open": 29870,
-        "high": 30320,
-        "low": 29720,
-        "close": 30020,
+        "open": 21904,
+        "high": 22234,
+        "low": 21794,
+        "close": 22014,
         "volume": 649733
       },
       {
         "tradingDate": "2026-09-11",
-        "open": 29772,
-        "high": 30221,
-        "low": 29623,
-        "close": 29922,
+        "open": 21833,
+        "high": 22162,
+        "low": 21724,
+        "close": 21943,
         "volume": 1795269
       },
       {
         "tradingDate": "2026-09-14",
-        "open": 29805,
-        "high": 30255,
-        "low": 29655,
-        "close": 29955,
+        "open": 21857,
+        "high": 22187,
+        "low": 21747,
+        "close": 21967,
         "volume": 1694416
       },
       {
         "tradingDate": "2026-09-15",
-        "open": 29791,
-        "high": 30240,
-        "low": 29642,
-        "close": 29941,
+        "open": 21847,
+        "high": 22177,
+        "low": 21737,
+        "close": 21957,
         "volume": 1783571
       },
       {
         "tradingDate": "2026-09-16",
-        "open": 29337,
-        "high": 29779,
-        "low": 29189,
-        "close": 29484,
+        "open": 21513,
+        "high": 21837,
+        "low": 21405,
+        "close": 21621,
         "volume": 1434248
       },
       {
         "tradingDate": "2026-09-17",
-        "open": 29464,
-        "high": 29908,
-        "low": 29316,
-        "close": 29612,
+        "open": 21606,
+        "high": 21932,
+        "low": 21498,
+        "close": 21715,
         "volume": 364834
       },
       {
         "tradingDate": "2026-09-18",
-        "open": 29723,
-        "high": 30171,
-        "low": 29573,
-        "close": 29872,
+        "open": 21796,
+        "high": 22125,
+        "low": 21687,
+        "close": 21906,
         "volume": 1371058
       },
       {
         "tradingDate": "2026-09-21",
-        "open": 29664,
-        "high": 30111,
-        "low": 29515,
-        "close": 29813,
+        "open": 21754,
+        "high": 22082,
+        "low": 21644,
+        "close": 21863,
         "volume": 1457398
       },
       {
         "tradingDate": "2026-09-22",
-        "open": 29502,
-        "high": 29947,
-        "low": 29354,
-        "close": 29650,
+        "open": 21634,
+        "high": 21960,
+        "low": 21526,
+        "close": 21743,
         "volume": 728413
       },
       {
         "tradingDate": "2026-09-23",
-        "open": 29165,
-        "high": 29605,
-        "low": 29019,
-        "close": 29312,
+        "open": 21388,
+        "high": 21710,
+        "low": 21280,
+        "close": 21495,
         "volume": 199595
       },
       {
         "tradingDate": "2026-09-24",
-        "open": 29224,
-        "high": 29665,
-        "low": 29077,
-        "close": 29371,
+        "open": 21430,
+        "high": 21753,
+        "low": 21323,
+        "close": 21538,
         "volume": 514409
       },
       {
         "tradingDate": "2026-09-25",
-        "open": 29344,
-        "high": 29786,
-        "low": 29196,
-        "close": 29491,
+        "open": 21519,
+        "high": 21843,
+        "low": 21411,
+        "close": 21627,
         "volume": 1041834
       },
       {
         "tradingDate": "2026-09-28",
-        "open": 29298,
-        "high": 29739,
-        "low": 29151,
-        "close": 29445,
+        "open": 21485,
+        "high": 21809,
+        "low": 21377,
+        "close": 21593,
         "volume": 274401
       },
       {
         "tradingDate": "2026-09-29",
-        "open": 29445,
-        "high": 29889,
-        "low": 29297,
-        "close": 29593,
+        "open": 21592,
+        "high": 21918,
+        "low": 21484,
+        "close": 21701,
         "volume": 1244357
       },
       {
         "tradingDate": "2026-09-30",
-        "open": 29719,
-        "high": 30167,
-        "low": 29569,
-        "close": 29868,
+        "open": 21793,
+        "high": 22122,
+        "low": 21684,
+        "close": 21903,
         "volume": 1713240
       },
       {
         "tradingDate": "2026-10-01",
-        "open": 29214,
-        "high": 29655,
-        "low": 29067,
-        "close": 29361,
+        "open": 21424,
+        "high": 21747,
+        "low": 21317,
+        "close": 21532,
         "volume": 1498591
       },
       {
         "tradingDate": "2026-10-02",
-        "open": 29681,
-        "high": 30128,
-        "low": 29532,
-        "close": 29830,
+        "open": 21767,
+        "high": 22095,
+        "low": 21657,
+        "close": 21876,
         "volume": 827978
       },
       {
         "tradingDate": "2026-10-05",
-        "open": 29945,
-        "high": 30396,
-        "low": 29794,
-        "close": 30095,
+        "open": 21960,
+        "high": 22291,
+        "low": 21849,
+        "close": 22070,
         "volume": 150007
       },
       {
         "tradingDate": "2026-10-06",
-        "open": 30265,
-        "high": 30721,
-        "low": 30113,
-        "close": 30417,
+        "open": 22194,
+        "high": 22529,
+        "low": 22083,
+        "close": 22306,
         "volume": 555747
       },
       {
         "tradingDate": "2026-10-07",
-        "open": 30296,
-        "high": 30752,
-        "low": 30144,
-        "close": 30448,
+        "open": 22217,
+        "high": 22552,
+        "low": 22106,
+        "close": 22329,
         "volume": 1834045
       },
       {
         "tradingDate": "2026-10-08",
-        "open": 29923,
-        "high": 30374,
-        "low": 29772,
-        "close": 30073,
+        "open": 21943,
+        "high": 22274,
+        "low": 21832,
+        "close": 22053,
         "volume": 962154
       },
       {
         "tradingDate": "2026-10-09",
-        "open": 29850,
-        "high": 30300,
-        "low": 29700,
-        "close": 30000,
+        "open": 21890,
+        "high": 22220,
+        "low": 21780,
+        "close": 22000,
         "volume": 1425546
       }
     ],

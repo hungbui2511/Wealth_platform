@@ -80,7 +80,7 @@ export default function App() {
     <div className="min-h-screen flex flex-col">
       {/* Nhãn cố định NFR-11 – không ẩn được */}
       <div className="sticky top-0 z-40 flex flex-wrap items-center gap-2 justify-between px-4 py-1.5 bg-[#1a1408] border-b border-amber/40 text-[12px]">
-        <div className="flex gap-2"><Badge tone="amber">Demo – dữ liệu giả lập</Badge><Badge tone="red">Nội bộ – không gửi khách hàng</Badge></div>
+        <div className="flex gap-2"><Badge tone="amber">Demo – khách hư cấu, mã thật, giá mẫu</Badge><Badge tone="red">Nội bộ – không gửi khách hàng</Badge></div>
         {user && <div className="flex items-center gap-3 text-fgm"><span>{user.name}</span><Badge tone="primary">{ROLE_LABEL[user.role]}</Badge><button onClick={logout} className="inline-flex items-center gap-1 hover:text-fg"><LogOut size={14} />Đổi vai trò</button></div>}
       </div>
       {!checked ? <Loading /> : !user ? <Login onLogin={u => { setUserId(u.id); setUser(u); nav('/') }} /> : (

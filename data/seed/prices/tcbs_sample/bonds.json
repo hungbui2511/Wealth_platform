@@ -1,913 +1,913 @@
 {
-  "_note": "DỮ LIỆU MẪU – không phải giá thật. Cấu trúc đặt theo dữ liệu của nguồn tương ứng; mã là hư cấu.",
+  "_note": "DỮ LIỆU MẪU – không phải giá thật. Mã chứng khoán, trái phiếu, chứng chỉ quỹ là mã thật; giá là giá mẫu gần mặt bằng thị trường. Cấu trúc đặt theo dữ liệu của nguồn tương ứng.",
   "data": {
-    "DMBDA": [
+    "VHM12613": [
       {
         "tradingDate": "2026-07-20",
-        "cleanPrice": 98940,
-        "dirtyPrice": 99740
+        "cleanPrice": 98939699,
+        "dirtyPrice": 98940499
       },
       {
         "tradingDate": "2026-07-21",
-        "cleanPrice": 98749,
-        "dirtyPrice": 99549
+        "cleanPrice": 98748788,
+        "dirtyPrice": 98749588
       },
       {
         "tradingDate": "2026-07-22",
-        "cleanPrice": 98584,
-        "dirtyPrice": 99384
+        "cleanPrice": 98584491,
+        "dirtyPrice": 98585291
       },
       {
         "tradingDate": "2026-07-23",
-        "cleanPrice": 98623,
-        "dirtyPrice": 99423
+        "cleanPrice": 98623097,
+        "dirtyPrice": 98623897
       },
       {
         "tradingDate": "2026-07-24",
-        "cleanPrice": 98707,
-        "dirtyPrice": 99507
+        "cleanPrice": 98707261,
+        "dirtyPrice": 98708061
       },
       {
         "tradingDate": "2026-07-27",
-        "cleanPrice": 98774,
-        "dirtyPrice": 99574
+        "cleanPrice": 98774269,
+        "dirtyPrice": 98775069
       },
       {
         "tradingDate": "2026-07-28",
-        "cleanPrice": 98725,
-        "dirtyPrice": 99525
+        "cleanPrice": 98724750,
+        "dirtyPrice": 98725550
       },
       {
         "tradingDate": "2026-07-29",
-        "cleanPrice": 98860,
-        "dirtyPrice": 99660
+        "cleanPrice": 98860264,
+        "dirtyPrice": 98861064
       },
       {
         "tradingDate": "2026-07-30",
-        "cleanPrice": 98810,
-        "dirtyPrice": 99610
+        "cleanPrice": 98810286,
+        "dirtyPrice": 98811086
       },
       {
         "tradingDate": "2026-07-31",
-        "cleanPrice": 98621,
-        "dirtyPrice": 99421
+        "cleanPrice": 98620771,
+        "dirtyPrice": 98621571
       },
       {
         "tradingDate": "2026-08-03",
-        "cleanPrice": 98795,
-        "dirtyPrice": 99595
+        "cleanPrice": 98794832,
+        "dirtyPrice": 98795632
       },
       {
         "tradingDate": "2026-08-04",
-        "cleanPrice": 98841,
-        "dirtyPrice": 99641
+        "cleanPrice": 98840895,
+        "dirtyPrice": 98841695
       },
       {
         "tradingDate": "2026-08-05",
-        "cleanPrice": 98994,
-        "dirtyPrice": 99794
+        "cleanPrice": 98994113,
+        "dirtyPrice": 98994913
       },
       {
         "tradingDate": "2026-08-06",
-        "cleanPrice": 98839,
-        "dirtyPrice": 99639
+        "cleanPrice": 98839025,
+        "dirtyPrice": 98839825
       },
       {
         "tradingDate": "2026-08-07",
-        "cleanPrice": 98906,
-        "dirtyPrice": 99706
+        "cleanPrice": 98906324,
+        "dirtyPrice": 98907124
       },
       {
         "tradingDate": "2026-08-10",
-        "cleanPrice": 99083,
-        "dirtyPrice": 99883
+        "cleanPrice": 99082914,
+        "dirtyPrice": 99083714
       },
       {
         "tradingDate": "2026-08-11",
-        "cleanPrice": 99037,
-        "dirtyPrice": 99837
+        "cleanPrice": 99036863,
+        "dirtyPrice": 99037663
       },
       {
         "tradingDate": "2026-08-12",
-        "cleanPrice": 98941,
-        "dirtyPrice": 99741
+        "cleanPrice": 98940503,
+        "dirtyPrice": 98941303
       },
       {
         "tradingDate": "2026-08-13",
-        "cleanPrice": 98885,
-        "dirtyPrice": 99685
+        "cleanPrice": 98884771,
+        "dirtyPrice": 98885571
       },
       {
         "tradingDate": "2026-08-14",
-        "cleanPrice": 98844,
-        "dirtyPrice": 99644
+        "cleanPrice": 98843673,
+        "dirtyPrice": 98844473
       },
       {
         "tradingDate": "2026-08-17",
-        "cleanPrice": 98948,
-        "dirtyPrice": 99748
+        "cleanPrice": 98947754,
+        "dirtyPrice": 98948554
       },
       {
         "tradingDate": "2026-08-18",
-        "cleanPrice": 98845,
-        "dirtyPrice": 99645
+        "cleanPrice": 98845479,
+        "dirtyPrice": 98846279
       },
       {
         "tradingDate": "2026-08-19",
-        "cleanPrice": 98764,
-        "dirtyPrice": 99564
+        "cleanPrice": 98763548,
+        "dirtyPrice": 98764348
       },
       {
         "tradingDate": "2026-08-20",
-        "cleanPrice": 98943,
-        "dirtyPrice": 99743
+        "cleanPrice": 98943472,
+        "dirtyPrice": 98944272
       },
       {
         "tradingDate": "2026-08-21",
-        "cleanPrice": 99098,
-        "dirtyPrice": 99898
+        "cleanPrice": 99098140,
+        "dirtyPrice": 99098940
       },
       {
         "tradingDate": "2026-08-24",
-        "cleanPrice": 99246,
-        "dirtyPrice": 100046
+        "cleanPrice": 99245547,
+        "dirtyPrice": 99246347
       },
       {
         "tradingDate": "2026-08-25",
-        "cleanPrice": 99191,
-        "dirtyPrice": 99991
+        "cleanPrice": 99191285,
+        "dirtyPrice": 99192085
       },
       {
         "tradingDate": "2026-08-26",
-        "cleanPrice": 99005,
-        "dirtyPrice": 99805
+        "cleanPrice": 99004645,
+        "dirtyPrice": 99005445
       },
       {
         "tradingDate": "2026-08-27",
-        "cleanPrice": 98819,
-        "dirtyPrice": 99619
+        "cleanPrice": 98818728,
+        "dirtyPrice": 98819528
       },
       {
         "tradingDate": "2026-08-28",
-        "cleanPrice": 98806,
-        "dirtyPrice": 99606
+        "cleanPrice": 98806119,
+        "dirtyPrice": 98806919
       },
       {
         "tradingDate": "2026-08-31",
-        "cleanPrice": 98830,
-        "dirtyPrice": 99630
+        "cleanPrice": 98829698,
+        "dirtyPrice": 98830498
       },
       {
         "tradingDate": "2026-09-01",
-        "cleanPrice": 98864,
-        "dirtyPrice": 99664
+        "cleanPrice": 98864237,
+        "dirtyPrice": 98865037
       },
       {
         "tradingDate": "2026-09-02",
-        "cleanPrice": 98855,
-        "dirtyPrice": 99655
+        "cleanPrice": 98854727,
+        "dirtyPrice": 98855527
       },
       {
         "tradingDate": "2026-09-03",
-        "cleanPrice": 98992,
-        "dirtyPrice": 99792
+        "cleanPrice": 98991996,
+        "dirtyPrice": 98992796
       },
       {
         "tradingDate": "2026-09-04",
-        "cleanPrice": 99168,
-        "dirtyPrice": 99968
+        "cleanPrice": 99168132,
+        "dirtyPrice": 99168932
       },
       {
         "tradingDate": "2026-09-07",
-        "cleanPrice": 99353,
-        "dirtyPrice": 100153
+        "cleanPrice": 99353469,
+        "dirtyPrice": 99354269
       },
       {
         "tradingDate": "2026-09-08",
-        "cleanPrice": 99364,
-        "dirtyPrice": 100164
+        "cleanPrice": 99364477,
+        "dirtyPrice": 99365277
       },
       {
         "tradingDate": "2026-09-09",
-        "cleanPrice": 99437,
-        "dirtyPrice": 100237
+        "cleanPrice": 99436538,
+        "dirtyPrice": 99437338
       },
       {
         "tradingDate": "2026-09-10",
-        "cleanPrice": 99512,
-        "dirtyPrice": 100312
+        "cleanPrice": 99512164,
+        "dirtyPrice": 99512964
       },
       {
         "tradingDate": "2026-09-11",
-        "cleanPrice": 99517,
-        "dirtyPrice": 100317
+        "cleanPrice": 99516809,
+        "dirtyPrice": 99517609
       },
       {
         "tradingDate": "2026-09-14",
-        "cleanPrice": 99710,
-        "dirtyPrice": 100510
+        "cleanPrice": 99710416,
+        "dirtyPrice": 99711216
       },
       {
         "tradingDate": "2026-09-15",
-        "cleanPrice": 99607,
-        "dirtyPrice": 100407
+        "cleanPrice": 99607489,
+        "dirtyPrice": 99608289
       },
       {
         "tradingDate": "2026-09-16",
-        "cleanPrice": 99786,
-        "dirtyPrice": 100586
+        "cleanPrice": 99785756,
+        "dirtyPrice": 99786556
       },
       {
         "tradingDate": "2026-09-17",
-        "cleanPrice": 99977,
-        "dirtyPrice": 100777
+        "cleanPrice": 99977244,
+        "dirtyPrice": 99978044
       },
       {
         "tradingDate": "2026-09-18",
-        "cleanPrice": 100096,
-        "dirtyPrice": 100896
+        "cleanPrice": 100096133,
+        "dirtyPrice": 100096933
       },
       {
         "tradingDate": "2026-09-21",
-        "cleanPrice": 100008,
-        "dirtyPrice": 100808
+        "cleanPrice": 100008342,
+        "dirtyPrice": 100009142
       },
       {
         "tradingDate": "2026-09-22",
-        "cleanPrice": 99862,
-        "dirtyPrice": 100662
+        "cleanPrice": 99862386,
+        "dirtyPrice": 99863186
       },
       {
         "tradingDate": "2026-09-23",
-        "cleanPrice": 100055,
-        "dirtyPrice": 100855
+        "cleanPrice": 100054957,
+        "dirtyPrice": 100055757
       },
       {
         "tradingDate": "2026-09-24",
-        "cleanPrice": 100166,
-        "dirtyPrice": 100966
+        "cleanPrice": 100165749,
+        "dirtyPrice": 100166549
       },
       {
         "tradingDate": "2026-09-25",
-        "cleanPrice": 100099,
-        "dirtyPrice": 100899
+        "cleanPrice": 100098534,
+        "dirtyPrice": 100099334
       },
       {
         "tradingDate": "2026-09-28",
-        "cleanPrice": 100278,
-        "dirtyPrice": 101078
+        "cleanPrice": 100278402,
+        "dirtyPrice": 100279202
       },
       {
         "tradingDate": "2026-09-29",
-        "cleanPrice": 100477,
-        "dirtyPrice": 101277
+        "cleanPrice": 100477023,
+        "dirtyPrice": 100477823
       },
       {
         "tradingDate": "2026-09-30",
-        "cleanPrice": 100466,
-        "dirtyPrice": 101266
+        "cleanPrice": 100465793,
+        "dirtyPrice": 100466593
       },
       {
         "tradingDate": "2026-10-01",
-        "cleanPrice": 100272,
-        "dirtyPrice": 101072
+        "cleanPrice": 100272054,
+        "dirtyPrice": 100272854
       },
       {
         "tradingDate": "2026-10-02",
-        "cleanPrice": 100222,
-        "dirtyPrice": 101022
+        "cleanPrice": 100221561,
+        "dirtyPrice": 100222361
       },
       {
         "tradingDate": "2026-10-05",
-        "cleanPrice": 100131,
-        "dirtyPrice": 100931
+        "cleanPrice": 100130934,
+        "dirtyPrice": 100131734
       },
       {
         "tradingDate": "2026-10-06",
-        "cleanPrice": 100116,
-        "dirtyPrice": 100916
+        "cleanPrice": 100116093,
+        "dirtyPrice": 100116893
       },
       {
         "tradingDate": "2026-10-07",
-        "cleanPrice": 100164,
-        "dirtyPrice": 100964
+        "cleanPrice": 100164190,
+        "dirtyPrice": 100164990
       },
       {
         "tradingDate": "2026-10-08",
-        "cleanPrice": 100112,
-        "dirtyPrice": 100912
+        "cleanPrice": 100112228,
+        "dirtyPrice": 100113028
       },
       {
         "tradingDate": "2026-10-09",
-        "cleanPrice": 100000,
-        "dirtyPrice": 100800
+        "cleanPrice": 100000000,
+        "dirtyPrice": 100000800
       }
     ],
-    "DMBNB": [
+    "VIB12508": [
       {
         "tradingDate": "2026-07-20",
-        "cleanPrice": 102435,
-        "dirtyPrice": 103235
+        "cleanPrice": 1024351028,
+        "dirtyPrice": 1024351828
       },
       {
         "tradingDate": "2026-07-21",
-        "cleanPrice": 102431,
-        "dirtyPrice": 103231
+        "cleanPrice": 1024310215,
+        "dirtyPrice": 1024311015
       },
       {
         "tradingDate": "2026-07-22",
-        "cleanPrice": 102473,
-        "dirtyPrice": 103273
+        "cleanPrice": 1024729112,
+        "dirtyPrice": 1024729912
       },
       {
         "tradingDate": "2026-07-23",
-        "cleanPrice": 102374,
-        "dirtyPrice": 103174
+        "cleanPrice": 1023737523,
+        "dirtyPrice": 1023738323
       },
       {
         "tradingDate": "2026-07-24",
-        "cleanPrice": 102354,
-        "dirtyPrice": 103154
+        "cleanPrice": 1023543973,
+        "dirtyPrice": 1023544773
       },
       {
         "tradingDate": "2026-07-27",
-        "cleanPrice": 102318,
-        "dirtyPrice": 103118
+        "cleanPrice": 1023177953,
+        "dirtyPrice": 1023178753
       },
       {
         "tradingDate": "2026-07-28",
-        "cleanPrice": 102228,
-        "dirtyPrice": 103028
+        "cleanPrice": 1022277682,
+        "dirtyPrice": 1022278482
       },
       {
         "tradingDate": "2026-07-29",
-        "cleanPrice": 102033,
-        "dirtyPrice": 102833
+        "cleanPrice": 1020332017,
+        "dirtyPrice": 1020332817
       },
       {
         "tradingDate": "2026-07-30",
-        "cleanPrice": 102198,
-        "dirtyPrice": 102998
+        "cleanPrice": 1021978724,
+        "dirtyPrice": 1021979524
       },
       {
         "tradingDate": "2026-07-31",
-        "cleanPrice": 102296,
-        "dirtyPrice": 103096
+        "cleanPrice": 1022957957,
+        "dirtyPrice": 1022958757
       },
       {
         "tradingDate": "2026-08-03",
-        "cleanPrice": 102326,
-        "dirtyPrice": 103126
+        "cleanPrice": 1023255712,
+        "dirtyPrice": 1023256512
       },
       {
         "tradingDate": "2026-08-04",
-        "cleanPrice": 102276,
-        "dirtyPrice": 103076
+        "cleanPrice": 1022755777,
+        "dirtyPrice": 1022756577
       },
       {
         "tradingDate": "2026-08-05",
-        "cleanPrice": 102091,
-        "dirtyPrice": 102891
+        "cleanPrice": 1020910527,
+        "dirtyPrice": 1020911327
       },
       {
         "tradingDate": "2026-08-06",
-        "cleanPrice": 102073,
-        "dirtyPrice": 102873
+        "cleanPrice": 1020727630,
+        "dirtyPrice": 1020728430
       },
       {
         "tradingDate": "2026-08-07",
-        "cleanPrice": 102190,
-        "dirtyPrice": 102990
+        "cleanPrice": 1021899835,
+        "dirtyPrice": 1021900635
       },
       {
         "tradingDate": "2026-08-10",
-        "cleanPrice": 102090,
-        "dirtyPrice": 102890
+        "cleanPrice": 1020903397,
+        "dirtyPrice": 1020904197
       },
       {
         "tradingDate": "2026-08-11",
-        "cleanPrice": 102215,
-        "dirtyPrice": 103015
+        "cleanPrice": 1022148206,
+        "dirtyPrice": 1022149006
       },
       {
         "tradingDate": "2026-08-12",
-        "cleanPrice": 102228,
-        "dirtyPrice": 103028
+        "cleanPrice": 1022282017,
+        "dirtyPrice": 1022282817
       },
       {
         "tradingDate": "2026-08-13",
-        "cleanPrice": 102061,
-        "dirtyPrice": 102861
+        "cleanPrice": 1020614999,
+        "dirtyPrice": 1020615799
       },
       {
         "tradingDate": "2026-08-14",
-        "cleanPrice": 101914,
-        "dirtyPrice": 102714
+        "cleanPrice": 1019137500,
+        "dirtyPrice": 1019138300
       },
       {
         "tradingDate": "2026-08-17",
-        "cleanPrice": 101903,
-        "dirtyPrice": 102703
+        "cleanPrice": 1019030558,
+        "dirtyPrice": 1019031358
       },
       {
         "tradingDate": "2026-08-18",
-        "cleanPrice": 101959,
-        "dirtyPrice": 102759
+        "cleanPrice": 1019589335,
+        "dirtyPrice": 1019590135
       },
       {
         "tradingDate": "2026-08-19",
-        "cleanPrice": 102099,
-        "dirtyPrice": 102899
+        "cleanPrice": 1020988334,
+        "dirtyPrice": 1020989134
       },
       {
         "tradingDate": "2026-08-20",
-        "cleanPrice": 101960,
-        "dirtyPrice": 102760
+        "cleanPrice": 1019603982,
+        "dirtyPrice": 1019604782
       },
       {
         "tradingDate": "2026-08-21",
-        "cleanPrice": 101829,
-        "dirtyPrice": 102629
+        "cleanPrice": 1018294791,
+        "dirtyPrice": 1018295591
       },
       {
         "tradingDate": "2026-08-24",
-        "cleanPrice": 101997,
-        "dirtyPrice": 102797
+        "cleanPrice": 1019971945,
+        "dirtyPrice": 1019972745
       },
       {
         "tradingDate": "2026-08-25",
-        "cleanPrice": 101901,
-        "dirtyPrice": 102701
+        "cleanPrice": 1019014585,
+        "dirtyPrice": 1019015385
       },
       {
         "tradingDate": "2026-08-26",
-        "cleanPrice": 101966,
-        "dirtyPrice": 102766
+        "cleanPrice": 1019663187,
+        "dirtyPrice": 1019663987
       },
       {
         "tradingDate": "2026-08-27",
-        "cleanPrice": 101851,
-        "dirtyPrice": 102651
+        "cleanPrice": 1018511069,
+        "dirtyPrice": 1018511869
       },
       {
         "tradingDate": "2026-08-28",
-        "cleanPrice": 102044,
-        "dirtyPrice": 102844
+        "cleanPrice": 1020439647,
+        "dirtyPrice": 1020440447
       },
       {
         "tradingDate": "2026-08-31",
-        "cleanPrice": 102208,
-        "dirtyPrice": 103008
+        "cleanPrice": 1022082351,
+        "dirtyPrice": 1022083151
       },
       {
         "tradingDate": "2026-09-01",
-        "cleanPrice": 102216,
-        "dirtyPrice": 103016
+        "cleanPrice": 1022159405,
+        "dirtyPrice": 1022160205
       },
       {
         "tradingDate": "2026-09-02",
-        "cleanPrice": 102041,
-        "dirtyPrice": 102841
+        "cleanPrice": 1020406068,
+        "dirtyPrice": 1020406868
       },
       {
         "tradingDate": "2026-09-03",
-        "cleanPrice": 101846,
-        "dirtyPrice": 102646
+        "cleanPrice": 1018457277,
+        "dirtyPrice": 1018458077
       },
       {
         "tradingDate": "2026-09-04",
-        "cleanPrice": 101954,
-        "dirtyPrice": 102754
+        "cleanPrice": 1019537929,
+        "dirtyPrice": 1019538729
       },
       {
         "tradingDate": "2026-09-07",
-        "cleanPrice": 101773,
-        "dirtyPrice": 102573
+        "cleanPrice": 1017731557,
+        "dirtyPrice": 1017732357
       },
       {
         "tradingDate": "2026-09-08",
-        "cleanPrice": 101969,
-        "dirtyPrice": 102769
+        "cleanPrice": 1019691501,
+        "dirtyPrice": 1019692301
       },
       {
         "tradingDate": "2026-09-09",
-        "cleanPrice": 101930,
-        "dirtyPrice": 102730
+        "cleanPrice": 1019296406,
+        "dirtyPrice": 1019297206
       },
       {
         "tradingDate": "2026-09-10",
-        "cleanPrice": 102114,
-        "dirtyPrice": 102914
+        "cleanPrice": 1021138546,
+        "dirtyPrice": 1021139346
       },
       {
         "tradingDate": "2026-09-11",
-        "cleanPrice": 101939,
-        "dirtyPrice": 102739
+        "cleanPrice": 1019392196,
+        "dirtyPrice": 1019392996
       },
       {
         "tradingDate": "2026-09-14",
-        "cleanPrice": 101814,
-        "dirtyPrice": 102614
+        "cleanPrice": 1018143035,
+        "dirtyPrice": 1018143835
       },
       {
         "tradingDate": "2026-09-15",
-        "cleanPrice": 101752,
-        "dirtyPrice": 102552
+        "cleanPrice": 1017519386,
+        "dirtyPrice": 1017520186
       },
       {
         "tradingDate": "2026-09-16",
-        "cleanPrice": 101638,
-        "dirtyPrice": 102438
+        "cleanPrice": 1016382389,
+        "dirtyPrice": 1016383189
       },
       {
         "tradingDate": "2026-09-17",
-        "cleanPrice": 101466,
-        "dirtyPrice": 102266
+        "cleanPrice": 1014656397,
+        "dirtyPrice": 1014657197
       },
       {
         "tradingDate": "2026-09-18",
-        "cleanPrice": 101459,
-        "dirtyPrice": 102259
+        "cleanPrice": 1014594552,
+        "dirtyPrice": 1014595352
       },
       {
         "tradingDate": "2026-09-21",
-        "cleanPrice": 101257,
-        "dirtyPrice": 102057
+        "cleanPrice": 1012573154,
+        "dirtyPrice": 1012573954
       },
       {
         "tradingDate": "2026-09-22",
-        "cleanPrice": 101406,
-        "dirtyPrice": 102206
+        "cleanPrice": 1014059799,
+        "dirtyPrice": 1014060599
       },
       {
         "tradingDate": "2026-09-23",
-        "cleanPrice": 101446,
-        "dirtyPrice": 102246
+        "cleanPrice": 1014461120,
+        "dirtyPrice": 1014461920
       },
       {
         "tradingDate": "2026-09-24",
-        "cleanPrice": 101270,
-        "dirtyPrice": 102070
+        "cleanPrice": 1012701970,
+        "dirtyPrice": 1012702770
       },
       {
         "tradingDate": "2026-09-25",
-        "cleanPrice": 101182,
-        "dirtyPrice": 101982
+        "cleanPrice": 1011822251,
+        "dirtyPrice": 1011823051
       },
       {
         "tradingDate": "2026-09-28",
-        "cleanPrice": 101378,
-        "dirtyPrice": 102178
+        "cleanPrice": 1013782155,
+        "dirtyPrice": 1013782955
       },
       {
         "tradingDate": "2026-09-29",
-        "cleanPrice": 101452,
-        "dirtyPrice": 102252
+        "cleanPrice": 1014523046,
+        "dirtyPrice": 1014523846
       },
       {
         "tradingDate": "2026-09-30",
-        "cleanPrice": 101254,
-        "dirtyPrice": 102054
+        "cleanPrice": 1012542698,
+        "dirtyPrice": 1012543498
       },
       {
         "tradingDate": "2026-10-01",
-        "cleanPrice": 101375,
-        "dirtyPrice": 102175
+        "cleanPrice": 1013752075,
+        "dirtyPrice": 1013752875
       },
       {
         "tradingDate": "2026-10-02",
-        "cleanPrice": 101308,
-        "dirtyPrice": 102108
+        "cleanPrice": 1013081043,
+        "dirtyPrice": 1013081843
       },
       {
         "tradingDate": "2026-10-05",
-        "cleanPrice": 101202,
-        "dirtyPrice": 102002
+        "cleanPrice": 1012015442,
+        "dirtyPrice": 1012016242
       },
       {
         "tradingDate": "2026-10-06",
-        "cleanPrice": 101191,
-        "dirtyPrice": 101991
+        "cleanPrice": 1011913957,
+        "dirtyPrice": 1011914757
       },
       {
         "tradingDate": "2026-10-07",
-        "cleanPrice": 101083,
-        "dirtyPrice": 101883
+        "cleanPrice": 1010831403,
+        "dirtyPrice": 1010832203
       },
       {
         "tradingDate": "2026-10-08",
-        "cleanPrice": 101035,
-        "dirtyPrice": 101835
+        "cleanPrice": 1010345051,
+        "dirtyPrice": 1010345851
       },
       {
         "tradingDate": "2026-10-09",
-        "cleanPrice": 101000,
-        "dirtyPrice": 101800
+        "cleanPrice": 1010000000,
+        "dirtyPrice": 1010000800
       }
     ],
-    "DMBNC": [
+    "VIC12510": [
       {
         "tradingDate": "2026-07-20",
-        "cleanPrice": 98705,
-        "dirtyPrice": 99505
+        "cleanPrice": 98704572,
+        "dirtyPrice": 98705372
       },
       {
         "tradingDate": "2026-07-21",
-        "cleanPrice": 98837,
-        "dirtyPrice": 99637
+        "cleanPrice": 98837494,
+        "dirtyPrice": 98838294
       },
       {
         "tradingDate": "2026-07-22",
-        "cleanPrice": 99002,
-        "dirtyPrice": 99802
+        "cleanPrice": 99002253,
+        "dirtyPrice": 99003053
       },
       {
         "tradingDate": "2026-07-23",
-        "cleanPrice": 99009,
-        "dirtyPrice": 99809
+        "cleanPrice": 99008922,
+        "dirtyPrice": 99009722
       },
       {
         "tradingDate": "2026-07-24",
-        "cleanPrice": 98910,
-        "dirtyPrice": 99710
+        "cleanPrice": 98909743,
+        "dirtyPrice": 98910543
       },
       {
         "tradingDate": "2026-07-27",
-        "cleanPrice": 98928,
-        "dirtyPrice": 99728
+        "cleanPrice": 98927665,
+        "dirtyPrice": 98928465
       },
       {
         "tradingDate": "2026-07-28",
-        "cleanPrice": 98750,
-        "dirtyPrice": 99550
+        "cleanPrice": 98750109,
+        "dirtyPrice": 98750909
       },
       {
         "tradingDate": "2026-07-29",
-        "cleanPrice": 98563,
-        "dirtyPrice": 99363
+        "cleanPrice": 98562693,
+        "dirtyPrice": 98563493
       },
       {
         "tradingDate": "2026-07-30",
-        "cleanPrice": 98740,
-        "dirtyPrice": 99540
+        "cleanPrice": 98740154,
+        "dirtyPrice": 98740954
       },
       {
         "tradingDate": "2026-07-31",
-        "cleanPrice": 98590,
-        "dirtyPrice": 99390
+        "cleanPrice": 98590019,
+        "dirtyPrice": 98590819
       },
       {
         "tradingDate": "2026-08-03",
-        "cleanPrice": 98690,
-        "dirtyPrice": 99490
+        "cleanPrice": 98690247,
+        "dirtyPrice": 98691047
       },
       {
         "tradingDate": "2026-08-04",
-        "cleanPrice": 98579,
-        "dirtyPrice": 99379
+        "cleanPrice": 98579014,
+        "dirtyPrice": 98579814
       },
       {
         "tradingDate": "2026-08-05",
-        "cleanPrice": 98425,
-        "dirtyPrice": 99225
+        "cleanPrice": 98425068,
+        "dirtyPrice": 98425868
       },
       {
         "tradingDate": "2026-08-06",
-        "cleanPrice": 98465,
-        "dirtyPrice": 99265
+        "cleanPrice": 98465159,
+        "dirtyPrice": 98465959
       },
       {
         "tradingDate": "2026-08-07",
-        "cleanPrice": 98403,
-        "dirtyPrice": 99203
+        "cleanPrice": 98403438,
+        "dirtyPrice": 98404238
       },
       {
         "tradingDate": "2026-08-10",
-        "cleanPrice": 98514,
-        "dirtyPrice": 99314
+        "cleanPrice": 98513962,
+        "dirtyPrice": 98514762
       },
       {
         "tradingDate": "2026-08-11",
-        "cleanPrice": 98596,
-        "dirtyPrice": 99396
+        "cleanPrice": 98595546,
+        "dirtyPrice": 98596346
       },
       {
         "tradingDate": "2026-08-12",
-        "cleanPrice": 98755,
-        "dirtyPrice": 99555
+        "cleanPrice": 98755287,
+        "dirtyPrice": 98756087
       },
       {
         "tradingDate": "2026-08-13",
-        "cleanPrice": 98614,
-        "dirtyPrice": 99414
+        "cleanPrice": 98613730,
+        "dirtyPrice": 98614530
       },
       {
         "tradingDate": "2026-08-14",
-        "cleanPrice": 98638,
-        "dirtyPrice": 99438
+        "cleanPrice": 98637887,
+        "dirtyPrice": 98638687
       },
       {
         "tradingDate": "2026-08-17",
-        "cleanPrice": 98708,
-        "dirtyPrice": 99508
+        "cleanPrice": 98708321,
+        "dirtyPrice": 98709121
       },
       {
         "tradingDate": "2026-08-18",
-        "cleanPrice": 98550,
-        "dirtyPrice": 99350
+        "cleanPrice": 98550346,
+        "dirtyPrice": 98551146
       },
       {
         "tradingDate": "2026-08-19",
-        "cleanPrice": 98473,
-        "dirtyPrice": 99273
+        "cleanPrice": 98472546,
+        "dirtyPrice": 98473346
       },
       {
         "tradingDate": "2026-08-20",
-        "cleanPrice": 98570,
-        "dirtyPrice": 99370
+        "cleanPrice": 98570466,
+        "dirtyPrice": 98571266
       },
       {
         "tradingDate": "2026-08-21",
-        "cleanPrice": 98549,
-        "dirtyPrice": 99349
+        "cleanPrice": 98549104,
+        "dirtyPrice": 98549904
       },
       {
         "tradingDate": "2026-08-24",
-        "cleanPrice": 98496,
-        "dirtyPrice": 99296
+        "cleanPrice": 98496071,
+        "dirtyPrice": 98496871
       },
       {
         "tradingDate": "2026-08-25",
-        "cleanPrice": 98516,
-        "dirtyPrice": 99316
+        "cleanPrice": 98516375,
+        "dirtyPrice": 98517175
       },
       {
         "tradingDate": "2026-08-26",
-        "cleanPrice": 98696,
-        "dirtyPrice": 99496
+        "cleanPrice": 98696167,
+        "dirtyPrice": 98696967
       },
       {
         "tradingDate": "2026-08-27",
-        "cleanPrice": 98763,
-        "dirtyPrice": 99563
+        "cleanPrice": 98763397,
+        "dirtyPrice": 98764197
       },
       {
         "tradingDate": "2026-08-28",
-        "cleanPrice": 98931,
-        "dirtyPrice": 99731
+        "cleanPrice": 98930692,
+        "dirtyPrice": 98931492
       },
       {
         "tradingDate": "2026-08-31",
-        "cleanPrice": 99045,
-        "dirtyPrice": 99845
+        "cleanPrice": 99044944,
+        "dirtyPrice": 99045744
       },
       {
         "tradingDate": "2026-09-01",
-        "cleanPrice": 99153,
-        "dirtyPrice": 99953
+        "cleanPrice": 99152632,
+        "dirtyPrice": 99153432
       },
       {
         "tradingDate": "2026-09-02",
-        "cleanPrice": 99131,
-        "dirtyPrice": 99931
+        "cleanPrice": 99130862,
+        "dirtyPrice": 99131662
       },
       {
         "tradingDate": "2026-09-03",
-        "cleanPrice": 98993,
-        "dirtyPrice": 99793
+        "cleanPrice": 98992527,
+        "dirtyPrice": 98993327
       },
       {
         "tradingDate": "2026-09-04",
-        "cleanPrice": 98989,
-        "dirtyPrice": 99789
+        "cleanPrice": 98988558,
+        "dirtyPrice": 98989358
       },
       {
         "tradingDate": "2026-09-07",
-        "cleanPrice": 99175,
-        "dirtyPrice": 99975
+        "cleanPrice": 99174792,
+        "dirtyPrice": 99175592
       },
       {
         "tradingDate": "2026-09-08",
-        "cleanPrice": 99121,
-        "dirtyPrice": 99921
+        "cleanPrice": 99120509,
+        "dirtyPrice": 99121309
       },
       {
         "tradingDate": "2026-09-09",
-        "cleanPrice": 99163,
-        "dirtyPrice": 99963
+        "cleanPrice": 99162886,
+        "dirtyPrice": 99163686
       },
       {
         "tradingDate": "2026-09-10",
-        "cleanPrice": 99078,
-        "dirtyPrice": 99878
+        "cleanPrice": 99078235,
+        "dirtyPrice": 99079035
       },
       {
         "tradingDate": "2026-09-11",
-        "cleanPrice": 99240,
-        "dirtyPrice": 100040
+        "cleanPrice": 99239927,
+        "dirtyPrice": 99240727
       },
       {
         "tradingDate": "2026-09-14",
-        "cleanPrice": 99227,
-        "dirtyPrice": 100027
+        "cleanPrice": 99227194,
+        "dirtyPrice": 99227994
       },
       {
         "tradingDate": "2026-09-15",
-        "cleanPrice": 99362,
-        "dirtyPrice": 100162
+        "cleanPrice": 99361934,
+        "dirtyPrice": 99362734
       },
       {
         "tradingDate": "2026-09-16",
-        "cleanPrice": 99542,
-        "dirtyPrice": 100342
+        "cleanPrice": 99542363,
+        "dirtyPrice": 99543163
       },
       {
         "tradingDate": "2026-09-17",
-        "cleanPrice": 99707,
-        "dirtyPrice": 100507
+        "cleanPrice": 99707098,
+        "dirtyPrice": 99707898
       },
       {
         "tradingDate": "2026-09-18",
-        "cleanPrice": 99509,
-        "dirtyPrice": 100309
+        "cleanPrice": 99509182,
+        "dirtyPrice": 99509982
       },
       {
         "tradingDate": "2026-09-21",
-        "cleanPrice": 99666,
-        "dirtyPrice": 100466
+        "cleanPrice": 99666479,
+        "dirtyPrice": 99667279
       },
       {
         "tradingDate": "2026-09-22",
-        "cleanPrice": 99682,
-        "dirtyPrice": 100482
+        "cleanPrice": 99682274,
+        "dirtyPrice": 99683074
       },
       {
         "tradingDate": "2026-09-23",
-        "cleanPrice": 99659,
-        "dirtyPrice": 100459
+        "cleanPrice": 99659006,
+        "dirtyPrice": 99659806
       },
       {
         "tradingDate": "2026-09-24",
-        "cleanPrice": 99668,
-        "dirtyPrice": 100468
+        "cleanPrice": 99668296,
+        "dirtyPrice": 99669096
       },
       {
         "tradingDate": "2026-09-25",
-        "cleanPrice": 99560,
-        "dirtyPrice": 100360
+        "cleanPrice": 99560367,
+        "dirtyPrice": 99561167
       },
       {
         "tradingDate": "2026-09-28",
-        "cleanPrice": 99562,
-        "dirtyPrice": 100362
+        "cleanPrice": 99561884,
+        "dirtyPrice": 99562684
       },
       {
         "tradingDate": "2026-09-29",
-        "cleanPrice": 99673,
-        "dirtyPrice": 100473
+        "cleanPrice": 99673481,
+        "dirtyPrice": 99674281
       },
       {
         "tradingDate": "2026-09-30",
-        "cleanPrice": 99784,
-        "dirtyPrice": 100584
+        "cleanPrice": 99783591,
+        "dirtyPrice": 99784391
       },
       {
         "tradingDate": "2026-10-01",
-        "cleanPrice": 99597,
-        "dirtyPrice": 100397
+        "cleanPrice": 99597289,
+        "dirtyPrice": 99598089
       },
       {
         "tradingDate": "2026-10-02",
-        "cleanPrice": 99566,
-        "dirtyPrice": 100366
+        "cleanPrice": 99566396,
+        "dirtyPrice": 99567196
       },
       {
         "tradingDate": "2026-10-05",
-        "cleanPrice": 99721,
-        "dirtyPrice": 100521
+        "cleanPrice": 99720936,
+        "dirtyPrice": 99721736
       },
       {
         "tradingDate": "2026-10-06",
-        "cleanPrice": 99630,
-        "dirtyPrice": 100430
+        "cleanPrice": 99630003,
+        "dirtyPrice": 99630803
       },
       {
         "tradingDate": "2026-10-07",
-        "cleanPrice": 99450,
-        "dirtyPrice": 100250
+        "cleanPrice": 99449838,
+        "dirtyPrice": 99450638
       },
       {
         "tradingDate": "2026-10-08",
-        "cleanPrice": 99477,
-        "dirtyPrice": 100277
+        "cleanPrice": 99477165,
+        "dirtyPrice": 99477965
       },
       {
         "tradingDate": "2026-10-09",
-        "cleanPrice": 99500,
-        "dirtyPrice": 100300
+        "cleanPrice": 99500000,
+        "dirtyPrice": 99500800
       }
     ],
-    "DMCPN": [
+    "TPCP5N": [
       {
         "tradingDate": "2026-07-20",
         "cleanPrice": 102568,
@@ -1209,7 +1209,7 @@
         "dirtyPrice": 102800
       }
     ],
-    "DMCPD": [
+    "TPCP10N": [
       {
         "tradingDate": "2026-07-20",
         "cleanPrice": 104847,

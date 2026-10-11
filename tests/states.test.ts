@@ -34,8 +34,8 @@ describe('BR-22: gói gửi TCBS chỉ gồm mã thị trường và ngày', () 
     const urls: string[] = [], logged: unknown[] = []
     const fake: typeof fetch = async (u) => { urls.push(String(u)); return new Response(JSON.stringify({ data: [{ tradingDate: '2026-10-09T00:00:00', close: 25100 }] })) }
     const ctx = { mode: 'live' as const, env: { TCBS_BASE_URL: 'https://tcbs.fake', TCBS_TOKEN: 't' }, agreements: { TCBS_STOCK: 'AGR-TCBS-1' }, fetchFn: fake, logOutbound: (_a: string, p: unknown) => logged.push(p), logEvent: () => {} }
-    const out = await makeAdapters(SAMPLE_STORE).TCBS_STOCK.history([{ key: 'DMNGA', instrument_id: 'DMNGA', market_symbol: 'MKT1', currency: 'VND' }], '2026-10-01', '2026-10-09', ctx)
-    expect(out.DMNGA[0]).toMatchObject({ date: '2026-10-09', price: '25100' })
+    const out = await makeAdapters(SAMPLE_STORE).TCBS_STOCK.history([{ key: 'MBB', instrument_id: 'MBB', market_symbol: 'MKT1', currency: 'VND' }], '2026-10-01', '2026-10-09', ctx)
+    expect(out.MBB[0]).toMatchObject({ date: '2026-10-09', price: '25100' })
     expect([...new URL(urls[0]).searchParams.keys()].sort()).toEqual(['from', 'symbol', 'to'])
     expect(logged).toEqual([tcbsPayload('MKT1', '2026-10-01', '2026-10-09')])
     await expect(makeAdapters(SAMPLE_STORE).TCBS_STOCK.history([], '2026-10-01', '2026-10-09', { ...ctx, agreements: {} })).rejects.toThrow(/agreement_ref/)
