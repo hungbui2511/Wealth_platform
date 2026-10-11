@@ -5,20 +5,13 @@ import { TABLES, verifyAuditChain } from '../db'
 import { initialConfigs } from './config'
 import { createPriceSnapshot } from './portfolio'
 
-// Bản sao DDL nhật ký trong migrations/0001_schema.sql (dùng khi đặt lại toàn bộ demo)
-export const AUDIT_DDL = `CREATE TABLE audit_log (seq INTEGER PRIMARY KEY, ts TEXT NOT NULL, actor TEXT NOT NULL, action TEXT NOT NULL, object TEXT, data TEXT NOT NULL, prev_hash TEXT NOT NULL, hash TEXT NOT NULL);
-CREATE INDEX IF NOT EXISTS audit_object ON audit_log(object);
-CREATE TRIGGER audit_log_no_update BEFORE UPDATE ON audit_log BEGIN SELECT RAISE(ABORT, 'audit_log chỉ ghi thêm: không được UPDATE'); END;
-CREATE TRIGGER audit_log_no_delete BEFORE DELETE ON audit_log BEGIN SELECT RAISE(ABORT, 'audit_log chỉ ghi thêm: không được DELETE'); END;`
-
 export async function reseed(ctx: AppCtx, opts: { skipAuth?: boolean } = {}) {
   if (!opts.skipAuth) requireRole(ctx, 'ADMIN')
   const prev = await verifyAuditChain(ctx.env.DB).catch(() => ({ ok: false, count: 0 }))
-  // Một lệnh exec: xóa dữ liệu, rồi đặt lại nhật ký ở mức schema (xóa bảng, tạo lại kèm trigger).
-  // Bản ghi đầu của chuỗi mới ghi lại đầu chuỗi cũ.
-  const sql = [...[...Object.keys(TABLES), 'counters'].map(t => `DELETE FROM ${t};`), 'DROP TABLE IF EXISTS audit_log;', AUDIT_DDL.replace(/\n(?!CREATE)/g, ' ')].join('\n')
-  await ctx.env.DB.exec(sql)
+  // Xóa dữ liệu nghiệp vụ và nạp lại trong cùng một lô nguyên tử. Nhật ký không bị xóa (NFR-13):
+  // chuỗi mã băm nối tiếp, bản ghi system.reseed ghi lại tình trạng chuỗi trước khi nạp lại.
   const uow = ctx.uow()
+  for (const t of [...Object.keys(TABLES), 'counters']) uow.raw(ctx.env.DB.prepare(`DELETE FROM ${t}`))
   for (const u of SEED.users) uow.put('users', { ...u })
   for (const f of SEED.families) uow.put('families', f as never)
   for (const g of SEED.goals) uow.put('goals', g as never)

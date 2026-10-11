@@ -62,16 +62,19 @@ export interface AuditInput { actor: string; action: string; object?: string; da
 export class UnitOfWork {
   private writes: { table: string; doc: Doc; mode: 'upsert' | 'insert' }[] = []
   private audits: AuditInput[] = []
+  private pre: D1PreparedStatement[] = []
   constructor(private repo: Repo, private now: () => string) {}
 
   put(table: string, doc: Doc) { this.writes.push({ table, doc, mode: 'upsert' }); return this }
   insert(table: string, doc: Doc) { this.writes.push({ table, doc, mode: 'insert' }); return this }
   audit(a: AuditInput) { this.audits.push(a); return this }
+  // Câu lệnh chạy đầu lô, cùng giao dịch với phần ghi (ví dụ xóa dữ liệu khi nạp lại)
+  raw(stmt: D1PreparedStatement) { this.pre.push(stmt); return this }
   get pending() { return this.writes.length + this.audits.length }
 
   private statements(): D1PreparedStatement[] {
     const db = this.repo.db
-    const out: D1PreparedStatement[] = []
+    const out: D1PreparedStatement[] = [...this.pre]
     // Gom theo bảng/chế độ: một lệnh INSERT ... SELECT FROM json_each(?) cho nhiều bản ghi
     const groups = new Map<string, Doc[]>()
     for (const w of this.writes) {
@@ -117,7 +120,7 @@ export class UnitOfWork {
       if (!stmts.length) return { audit: [] }
       try {
         await this.repo.db.batch(stmts)
-        this.writes = []; this.audits = []
+        this.writes = []; this.audits = []; this.pre = []
         return { audit: auditRows.map(r => ({ seq: r.seq, hash: r.hash })) }
       } catch (e) {
         // Xung đột số thứ tự nhật ký khi có yêu cầu song song: thử lại với đầu chuỗi mới

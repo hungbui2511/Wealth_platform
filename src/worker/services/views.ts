@@ -349,9 +349,11 @@ export async function decide(ctx: AppCtx, viewId: string, body: { action: string
   return { decision: d, view: v, run_id: d.run_id }
 }
 
-// AC-05a: áp dụng một nhận định JSON nhập tay, bỏ qua điều kiện duyệt (dùng ở bước xây dựng 2)
+// AC-05a: áp dụng một nhận định JSON nhập tay, bỏ qua phản biện và điều kiện duyệt (chỉ dùng ở bước xây dựng 2).
+// Tắt trên bản deploy; bật bằng MANUAL_APPLY=on khi kiểm thử. Chỉ CIO (người có quyền duyệt) được dùng.
 export async function createManualView(ctx: AppCtx, raw: unknown, eventId: string, apply: (v: ViewRec, uow: UnitOfWork) => Promise<{ run_id: string }>) {
-  requireRole(ctx, 'CIO', 'ADMIN')
+  if (ctx.env.MANUAL_APPLY !== 'on') throw new HttpError(403, 'Áp dụng nhận định nhập tay đã tắt trên bản này (chỉ dùng khi kiểm thử, MANUAL_APPLY=on)')
+  requireRole(ctx, 'CIO')
   const e = await getEvent(ctx, eventId)
   const news = await eventNews(ctx, e)
   const vctx = await viewContext(ctx, e, news)

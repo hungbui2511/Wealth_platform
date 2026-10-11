@@ -4,7 +4,7 @@ import { writeFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { createD1 } from '../tests/support/d1shim'
 import { makeCtx } from '../src/worker/ctx'
-import { reseed, AUDIT_DDL } from '../src/worker/services/admin'
+import { reseed } from '../src/worker/services/admin'
 import { TABLES } from '../src/worker/db'
 
 const DB = createD1()
@@ -14,8 +14,8 @@ const raw = (DB as unknown as { _raw: import('node:sqlite').DatabaseSync })._raw
 const q = (v: unknown) => v === null || v === undefined ? 'NULL' : typeof v === 'number' ? String(v) : `'${String(v).replace(/'/g, "''")}'`
 const lines: string[] = ['-- Sinh bởi scripts/build-seed-sql.ts – dữ liệu giả lập, không phải dữ liệu thật']
 for (const t of [...Object.keys(TABLES), 'counters']) lines.push(`DELETE FROM ${t};`)
-lines.push('DROP TABLE IF EXISTS audit_log;', ...AUDIT_DDL.split('\n'))
-for (const t of [...Object.keys(TABLES), 'counters', 'audit_log']) {
+// Nhật ký chỉ ghi thêm nên không xóa, không chép (NFR-13); nạp qua giao diện thì có bản ghi system.reseed
+for (const t of [...Object.keys(TABLES), 'counters']) {
   for (const row of raw.prepare(`SELECT * FROM ${t}`).all() as Record<string, unknown>[]) {
     lines.push(`INSERT INTO ${t} (${Object.keys(row).join(', ')}) VALUES (${Object.values(row).map(q).join(', ')});`)
   }
