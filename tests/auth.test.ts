@@ -83,6 +83,13 @@ describe('Xác thực Cloudflare Access', () => {
     const t = await sign({ aud: AUD, iss: TEAM, common_name: 'smoke.access', exp: nowSec() + 600, sub: '' })
     expect((await req('/api/me', { 'cf-access-jwt-assertion': t, 'x-demo-user': 'CIO1' })).status).toBe(200)
   })
+  it('không đặt DEMO_OPERATORS: người đã qua Access được chuyển vai trò, trừ email gắn cố định', async () => {
+    const env2 = { ...env, DEMO_OPERATORS: undefined } as unknown as Env
+    const r = await app.request('/api/me', { headers: { 'cf-access-jwt-assertion': await sign(claims('khach@example.com')), 'x-demo-user': 'CIO1' } }, env2)
+    expect(r.status).toBe(200)
+    const fixed = await app.request('/api/me', { headers: { 'cf-access-jwt-assertion': await sign(claims('rm@example.com')), 'x-demo-user': 'ADM1' } }, env2)
+    expect(fixed.status).toBe(403)
+  })
   it('thiếu cấu hình Access thì đóng (503), không mở', async () => {
     const r = await app.request('/api/me', { headers: { 'x-demo-user': 'ADM1' } }, { ...env, ACCESS_AUD: '' } as Env)
     expect(r.status).toBe(503)

@@ -7,7 +7,7 @@ import { HttpError, type Env, type User } from './ctx'
 export interface Identity {
   user: User
   email?: string
-  operator: boolean // được chuyển vai trò demo (DEMO_OPERATORS)
+  operator: boolean // được chuyển vai trò demo
 }
 
 const b64urlBytes = (s: string) => Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/').padEnd(Math.ceil(s.length / 4) * 4, '=')), c => c.charCodeAt(0))
@@ -80,7 +80,10 @@ export async function verifiedEmail(req: Request, env: Env, fetchFn: typeof fetc
   const token = req.headers.get('cf-access-jwt-assertion')
   if (!token) throw new HttpError(401, 'Yêu cầu không đi qua Cloudflare Access')
   const { email } = await verifyAccessJwt(token, { teamDomain, aud, fetchFn })
-  return { email, operator: csv(env.DEMO_OPERATORS).includes(email) }
+  // Không đặt DEMO_OPERATORS: mọi người đã qua chính sách Access (danh sách email được mời) đều được chuyển vai trò demo,
+  // trừ email đã gắn cố định trong ROLE_MAP. Đặt DEMO_OPERATORS để giới hạn chặt hơn.
+  const operators = csv(env.DEMO_OPERATORS)
+  return { email, operator: operators.length ? operators.includes(email) : !roleMap(env).has(email) }
 }
 
 export async function authenticate(req: Request, env: Env, fetchFn: typeof fetch): Promise<Identity> {

@@ -13,7 +13,7 @@
     "dev": "npm run build && npm run db:migrate:local && wrangler dev --var AUTH_MODE:dev",
     "dev:ui": "vite",
     "deploy": "npm run build && npm run db:migrate:remote && wrangler deploy",
-    "demo:delete": "wrangler delete --name wealth-mvp1 && wrangler d1 delete wealth-mvp1",
+    "demo:delete": "wrangler delete --name wealth-platform && wrangler d1 delete wealth-mvp1",
     "smoke": "tsx scripts/smoke.ts",
     "test": "vitest run",
     "typecheck": "tsc --noEmit && tsc -p frontend/tsconfig.json"

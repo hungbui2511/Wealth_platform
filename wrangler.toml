@@ -1,5 +1,5 @@
 # Wealth Platform 2036 – MVP1 demo trên Cloudflare (BRD Mục 11.7). Phương án B: TypeScript (Hono + D1).
-name = "wealth-mvp1"
+name = "wealth-platform" # trùng tên Worker đã tạo trên dashboard (Workers Builds)
 main = "src/worker/index.ts"
 compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
@@ -14,7 +14,7 @@ AUTH_MODE = "access"  # access: chỉ tin JWT Cloudflare Access đã xác minh. 
 
 [[d1_databases]]
 binding = "DB"
-database_name = "wealth-mvp1"
+database_name = "wealth-platform" # trùng tên Worker đã tạo trên dashboard (Workers Builds)
 # D1 đã tạo trên tài khoản Cloudflare (APAC); schema 0001 đã áp dụng
 database_id = "792b4d3a-39fc-498c-b6a2-4d3d7ebe234c"
 migrations_dir = "migrations"
