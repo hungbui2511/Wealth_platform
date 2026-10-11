@@ -12,10 +12,11 @@ export function extractJson(text: string): unknown {
   try { return JSON.parse(body) } catch { throw new LlmError('Đầu ra của mô hình không phải JSON hợp lệ') }
 }
 
-export async function callJson(env: { ANTHROPIC_API_KEY?: string }, cfg: ModelCfg, system: string, user: string): Promise<LlmResult> {
+// fetchFn: cho phép kiểm thử chế độ live bằng máy chủ giả; trên Worker là fetch gốc
+export async function callJson(env: { ANTHROPIC_API_KEY?: string }, cfg: ModelCfg, system: string, user: string, fetchFn?: typeof fetch): Promise<LlmResult> {
   if (cfg.provider !== 'anthropic') throw new LlmError(`Nhà cung cấp ${cfg.provider} chưa được cài đặt trong bản demo`)
   if (!env.ANTHROPIC_API_KEY) throw new LlmError('Thiếu ANTHROPIC_API_KEY cho AGENT_MODE=live')
-  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY })
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, maxRetries: 2, timeout: 5 * 60 * 1000, ...(fetchFn ? { fetch: fetchFn } : {}) })
   const res = await client.beta.messages.create({
     model: cfg.model,
     max_tokens: cfg.max_tokens,
@@ -27,6 +28,7 @@ export async function callJson(env: { ANTHROPIC_API_KEY?: string }, cfg: ModelCf
     messages: [{ role: 'user', content: user }],
   } as never) as unknown as { content: { type: string; text?: string }[]; stop_reason: string; model: string; usage: unknown }
   if (res.stop_reason === 'refusal') throw new LlmError('Mô hình từ chối yêu cầu')
+  if (res.stop_reason === 'max_tokens') throw new LlmError('Đầu ra của mô hình bị cắt vì vượt giới hạn token (max_tokens); tăng max_tokens trong cấu hình MODEL')
   const raw = res.content.filter(b => b.type === 'text').map(b => b.text).join('')
   return { json: extractJson(raw), raw, model: res.model, usage: res.usage }
 }

@@ -2,6 +2,7 @@
 import { DEFAULT_ASSUMPTIONS, DEFAULT_BANNED_PHRASES, DEFAULT_THRESHOLDS, DEFAULT_UNIT_TABLE } from '../../shared/catalog'
 import { SEED } from '../../data/seed'
 import { DEFAULT_MODELS, DEFAULT_PROMPTS } from '../../agents/prompts'
+import { DEFAULT_NEWS_SOURCES } from '../../news/sources'
 import { actor, HttpError, minReason, requireRole, type AppCtx, type Role } from '../ctx'
 import type { UnitOfWork } from '../db'
 
@@ -35,7 +36,7 @@ export function initialConfigs(now: string): ConfigVersion[] {
     base('PROMPT', DEFAULT_PROMPTS), base('MODEL', DEFAULT_MODELS),
     base('PRICE_SOURCE', { agreements: { TCBS_STOCK: null, TCBS_BOND: null, ONEMOUNT: null } }),
     base('ONEMOUNT_CONFIRM', { confirmed: false }),
-    base('SYMBOL_MAP', {}), base('NEWS_SOURCES', []),
+    base('SYMBOL_MAP', {}), base('NEWS_SOURCES', DEFAULT_NEWS_SOURCES),
   ]
 }
 

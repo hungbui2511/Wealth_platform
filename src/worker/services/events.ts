@@ -114,3 +114,39 @@ export async function setTimestamp(ctx: AppCtx, id: string, field: TimestampFiel
   const u = ctx.uow(); u.update('events', ne as never); u.audit({ actor: actor(ctx), action: 'event.timestamp_set', object: id, data: { field, value } }); await u.commit()
   return ne
 }
+
+// Lập sự kiện từ tin trong hộp tin mới (tin lấy tự động): CIO hoặc Quản trị chọn tin, loại sự kiện và tiêu đề.
+// Tin giữ nguyên mã, chỉ gắn vào sự kiện; kiểm soát nguồn công khai (BR-26) và danh sách hạn chế (BR-27) chạy lại.
+export async function createEventFromNews(ctx: AppCtx, input: { news_ids: string[]; type: string; title?: string }) {
+  requireRole(ctx, 'CIO', 'ADMIN')
+  if (!EVENT_TYPES.includes(input.type as never)) throw new HttpError(422, `Loại sự kiện không hợp lệ: ${input.type}`)
+  const ids = [...new Set(input.news_ids ?? [])]
+  if (!ids.length) throw new HttpError(422, 'Chọn ít nhất một tin')
+  if (ids.length > 10) throw new HttpError(422, 'Một sự kiện gom tối đa 10 tin')
+  const news: (NewsItem & { rev?: number })[] = []
+  for (const id of ids) {
+    const n = await ctx.repo.get<NewsItem & { rev?: number }>('news_items', id)
+    if (!n) throw new HttpError(404, `Không có tin ${id}`)
+    if (n.event_id) throw new HttpError(409, `Tin ${id} đã thuộc sự kiện ${n.event_id}`)
+    news.push(n)
+  }
+  const cfg = await loadConfigs(ctx)
+  const now = ctx.now()
+  const problems = news.map(n => ({ id: n.id, errors: checkPublicSource(n, cfg.whitelist, now) })).filter(p => p.errors.length)
+  if (problems.length) throw new HttpError(422, 'Có tin không qua kiểm soát nguồn công khai (BR-26)', problems)
+  const id = await ctx.repo.nextId('events', `EV-${now.slice(0, 4)}-`, 4)
+  const published = news.map(n => n.published_at).sort((a, b) => Date.parse(a) - Date.parse(b))[0]
+  const hits = restrictedHits(news.flatMap(n => [n.title, n.summary]), activeRestricted(cfg, now))
+  const ev: EventRec = {
+    id, type: input.type, title: (input.title?.trim() || news[0].title).slice(0, 200), summary: news.map(n => n.summary).join(' ').slice(0, 3000),
+    news_ids: news.map(n => n.id), created_by: actor(ctx), created_at: now,
+    timestamps: { published_at: new Date(published).toISOString(), ingested_at: news.map(n => n.ingested_at).sort()[0], event_created_at: now },
+    ...(hits.length ? { hold: { status: 'PENDING' as const, entries: hits.map(h => ({ id: h.id, issuer: h.issuer })) } } : {}),
+  }
+  const u = ctx.uow()
+  for (const n of news) u.update('news_items', { ...n, event_id: id } as never)
+  u.insert('events', ev as never)
+  u.audit({ actor: actor(ctx), action: 'event.created', object: id, data: { type: ev.type, from_inbox: true, news: news.map(n => ({ id: n.id, url: n.url, published_at: n.published_at })), restricted_hold: ev.hold ?? null } })
+  await u.commit()
+  return { event: ev, news }
+}

@@ -15,6 +15,8 @@ export interface Env {
   TCBS_TOKEN?: string
   ONEMOUNT_BASE_URL?: string
   ONEMOUNT_API_KEY?: string
+  // Cloudflare Workflows: chạy nền các lượt agent dài ở chế độ live (không bị ngắt theo yêu cầu HTTP)
+  AGENT_JOBS?: { create(opts: { id?: string; params?: unknown }): Promise<unknown> }
   [k: string]: unknown
 }
 
@@ -33,9 +35,11 @@ export interface AppCtx {
   priceMode: 'sample' | 'live'
   fetchFn: typeof fetch
   background?: (p: Promise<unknown>) => void
+  // Báo tiến độ của tác vụ chạy nền (bước đang chạy); không có khi chạy trực tiếp trong yêu cầu
+  progress?: (step: string) => Promise<void>
 }
 
-export function makeCtx(env: Env, user: User, opts: { now?: () => string; fetchFn?: typeof fetch; accessEmail?: string; background?: (p: Promise<unknown>) => void } = {}): AppCtx {
+export function makeCtx(env: Env, user: User, opts: { now?: () => string; fetchFn?: typeof fetch; accessEmail?: string; background?: (p: Promise<unknown>) => void; progress?: (step: string) => Promise<void> } = {}): AppCtx {
   const repo = new Repo(env.DB)
   const now = opts.now ?? (() => new Date().toISOString())
   return {
@@ -45,6 +49,7 @@ export function makeCtx(env: Env, user: User, opts: { now?: () => string; fetchF
     priceMode: env.PRICE_MODE === 'live' ? 'live' : 'sample',
     fetchFn: opts.fetchFn ?? fetch,
     background: opts.background,
+    progress: opts.progress,
   }
 }
 

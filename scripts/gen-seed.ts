@@ -2,6 +2,7 @@
 // Mọi tên người, doanh nghiệp, mã công cụ, tổ chức lưu ký, cơ quan và chỉ số đều hư cấu (BR-16).
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
+import { PUBLIC_DOMAINS } from '../src/news/sources'
 import type { Account, CashflowItem, Family, Goal, Holding, Instrument, Liability, Member, Entity, EntityOwnership, Transaction, PropertyDetail } from '../src/shared/types'
 
 const ROOT = join(dirname(new URL(import.meta.url).pathname), '..')
@@ -564,6 +565,7 @@ out('data/seed/compliance/sources_whitelist.json', [
   { domain: 'baotaichinh-demo.example', name: 'Báo tài chính giả lập', note: 'Miền giả lập của gói tin mẫu' },
   { domain: 'congbao-gialap.example', name: 'Công báo giả lập', note: 'Nguồn văn bản chính sách giả lập' },
   { domain: 'duthao-gialap.example', name: 'Cổng lấy ý kiến dự thảo giả lập', note: 'Nguồn văn bản dự thảo giả lập' },
+  ...PUBLIC_DOMAINS.map(d => ({ ...d, note: 'Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)' })),
 ])
 out('data/seed/compliance/restricted_list.json', [
   { id: 'RL-001', issuer: 'Công ty Demo X', instruments: ['DMXYZ'], keywords: ['Công ty Demo X', 'Demo X'], valid_from: '2026-01-01', valid_to: '2026-12-31', reason: 'Tổ chức hư cấu dùng để kiểm thử: giả định ngân hàng đang có quan hệ tư vấn phát hành (chỉ Tuân thủ xem).' },

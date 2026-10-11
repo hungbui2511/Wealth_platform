@@ -18,5 +18,80 @@
     "domain": "duthao-gialap.example",
     "name": "Cổng lấy ý kiến dự thảo giả lập",
     "note": "Nguồn văn bản dự thảo giả lập"
+  },
+  {
+    "domain": "vnexpress.net",
+    "name": "VnExpress",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "vneconomy.vn",
+    "name": "VnEconomy",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "baodautu.vn",
+    "name": "Báo Đầu tư",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "vietstock.vn",
+    "name": "Vietstock",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "nhandan.vn",
+    "name": "Báo Nhân Dân",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "vtv.vn",
+    "name": "VTV",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "chinhphu.vn",
+    "name": "Cổng TTĐT Chính phủ",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "baochinhphu.vn",
+    "name": "Báo Điện tử Chính phủ",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "sbv.gov.vn",
+    "name": "Ngân hàng Nhà nước Việt Nam",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "mof.gov.vn",
+    "name": "Bộ Tài chính",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "ssc.gov.vn",
+    "name": "Ủy ban Chứng khoán Nhà nước",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "vbpl.vn",
+    "name": "CSDL quốc gia về văn bản pháp luật",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "quochoi.vn",
+    "name": "Quốc hội (cổng dự thảo)",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "hnx.vn",
+    "name": "Sở GDCK Hà Nội",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "hsx.vn",
+    "name": "Sở GDCK TP.HCM",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
   }
 ]

@@ -84,7 +84,7 @@ export async function interpretation(ctx: AppCtx, runId: string, familyId: strin
   else {
     const models = await activeConfig<ModelSet>(ctx, 'MODEL'); const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
     const pkg = { family_name: fam.name, result: { ...r, top_instruments: r.top_instruments.filter(t => !restricted.has(t.instrument_id)), positions: undefined }, view: { summary: run.view_body.summary, impacts: run.view_body.impacts.filter(l => l.level !== 0) } }
-    try { const res = await callJson(ctx.env, models.content.interpretation, prompts.content.interpretation, wrapData('kết quả M6', pkg)); text = String((res.json as { text?: string }).text ?? ''); model = res.model }
+    try { const res = await callJson(ctx.env, models.content.interpretation, prompts.content.interpretation, wrapData('kết quả M6', pkg), ctx.fetchFn); text = String((res.json as { text?: string }).text ?? ''); model = res.model }
     catch (e) { text = ''; model = `lỗi: ${(e as Error).message}` }
   }
   const check = checkText(text, allowedFromResult(r, run.view_body), cfg.banned)

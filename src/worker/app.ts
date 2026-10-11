@@ -10,7 +10,8 @@ import { reseed } from './services/admin'
 import { ConflictError } from './db'
 import { authenticate, authMode, verifiedEmail, roleMap } from './auth'
 import { CONFIG_KINDS, decideConfig, loadConfigs, proposeConfig, redactConfig, activeConfig, type ConfigKind, type ConfigVersion } from './services/config'
-import { createEvent, loadSampleEvents, allowEvent, getEvent, eventNews, setTimestamp, type EventRec } from './services/events'
+import { createEvent, createEventFromNews, loadSampleEvents, allowEvent, getEvent, eventNews, setTimestamp, type EventRec } from './services/events'
+import { dismissNews, ingestNews, newsInbox } from './services/ingest'
 import { createPriceSnapshot, currentSnapshot, familyCashflow, familyGoals, familyOverview, familyPnl, PRICE_DATE } from './services/portfolio'
 import { approvalConditions, createManualView, decide, editView, getView, respondFinding, retryPreChallenge, runCioAgent, runReChallenge, viewChallenges, viewResponses, type ViewRec } from './services/views'
 import { confirmRun, createApplication, getRun, recompute, withdrawRun, withdrawView, type RunRec } from './services/apply'
@@ -18,6 +19,7 @@ import { addNote, familyImpacts, familyList, interpretation } from './services/r
 import { closeGoal, createGoal, updateGoal } from './services/goals'
 import { addPolicy, analyzePolicy, confirmSource, loadSamplePolicies, policyDetail, radar } from './services/policy'
 import { createRelease, reviewRelease, submitRelease, updateRelease } from './services/releases'
+import { backgroundEnabled, getJob, listJobs, runOrQueue, startJob } from './services/jobs'
 import { agentCatalog, agentRunTrace, auditExport, auditList, traceFamily, verifyChain } from './services/trace'
 import type { FamilyImpactResult } from '../engine/apply'
 import type { TimestampField } from '../compliance/controls'
@@ -36,7 +38,7 @@ export function createApp(opts: AppOptions = {}) {
   })
 
   // Không cần đăng nhập: danh sách người dùng demo và danh mục cố định
-  app.get('/api/health', c => c.json({ ok: true, agent_mode: c.env.AGENT_MODE ?? 'mock', price_mode: c.env.PRICE_MODE ?? 'sample', price_date: PRICE_DATE }))
+  app.get('/api/health', c => c.json({ ok: true, agent_mode: c.env.AGENT_MODE ?? 'mock', price_mode: c.env.PRICE_MODE ?? 'sample', price_date: PRICE_DATE, background_jobs: !!c.env.AGENT_JOBS, llm_key: !!c.env.ANTHROPIC_API_KEY }))
   const fetchFn = () => opts.fetchFn ?? fetch
   // Danh sách vai trò được chọn: người vận hành demo thấy tất cả; người được gán cố định chỉ thấy vai trò của mình
   app.get('/api/users', async c => {
@@ -103,8 +105,22 @@ export function createApp(opts: AppOptions = {}) {
     return c.json(await redactForRm(ctx, events.map(e => ({ ...e, views: hide ? [] : views.filter(v => v.event_id === e.id).map(v => ({ id: v.id, version: v.version, status: v.status })), runs: runs.filter(r => r.event_id === e.id && canSeeRun(ctx, r)).map(r => ({ id: r.id, status: r.status, view_id: r.view_id })) }))))
   })
   app.post('/api/events', async c => { const b = await body<{ type: string; title?: string; items: never[] }>(c); return c.json(await createEvent(X(c), b)) })
+  // Tin lấy tự động: hộp tin mới, lấy tin ngay, ẩn tin, lập sự kiện từ tin đã chọn
+  app.get('/api/news/inbox', async c => c.json(await newsInbox(X(c), { all: c.req.query('all') === '1' })))
+  app.post('/api/news/ingest', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN'); return c.json(await ingestNews(ctx, { trigger: 'manual' })) })
+  app.post('/api/news/dismiss', async c => { const b = await body<{ ids: string[]; dismissed?: boolean }>(c); return c.json(await dismissNews(X(c), b.ids, b.dismissed ?? true)) })
+  app.post('/api/events/from-news', async c => c.json(await createEventFromNews(X(c), await body(c))))
   app.get('/api/events/:id', async c => { const ctx = X(c); const e = await getEvent(ctx, c.req.param('id')); return c.json(await redactForRm(ctx, { event: e, news: await eventNews(ctx, e), views: ctx.user.role === 'RM' ? [] : await ctx.repo.list('views', 'event_id = ?', [e.id], 'version') })) })
-  app.post('/api/events/:id/run-agent', async c => c.json(await runCioAgent(X(c), c.req.param('id'))))
+  app.post('/api/events/:id/run-agent', async c => {
+    const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN')
+    const id = c.req.param('id')
+    if (backgroundEnabled(ctx)) {
+      // Kiểm tra ngay những điều kiện chặn (BR-27) để người dùng biết liền, không phải chờ tác vụ nền
+      const e = await getEvent(ctx, id)
+      if (e.hold?.status === 'PENDING') return c.json(await runCioAgent(ctx, id)) // ném lỗi 409 và ghi nhật ký như chạy trực tiếp
+    }
+    return c.json(await runOrQueue(ctx, 'cio_run', id, { event_id: id }, () => runCioAgent(ctx, id)))
+  })
   app.post('/api/events/:id/allow', async c => c.json(await allowEvent(X(c), c.req.param('id'), String((await body(c)).note ?? ''))))
   app.post('/api/events/:id/timestamps', async c => { const b = await body<{ field: TimestampField; value: string }>(c); return c.json(await setTimestamp(X(c), c.req.param('id'), b.field, b.value)) })
   // FR-202, FR-1010: nguồn tin cấu hình; từ chối miền ngoài danh sách nguồn công khai (BR-28)
@@ -129,10 +145,10 @@ export function createApp(opts: AppOptions = {}) {
     return c.json({ view: v, event: e, news: await eventNews(ctx, e), challenges: await viewChallenges(ctx, v.id), responses: await viewResponses(ctx, v.id), conditions: await approvalConditions(ctx, v), runs: await ctx.repo.list('application_runs', 'view_id = ?', [v.id]), decisions: await ctx.repo.list('decisions', 'view_id = ?', [v.id]) })
   })
   app.put('/api/views/:id/lines', async c => { const b = await body<{ impacts: never[]; note?: string }>(c); return c.json(await editView(X(c), c.req.param('id'), b.impacts, b.note)) })
-  app.post('/api/views/:id/challenge', async c => c.json(await retryPreChallenge(X(c), c.req.param('id'))))
-  app.post('/api/views/:id/rechallenge', async c => c.json(await runReChallenge(X(c), c.req.param('id'))))
+  app.post('/api/views/:id/challenge', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN'); const id = c.req.param('id'); return c.json(await runOrQueue(ctx, 'challenge_retry', id, { view_id: id }, () => retryPreChallenge(ctx, id))) })
+  app.post('/api/views/:id/rechallenge', async c => { const ctx = X(c); requireRole(ctx, 'CIO'); const id = c.req.param('id'); return c.json(await runOrQueue(ctx, 'rechallenge', id, { view_id: id }, () => runReChallenge(ctx, id))) })
   app.post('/api/views/:id/findings/:fid/response', async c => c.json(await respondFinding(X(c), c.req.param('id'), c.req.param('fid'), await body(c))))
-  app.post('/api/views/:id/decision', async c => { const ctx = X(c); return c.json(await decide(ctx, c.req.param('id'), await body(c), (v, uow) => createApplication(ctx, v, uow))) })
+  app.post('/api/views/:id/decision', async c => { const ctx = X(c); return c.json(await decide(ctx, c.req.param('id'), await body(c), (v, uow) => createApplication(ctx, v, uow), { queueRework: async (eventId, instructions) => backgroundEnabled(ctx) ? startJob(ctx, 'cio_run', eventId, { event_id: eventId, instructions }) : null })) })
   app.post('/api/views/:id/withdraw', async c => c.json(await withdrawView(X(c), c.req.param('id'), (await body(c)).reason)))
   app.post('/api/manual-apply', async c => { const ctx = X(c); const b = await body<{ event_id: string; view: unknown }>(c); return c.json(await createManualView(ctx, b.view, b.event_id, (v, uow) => createApplication(ctx, v, uow))) })
   app.get('/api/agent-runs/:id', async c => c.json(await agentRunTrace(X(c), c.req.param('id'))))
@@ -182,7 +198,11 @@ export function createApp(opts: AppOptions = {}) {
   app.post('/api/policies', async c => c.json(await addPolicy(X(c), await body(c))))
   app.get('/api/policies/:id', async c => c.json(await policyDetail(X(c), c.req.param('id'))))
   app.post('/api/policies/:id/confirm-source', async c => c.json(await confirmSource(X(c), c.req.param('id'), String((await body(c)).note ?? ''))))
-  app.post('/api/policies/:id/analyze', async c => c.json(await analyzePolicy(X(c), c.req.param('id'))))
+  app.post('/api/policies/:id/analyze', async c => { const ctx = X(c); requireRole(ctx, 'ADMIN', 'CIO'); const id = c.req.param('id'); return c.json(await runOrQueue(ctx, 'policy_analyze', id, { doc_id: id }, () => analyzePolicy(ctx, id))) })
+
+  // ----- Tác vụ agent chạy nền -----
+  app.get('/api/jobs', async c => c.json(await listJobs(X(c), { active: c.req.query('active') === '1', limit: Number(c.req.query('limit') ?? 20) })))
+  app.get('/api/jobs/:id', async c => c.json(await getJob(X(c), c.req.param('id'))))
   app.get('/api/releases', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'COMPLIANCE'); return c.json(await ctx.repo.list('research_releases', '', [], 'id')) })
   app.post('/api/releases', async c => c.json(await createRelease(X(c), await body(c))))
   app.put('/api/releases/:id', async c => c.json(await updateRelease(X(c), c.req.param('id'), await body(c))))

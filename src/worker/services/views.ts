@@ -2,7 +2,8 @@
 import { ASSET_CLASSES, FX_CURRENCIES, SECTORS } from '../../shared/catalog'
 import type { Finding, ImpactLine, ViewBody } from '../../shared/types'
 import { lineKey, validateView, type ViewContext } from '../../shared/schemas'
-import { buildCioGraph, neutralView, ANALYSTS, type NodeRun } from '../../agents/cioGraph'
+import { buildCioGraph, ANALYSTS, type NodeRun } from '../../agents/cioGraph'
+import { keywordView } from '../../agents/keywordView'
 import { citationChecks, diffLines, normalizeLlmFindings, ruleChecks, type RawFinding } from '../../agents/challenger'
 import { callJson } from '../../agents/llm'
 import { wrapData, type ModelSet, type PromptSet } from '../../agents/prompts'
@@ -87,7 +88,8 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
     catalog: { asset_classes: ASSET_CLASSES, sectors: SECTORS, fx: FX_CURRENCIES, instruments: Object.values(instruments).filter(i => i.price_source !== 'FIXED' && !i.id.includes('-') && !vctx.restricted.has(i.id)).map(i => ({ id: i.id, name: i.name, asset_class: i.asset_class, ...(i.sector ? { sector: i.sector } : {}) })) },
     ...(opts.instructions ? { instructions: opts.instructions } : {}),
   }
-  const mock = MOCK.cio[mockKey(e)]
+  // Đầu ra ghi sẵn chỉ dành cho sự kiện của gói mẫu (tin giả lập); tin thật dùng nhận định mô phỏng theo từ khóa
+  const mock = news.every(n => n.simulated) ? MOCK.cio[mockKey(e)] : undefined
   const mockVer = version >= 2 && mock?.v2 ? mock.v2 : mock?.v1
   const pv = prompts.version.id
   const exec = {
@@ -95,13 +97,18 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
       const promptText = node.startsWith('analyst_') ? prompts.content.cio.analyst.replace('{{GROUP}}', ANALYSTS[node as keyof typeof ANALYSTS].name).replace('{{CLASSES}}', ANALYSTS[node as keyof typeof ANALYSTS].classes.join(', ')) : node === 'debate' ? prompts.content.cio.debate : prompts.content.cio.synthesize
       if (ctx.agentMode === 'mock') {
         let output: unknown
+        // Sự kiện mẫu: đầu ra ghi sẵn. Tin mới: nhận định mô phỏng theo từ khóa (ghi rõ không phải AI)
+        const kw = mockVer ? null : keywordView(e.title, news)
         if (node === 'synthesize') {
-          const v = mockVer ? (fillSources(mockVer.view, news) as ViewBody) : neutralView(e.title)
+          const v = mockVer ? (fillSources(mockVer.view, news) as ViewBody) : kw!
           output = { summary: v.summary || e.title, impacts: v.impacts }
-        } else output = mockVer ? fillSources(mockVer.nodes[node], news) : node === 'debate' ? { topics: [] } : { lines: [], notes: 'Không có đầu ra ghi sẵn' }
+        } else if (mockVer) output = fillSources(mockVer.nodes[node], news)
+        else if (node === 'debate') output = { topics: [] }
+        else { const cls = ANALYSTS[node as keyof typeof ANALYSTS]; output = { lines: kw!.impacts.filter(l => (l.scope === 'asset_class' && (cls.classes as readonly string[]).includes(l.target)) || (l.scope === 'fx' && cls.fx)), notes: 'Chế độ mô phỏng theo từ khóa (không phải AI)' } }
         return { output, prompt: promptText, prompt_version: `${pv}:${prompts.content.version}`, model: `mock (${models.content.cio.model})` }
       }
-      const r = await callJson(ctx.env, models.content.cio, promptText, wrapData(`nút ${node}, lần ${attempt + 1}`, payload))
+      await ctx.progress?.(attempt > 0 ? `${node}#${attempt + 1}` : node)
+      const r = await callJson(ctx.env, models.content.cio, promptText, wrapData(`nút ${node}, lần ${attempt + 1}`, payload), ctx.fetchFn)
       return { output: r.json, prompt: promptText, prompt_version: `${pv}:${prompts.content.version}`, model: r.model }
     },
   }
@@ -200,11 +207,12 @@ export async function runPreChallenge(ctx: AppCtx, viewId: string): Promise<View
   const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
   let llmRaw: unknown[] = [], counter = '', model = `mock (${models.content.challenger.model})`
   if (ctx.agentMode === 'mock') {
-    const m = MOCK.challenger[mockKey(e)]
+    const m = news.every(n => n.simulated) ? MOCK.challenger[mockKey(e)] : undefined
     const part = v.version >= 2 && m?.pre_v2 ? m.pre_v2 : m?.pre
     llmRaw = part?.findings ?? []; counter = part?.counter_scenario ?? ''
   } else {
-    const r = await callChallenger(ctx, v.id, 'pre_approval', () => callJson(ctx.env, models.content.challenger, prompts.content.challenger.pre, wrapData('gói phản biện trước duyệt', pkg)))
+    await ctx.progress?.('challenger_pre')
+    const r = await callChallenger(ctx, v.id, 'pre_approval', () => callJson(ctx.env, models.content.challenger, prompts.content.challenger.pre, wrapData('gói phản biện trước duyệt', pkg), ctx.fetchFn))
     const j = r.json as { findings?: unknown[]; counter_scenario?: string }
     llmRaw = j.findings ?? []; counter = j.counter_scenario ?? ''; model = r.model
   }
@@ -274,8 +282,8 @@ export async function runReChallenge(ctx: AppCtx, viewId: string): Promise<ViewR
   const models = await activeConfig<ModelSet>(ctx, 'MODEL')
   const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
   let llmRaw: unknown[] = [], model = `mock (${models.content.challenger.model})`
-  if (ctx.agentMode === 'mock') llmRaw = [...keys].flatMap(k => MOCK.challenger[mockKey(e)]?.re_challenge?.[k] ?? [])
-  else { const r = await callChallenger(ctx, v.id, 're_challenge', () => callJson(ctx.env, models.content.challenger, prompts.content.challenger.re_challenge, wrapData('gói phản biện lại', pkg))); llmRaw = (r.json as { findings?: unknown[] }).findings ?? []; model = r.model }
+  if (ctx.agentMode === 'mock') llmRaw = news.every(n => n.simulated) ? [...keys].flatMap(k => MOCK.challenger[mockKey(e)]?.re_challenge?.[k] ?? []) : []
+  else { await ctx.progress?.('challenger_re'); const r = await callChallenger(ctx, v.id, 're_challenge', () => callJson(ctx.env, models.content.challenger, prompts.content.challenger.re_challenge, wrapData('gói phản biện lại', pkg), ctx.fetchFn)); llmRaw = (r.json as { findings?: unknown[] }).findings ?? []; model = r.model }
   const norm = normalizeLlmFindings(llmRaw.map(f => ({ ...(f as object), stage: 're_challenge' })), vctx.newsIds)
   const n = await nextChallengeNo(ctx, v.id, 're_challenge')
   const id = `CH-${evNum(v.event_id)}-v${v.version}-re-${n}`
@@ -334,7 +342,8 @@ export async function approvalConditions(ctx: AppCtx, v: ViewRec, reason?: strin
 
 export interface DecisionRec { id: string; view_id: string; action: 'APPROVE' | 'REWORK' | 'REJECT' | 'WITHDRAW'; idem_key: string; reason: string; by: string; at: string; include_challenge?: boolean; run_id?: string; new_view_id?: string }
 
-export async function decide(ctx: AppCtx, viewId: string, body: { action: string; reason: string; idempotency_key?: string; include_challenge?: boolean }, apply: (v: ViewRec, uow: UnitOfWork) => Promise<{ run_id: string }>): Promise<{ decision: DecisionRec; view: ViewRec; idempotent?: boolean; run_id?: string; new_view?: ViewRec }> {
+// queueRework (tùy chọn): ở chế độ live, đưa lượt Agent CIO làm lại vào hàng chạy nền thay vì chạy trong yêu cầu
+export async function decide(ctx: AppCtx, viewId: string, body: { action: string; reason: string; idempotency_key?: string; include_challenge?: boolean }, apply: (v: ViewRec, uow: UnitOfWork) => Promise<{ run_id: string }>, opts: { queueRework?: (eventId: string, instructions: string) => Promise<unknown | null> } = {}): Promise<{ decision: DecisionRec; view: ViewRec; idempotent?: boolean; run_id?: string; new_view?: ViewRec; job?: unknown }> {
   requireRole(ctx, 'CIO')
   const action = body.action as DecisionRec['action']
   if (!['APPROVE', 'REWORK', 'REJECT'].includes(action)) throw new HttpError(422, 'Hành động không hợp lệ')
@@ -368,6 +377,8 @@ export async function decide(ctx: AppCtx, viewId: string, body: { action: string
       const chs = await viewChallenges(ctx, viewId)
       instructions += '\nPhản biện kèm theo:\n' + chs.flatMap(c => c.findings).map(f => `- [${f.severity}] ${f.target}: ${f.issue} → ${f.suggestion}`).join('\n')
     }
+    const job = opts.queueRework ? await opts.queueRework(v.event_id, instructions) : null
+    if (job) return { decision: d, view: v, job }
     const nv = await runCioAgent(ctx, v.event_id, { instructions, skipRole: true })
     return { decision: { ...d, new_view_id: nv.id }, view: v, new_view: nv }
   }

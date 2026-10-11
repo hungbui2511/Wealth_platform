@@ -84,7 +84,7 @@ export async function createApplication(ctx: AppCtx, view: ViewRec, uow: UnitOfW
   let summary = postcheckSummaryTemplate(findings), model = 'mẫu cố định (mock)'
   if (ctx.agentMode === 'live' && findings.length) {
     const models = await activeConfig<ModelSet>(ctx, 'MODEL'); const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
-    try { const r = await callJson(ctx.env, models.content.challenger, prompts.content.challenger.post_summary, wrapData('phát hiện hậu kiểm', pkg)); summary = String((r.json as { summary?: string }).summary ?? summary); model = r.model }
+    try { const r = await callJson(ctx.env, models.content.challenger, prompts.content.challenger.post_summary, wrapData('phát hiện hậu kiểm', pkg), ctx.fetchFn); summary = String((r.json as { summary?: string }).summary ?? summary); model = r.model }
     catch { model = 'mẫu cố định (LLM lỗi)' }
   }
   const count = (s: string) => findings.filter(f => f.severity === s).length

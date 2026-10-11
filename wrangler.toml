@@ -26,5 +26,15 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 run_worker_first = ["/api/*"]
 
+# Lấy tin tự động từ nguồn công khai mỗi 30 phút (src/worker/services/ingest.ts)
+[triggers]
+crons = ["*/30 * * * *"]
+
+# Chạy nền các lượt agent ở chế độ live (src/worker/workflow.ts); chế độ mock vẫn chạy trực tiếp trong yêu cầu
+[[workflows]]
+name = "wealth-agent-jobs"
+binding = "AGENT_JOBS"
+class_name = "AgentJobs"
+
 [observability]
 enabled = true

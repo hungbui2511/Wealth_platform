@@ -88,7 +88,7 @@ export async function analyzePolicy(ctx: AppCtx, id: string) {
     raw = MOCK.policy[d.id]
     model = `mock (${models.content.policy.model})`
     if (!raw) throw new HttpError(409, 'Chưa có tóm tắt ghi sẵn cho văn bản này: chạy AGENT_MODE=live hoặc thêm tóm tắt đã duyệt vào data/mock_agent/policy/')
-  } else { const r = await callJson(ctx.env, models.content.policy, promptText, wrapData('văn bản chính sách', pkg)); raw = r.json; model = r.model }
+  } else { await ctx.progress?.('policy'); const r = await callJson(ctx.env, models.content.policy, promptText, wrapData('văn bản chính sách', pkg), ctx.fetchFn); raw = r.json; model = r.model }
   const runId = `RUN-POL-${d.id}-${await ctx.repo.nextSeq('RUN-POL')}`
   const val = validatePolicySummary(raw, d.content, d.kind)
   const u = ctx.uow()
