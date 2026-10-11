@@ -16,6 +16,7 @@ import { activeConfig, loadConfigs, type Configs } from './config'
 import { getEvent, withTimestamp, type EventRec } from './events'
 import { currentSnapshot, loadGoals, loadInstruments, snapshotById, type SnapshotRecord } from './portfolio'
 import { getView, transition, type ChallengeRec, type ViewRec } from './views'
+import { evNum, familyImpactId, nextRunNo } from '../ids'
 
 export interface RunRec {
   id: string; view_id: string; event_id: string; status: string; idem_key: string; created_at: string
@@ -30,7 +31,6 @@ export interface RunRec {
 
 export interface PortfolioSnapshot { families: Family[]; instruments: Record<string, Instrument>; goals: Goal[]; configs: Pick<Configs, 'unit' | 'thresholds' | 'assumptions'> }
 
-const evNum = (eventId: string) => eventId.slice(-4)
 
 function runTransition(ctx: AppCtx, r: RunRec, to: string, note?: string): RunRec {
   assertRunTransition(r.status, to)
@@ -53,7 +53,7 @@ export async function createApplication(ctx: AppCtx, view: ViewRec, uow: UnitOfW
   if (prior) return { run_id: prior.id, run: prior }
   const t0 = Date.now()
   const [families, instruments, goals, cfg, snap] = await Promise.all([ctx.repo.list<Family>('families', '', [], 'id'), loadInstruments(ctx), loadGoals(ctx), loadConfigs(ctx), opts.snapshot ? Promise.resolve(opts.snapshot) : currentSnapshot(ctx)])
-  const m = (await ctx.repo.list('application_runs', 'view_id = ?', [view.id])).length + 1
+  const m = await nextRunNo(ctx, view.id)
   const id = `AR-${evNum(view.event_id)}-v${view.version}-${m}`
   const ps: PortfolioSnapshot = { families, instruments, goals, configs: { unit: cfg.unit, thresholds: cfg.thresholds, assumptions: cfg.assumptions } }
   const psHash = await hashOf(ps)
@@ -75,7 +75,7 @@ export async function createApplication(ctx: AppCtx, view: ViewRec, uow: UnitOfW
   const ranked = rankFamilies(computed.map(c => c.result))
   run = runTransition(ctx, { ...run, ranking: ranked.map(r => ({ family_id: r.family_id, impact: r.impact, pct: r.pct, alert: r.alert })) }, 'POST_CHECKING')
   uow.put('run_snapshots', { id: run.portfolio_snapshot_id, hash: psHash, ...ps } as never)
-  for (const c of computed) uow.put('family_impacts', { ...c.result, id: `${id}|${c.family.id}`, run_id: id } as never)
+  for (const c of computed) uow.put('family_impacts', { ...c.result, id: familyImpactId(id, c.family.id), run_id: id } as never)
 
   // Hậu kiểm theo quy tắc (BR-17); agent chỉ viết tóm tắt từ danh sách phát hiện
   const chId = `CH-${evNum(view.event_id)}-v${view.version}-post-${m}`
@@ -89,7 +89,7 @@ export async function createApplication(ctx: AppCtx, view: ViewRec, uow: UnitOfW
   }
   const count = (s: string) => findings.filter(f => f.severity === s).length
   const ch: ChallengeRec = { id: chId, view_id: view.id, stage: 'post_check', created_at: ctx.now(), findings, summary, run_id: id, input_package: pkg, model, prompt_version: null }
-  uow.put('challenges', ch as never)
+  uow.insert('challenges', ch as never)
   run.post_check = { challenge_id: chId, critical: count('critical'), medium: count('medium'), low: count('low') }
   uow.audit({ actor: 'SYSTEM:engine', action: 'run.computed', object: id, data: { view_id: view.id, config_version_ids: cfg.ids, price_snapshot: snap.id, price_snapshot_hash: snap.hash, portfolio_snapshot_hash: psHash, engine_version: ENGINE_VERSION, families: computed.length } })
   uow.audit({ actor: 'SYSTEM:postcheck', action: 'run.postcheck', object: chId, data: { run_id: id, ...run.post_check } })
@@ -105,11 +105,11 @@ async function makeEffective(ctx: AppCtx, run: RunRec, view: ViewRec, computed: 
   const now = ctx.now()
   run = { ...run, effective_at: now }
   for (const old of await ctx.repo.list<RunRec>('application_runs', "event_id = ? AND status = 'EFFECTIVE' AND id != ?", [run.event_id, run.id])) {
-    uow.put('application_runs', runTransition(ctx, old, 'SUPERSEDED', `Thay bằng ${run.id}`) as never)
+    uow.update('application_runs', runTransition(ctx, old, 'SUPERSEDED', `Thay bằng ${run.id}`) as never)
     uow.audit({ actor: 'SYSTEM', action: 'run.superseded', object: old.id, data: { by: run.id } })
     if (old.view_id !== view.id) {
       const ov = await getView(ctx, old.view_id)
-      if (ov.status === 'APPROVED') { uow.put('views', transition(ctx, ov, 'SUPERSEDED', `Lần áp dụng ${run.id} của phiên bản mới có hiệu lực`) as never); uow.audit({ actor: 'SYSTEM', action: 'view.superseded', object: ov.id, data: { by: view.id } }) }
+      if (ov.status === 'APPROVED') { uow.update('views', transition(ctx, ov, 'SUPERSEDED', `Lần áp dụng ${run.id} của phiên bản mới có hiệu lực`) as never); uow.audit({ actor: 'SYSTEM', action: 'view.superseded', object: ov.id, data: { by: view.id } }) }
     }
   }
   // FR-905: tính lại tỷ lệ đáp ứng mục tiêu sau mỗi lần áp dụng có hiệu lực
@@ -125,7 +125,7 @@ async function makeEffective(ctx: AppCtx, run: RunRec, view: ViewRec, computed: 
   ne = withTimestamp(ne, 'view_ready_at', view.view_ready_at ?? view.approved_at ?? now)
   ne = withTimestamp(ne, 'approved_at', view.approved_at ?? now)
   ne = withTimestamp(ne, 'effective_at', now)
-  uow.put('events', ne as never)
+  uow.update('events', ne as never)
   uow.audit({ actor: 'SYSTEM', action: 'run.effective', object: run.id, data: { event_id: run.event_id, reaction_ms: Date.parse(now) - Date.parse(ne.timestamps.published_at!) } })
   return run
 }
@@ -147,7 +147,7 @@ export async function confirmRun(ctx: AppCtx, id: string, reasonRaw: unknown) {
   const uow = ctx.uow()
   run = runTransition(ctx, run, 'EFFECTIVE', reason)
   run = await makeEffective(ctx, run, view, computeAll(ps!, snap, run.view_body), ps!, uow)
-  uow.put('application_runs', run as never)
+  uow.update('application_runs', run as never)
   uow.audit({ actor: actor(ctx), action: 'run.cio_confirmed', object: id, data: { reason } })
   await uow.commit()
   return run
@@ -166,10 +166,10 @@ export async function withdrawView(ctx: AppCtx, viewId: string, reasonRaw: unkno
   const v = await getView(ctx, viewId)
   const uow = ctx.uow()
   const nv = transition(ctx, v, 'WITHDRAWN', reason)
-  uow.put('views', nv as never)
+  uow.update('views', nv as never)
   const runs = await ctx.repo.list<RunRec>('application_runs', 'view_id = ?', [viewId])
   for (const r of runs.filter(r => ['EFFECTIVE', 'NEEDS_CIO_REVIEW'].includes(r.status))) {
-    uow.put('application_runs', runTransition(ctx, r, 'WITHDRAWN', reason) as never)
+    uow.update('application_runs', runTransition(ctx, r, 'WITHDRAWN', reason) as never)
     uow.audit({ actor: actor(ctx), action: 'run.withdrawn', object: r.id, data: { reason } })
   }
   uow.insert('decisions', { id: `DC-${viewId}-WITHDRAW-${await ctx.repo.nextSeq('DC')}`, view_id: viewId, action: 'WITHDRAW', idem_key: `${viewId}:WITHDRAW`, reason, by: actor(ctx), at: ctx.now() } as never)

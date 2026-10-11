@@ -1,7 +1,7 @@
 // Shim D1 trên node:sqlite để chạy kiểm thử tích hợp API mà không cần workerd.
 // Cùng SQL migration (kể cả trigger nhật ký) được áp dụng như trên D1.
 import { DatabaseSync } from 'node:sqlite'
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -26,7 +26,8 @@ class Stmt {
 
 export function createD1(): D1Database {
   const db = new DatabaseSync(':memory:')
-  db.exec(readFileSync(join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'migrations', '0001_schema.sql'), 'utf8'))
+  const dir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', 'migrations')
+  for (const f of readdirSync(dir).filter(f => f.endsWith('.sql')).sort()) db.exec(readFileSync(join(dir, f), 'utf8'))
   const api = {
     prepare: (sql: string) => new Stmt(db, sql),
     async batch(stmts: Stmt[]) {

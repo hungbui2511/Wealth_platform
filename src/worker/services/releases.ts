@@ -46,11 +46,11 @@ export async function createRelease(ctx: AppCtx, body: { view_id: string; releas
   const v = await getView(ctx, body.view_id)
   if (!['APPROVED', 'SUPERSEDED'].includes(v.status)) throw new HttpError(409, 'Chỉ tạo bản tin từ nhận định đã duyệt')
   checkTimes(v, body.release_private_at, body.release_public_at)
-  const n = (await ctx.repo.list('research_releases', 'view_id = ?', [v.id])).length
+  const n = await ctx.repo.nextSeq(`release:${v.id}`, 'SELECT count(*) FROM research_releases WHERE view_id = ?', [v.id])
   const content = body.content ?? draftContent(v, activeRestricted(await loadConfigs(ctx), ctx.now()))
-  const r: ReleaseRec = { id: `RR-${v.event_id.slice(-4)}-v${v.version}${n ? `-${n + 1}` : ''}`, view_id: v.id, status: 'DRAFT', content, release_private_at: new Date(body.release_private_at).toISOString(), release_public_at: new Date(body.release_public_at).toISOString(), created_by: actor(ctx), created_at: ctx.now() }
+  const r: ReleaseRec = { id: `RR-${v.event_id.slice(-4)}-v${v.version}${n > 1 ? `-${n}` : ''}`, view_id: v.id, status: 'DRAFT', content, release_private_at: new Date(body.release_private_at).toISOString(), release_public_at: new Date(body.release_public_at).toISOString(), created_by: actor(ctx), created_at: ctx.now() }
   r.checks = await releaseChecks(ctx, v, content)
-  const u = ctx.uow(); u.put('research_releases', r as never); u.audit({ actor: actor(ctx), action: 'release.created', object: r.id, data: { view_id: v.id, release_private_at: r.release_private_at, release_public_at: r.release_public_at, checks: r.checks } }); await u.commit()
+  const u = ctx.uow(); u.insert('research_releases', r as never); u.audit({ actor: actor(ctx), action: 'release.created', object: r.id, data: { view_id: v.id, release_private_at: r.release_private_at, release_public_at: r.release_public_at, checks: r.checks } }); await u.commit()
   return r
 }
 
@@ -68,7 +68,7 @@ export async function updateRelease(ctx: AppCtx, id: string, body: { content?: s
   const nr = { ...r, status: 'DRAFT' as const, content: body.content ?? r.content, release_private_at: body.release_private_at ?? r.release_private_at, release_public_at: body.release_public_at ?? r.release_public_at }
   checkTimes(v, nr.release_private_at, nr.release_public_at)
   nr.checks = await releaseChecks(ctx, v, nr.content)
-  const u = ctx.uow(); u.put('research_releases', nr as never); u.audit({ actor: actor(ctx), action: 'release.updated', object: id, data: { checks: nr.checks } }); await u.commit()
+  const u = ctx.uow(); u.update('research_releases', nr as never); u.audit({ actor: actor(ctx), action: 'release.updated', object: id, data: { checks: nr.checks } }); await u.commit()
   return nr
 }
 
@@ -77,7 +77,7 @@ export async function submitRelease(ctx: AppCtx, id: string) {
   const r = await getRelease(ctx, id)
   if (r.status !== 'DRAFT') throw new HttpError(409, 'Chỉ gửi duyệt bản tin nháp')
   const nr = { ...r, status: 'PENDING_COMPLIANCE' as const }
-  const u = ctx.uow(); u.put('research_releases', nr as never); u.audit({ actor: actor(ctx), action: 'release.submitted', object: id, data: {} }); await u.commit()
+  const u = ctx.uow(); u.update('research_releases', nr as never); u.audit({ actor: actor(ctx), action: 'release.submitted', object: id, data: {} }); await u.commit()
   return nr
 }
 
@@ -90,6 +90,6 @@ export async function reviewRelease(ctx: AppCtx, id: string, approve: boolean, n
   const checks = await releaseChecks(ctx, v, r.content)
   if (approve && !checks.ok) throw new HttpError(409, 'Bản tin vi phạm BR-13, BR-14 hoặc nhắc mã hạn chế (BR-27): không được duyệt phát hành', checks)
   const nr = { ...r, status: approve ? 'APPROVED' as const : 'REJECTED' as const, reviewed_by: actor(ctx), reviewed_at: ctx.now(), review_note: note, checks }
-  const u = ctx.uow(); u.put('research_releases', nr as never); u.audit({ actor: actor(ctx), action: approve ? 'release.approved' : 'release.rejected', object: id, data: { note, checks } }); await u.commit()
+  const u = ctx.uow(); u.update('research_releases', nr as never); u.audit({ actor: actor(ctx), action: approve ? 'release.approved' : 'release.rejected', object: id, data: { note, checks } }); await u.commit()
   return nr
 }

@@ -41,7 +41,7 @@ export async function addPolicy(ctx: AppCtx, input: Omit<PolicyDoc, 'state' | 'i
   const id = input.id ?? `PD-${year}-${String(await ctx.repo.nextSeq(`PD-${year}`)).padStart(3, '0')}`
   if (await ctx.repo.get('policy_documents', id)) throw new HttpError(409, `Văn bản ${id} đã tồn tại`)
   const doc: PolicyDoc = { id, title: input.title, agency: input.agency, kind: input.kind, status: input.status, published_at: input.published_at, effective_expected: input.effective_expected, url: input.url, topics, content: input.content, simulated: !!input.simulated, state: 'PENDING_SOURCE_CONFIRM', ingested_at: now }
-  const u = ctx.uow(); u.put('policy_documents', { ...doc, status: doc.state } as never); u.audit({ actor: actor(ctx), action: 'policy.added', object: id, data: { title: doc.title, url: doc.url, published_at: doc.published_at } }); await u.commit()
+  const u = ctx.uow(); u.insert('policy_documents', doc as never); u.audit({ actor: actor(ctx), action: 'policy.added', object: id, data: { title: doc.title, url: doc.url, published_at: doc.published_at } }); await u.commit()
   return doc
 }
 
@@ -63,7 +63,7 @@ async function getDoc(ctx: AppCtx, id: string): Promise<PolicyDoc> {
   if (!d) throw new HttpError(404, `Không có văn bản ${id}`)
   return d
 }
-const save = (u: ReturnType<AppCtx['uow']>, d: PolicyDoc) => u.put('policy_documents', { ...d, status: d.state } as never)
+const save = (u: ReturnType<AppCtx['uow']>, d: PolicyDoc) => u.update('policy_documents', d as never)
 
 export async function confirmSource(ctx: AppCtx, id: string, note: string) {
   requireRole(ctx, 'COMPLIANCE')
@@ -92,7 +92,7 @@ export async function analyzePolicy(ctx: AppCtx, id: string) {
   const runId = `RUN-POL-${d.id}-${await ctx.repo.nextSeq('RUN-POL')}`
   const val = validatePolicySummary(raw, d.content, d.kind)
   const u = ctx.uow()
-  u.put('agent_runs', { id: runId, agent: 'policy', subject_id: d.id, created_at: ctx.now(), mode: ctx.agentMode, model, prompt_version: prompts.version.id, prompt: promptText, input_package: pkg, output: raw, ok: val.ok, errors: val.errors } as never)
+  u.insert('agent_runs', { id: runId, agent: 'policy', subject_id: d.id, created_at: ctx.now(), mode: ctx.agentMode, model, prompt_version: prompts.version.id, prompt: promptText, input_package: pkg, output: raw, ok: val.ok, errors: val.errors } as never)
   u.audit({ actor: 'AGENT:policy', action: 'agent.policy_run', object: d.id, data: { run_id: runId, model, ok: val.ok, errors: val.errors } })
   if (!val.ok) { const nd = { ...d, state: 'ERROR' as const, errors: val.errors }; save(u, nd); await u.commit(); throw new HttpError(422, 'Tóm tắt chính sách không đúng schema hoặc trích dẫn sai', val.errors) }
   // Khớp đối tượng xác định (BR-30)

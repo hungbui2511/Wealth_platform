@@ -14,6 +14,7 @@ import type { UnitOfWork } from '../db'
 import { activeConfig, activeRestricted, loadConfigs } from './config'
 import { eventNews, getEvent, withTimestamp, type EventRec, type NewsItem } from './events'
 import { currentSnapshot, loadInstruments } from './portfolio'
+import { evNum, nextChallengeNo, nextViewVersion } from '../ids'
 
 export interface ViewRec {
   id: string; event_id: string; version: number; status: string; origin: 'agent' | 'manual'
@@ -32,7 +33,6 @@ export interface ChallengeRec {
 
 export interface FindingResponse { id: string; view_id: string; finding_id: string; response: 'accepted_fixed' | 'disagree' | 'out_of_scope'; fixed_line?: string; comment: string; by: string; at: string }
 
-const evNum = (eventId: string) => eventId.slice(-4)
 
 export async function getView(ctx: AppCtx, id: string): Promise<ViewRec> {
   const v = await ctx.repo.get<ViewRec>('views', id)
@@ -74,8 +74,7 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
     throw new HttpError(409, 'Sự kiện nhắc tới tổ chức trong danh sách hạn chế: chờ Tuân thủ cho phép trước khi chạy agent (BR-27)')
   }
   const news = await eventNews(ctx, e)
-  const existing = await ctx.repo.list<ViewRec>('views', 'event_id = ?', [e.id], 'version DESC')
-  const version = (existing[0]?.version ?? 0) + 1
+  const version = await nextViewVersion(ctx, e.id)
   const viewId = `VW-${evNum(e.id)}-v${version}`
   const instruments = await loadInstruments(ctx)
   const vctx = await viewContext(ctx, e, news)
@@ -123,18 +122,18 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
     created_at: now, history: [{ at: now, from: '', to: 'DRAFTING', by: actor(ctx) }], ...(opts.instructions ? { instructions: opts.instructions } : {}),
   }
   const uow = ctx.uow()
-  uow.put('agent_runs', { id: runId, agent: 'cio', subject_id: viewId, created_at: now, event_id: e.id, mode: ctx.agentMode, model: models.content.cio, prompt_version: pv, input_package: input, ok: !!final.result?.ok, errors: final.result?.errors ?? (fatal ? [fatal] : []), params: { max_retries: 2 } } as never)
-  final.nodeRuns.forEach(n => uow.put('agent_node_runs', { id: `${runId}-N${String(n.seq).padStart(2, '0')}`, run_id: runId, ...n } as never))
+  uow.insert('agent_runs', { id: runId, agent: 'cio', subject_id: viewId, created_at: now, event_id: e.id, mode: ctx.agentMode, model: models.content.cio, prompt_version: pv, input_package: input, ok: !!final.result?.ok, errors: final.result?.errors ?? (fatal ? [fatal] : []), params: { max_retries: 2 } } as never)
+  final.nodeRuns.forEach(n => uow.insert('agent_node_runs', { id: `${runId}-N${String(n.seq).padStart(2, '0')}`, run_id: runId, ...n } as never))
   uow.audit({ actor: 'AGENT:cio', action: 'agent.cio_run', object: viewId, data: { run_id: runId, mode: ctx.agentMode, model: models.content.cio.model, prompt_version: pv, input_package: input, nodes: final.nodeRuns.map(n => n.node), ok: !!final.result?.ok, errors: final.result?.errors ?? [fatal] } })
   if (!final.result?.ok) {
     v = transition(ctx, { ...v, errors: final.result?.errors ?? [fatal ?? 'Lỗi không xác định'] }, 'AGENT_ERROR', 'Sai schema sau 2 lần thử lại')
-    uow.put('views', v as never)
+    uow.insert('views', v as never)
     uow.audit({ actor: 'SYSTEM', action: 'view.status', object: viewId, data: { to: 'AGENT_ERROR', errors: v.errors } })
     await uow.commit()
     return v
   }
   v = transition(ctx, v, 'PENDING_CHALLENGE', 'Đầu ra hợp lệ theo schema')
-  uow.put('views', v as never)
+  uow.insert('views', v as never)
   if (v.removed_restricted.length) uow.audit({ actor: 'SYSTEM', action: 'restricted.line_removed', object: viewId, data: { lines: v.removed_restricted.map(lineKey) } })
   await uow.commit()
   // FR-401: phản biện chạy tự động khi nhận định qua kiểm tra schema
@@ -184,14 +183,14 @@ export async function runPreChallenge(ctx: AppCtx, viewId: string): Promise<View
     llmRaw = j.findings ?? []; counter = j.counter_scenario ?? ''; model = r.model
   }
   const norm = normalizeLlmFindings(llmRaw, vctx.newsIds)
-  const n = (await ctx.repo.list('challenges', 'view_id = ? AND stage = ?', [v.id, 'pre_approval'])).length + 1
+  const n = await nextChallengeNo(ctx, v.id, 'pre_approval')
   const id = `CH-${evNum(v.event_id)}-v${v.version}-pre-${n}`
   const ch: ChallengeRec = { id, view_id: v.id, stage: 'pre_approval', created_at: ctx.now(), findings: numberFindings(id, 'pre_approval', rule, norm.findings), counter_scenario: counter, input_package: pkg, model, prompt_version: prompts.version.id, dropped: norm.dropped }
   v = transition(ctx, v, 'PENDING_APPROVAL', 'Có báo cáo phản biện')
   v.view_ready_at = ctx.now()
   const uow = ctx.uow()
-  uow.put('challenges', ch as never).put('views', v as never)
-  if (!e.timestamps.view_ready_at) uow.put('events', withTimestamp(e, 'view_ready_at', v.view_ready_at) as never)
+  uow.insert('challenges', ch as never).update('views', v as never)
+  if (!e.timestamps.view_ready_at) uow.update('events', withTimestamp(e, 'view_ready_at', v.view_ready_at) as never)
   uow.audit({ actor: 'AGENT:challenger', action: 'agent.challenge', object: id, data: { view_id: v.id, stage: 'pre_approval', model, input_package: pkg, findings: ch.findings.map(f => ({ id: f.finding_id, check: f.check, severity: f.severity, origin: f.origin })) } })
   await uow.commit()
   return v
@@ -227,7 +226,7 @@ export async function editView(ctx: AppCtx, viewId: string, impacts: ImpactLine[
     if (v.status === 'PENDING_APPROVAL') v = transition(ctx, v, 'PENDING_CHALLENGE', 'CIO sửa hướng, mức hoặc thêm bớt dòng')
   }
   const uow = ctx.uow()
-  uow.put('views', v as never)
+  uow.update('views', v as never)
   uow.audit({ actor: actor(ctx), action: 'view.cio_edit', object: v.id, data: { diff, note } })
   await uow.commit()
   return { view: v, rechallenge_required: material.length > 0 }
@@ -252,12 +251,12 @@ export async function runReChallenge(ctx: AppCtx, viewId: string): Promise<ViewR
   if (ctx.agentMode === 'mock') llmRaw = [...keys].flatMap(k => MOCK.challenger[mockKey(e)]?.re_challenge?.[k] ?? [])
   else { const r = await callJson(ctx.env, models.content.challenger, prompts.content.challenger.re_challenge, wrapData('gói phản biện lại', pkg)); llmRaw = (r.json as { findings?: unknown[] }).findings ?? []; model = r.model }
   const norm = normalizeLlmFindings(llmRaw.map(f => ({ ...(f as object), stage: 're_challenge' })), vctx.newsIds)
-  const n = (await ctx.repo.list('challenges', 'view_id = ? AND stage = ?', [v.id, 're_challenge'])).length + 1
+  const n = await nextChallengeNo(ctx, v.id, 're_challenge')
   const id = `CH-${evNum(v.event_id)}-v${v.version}-re-${n}`
   const ch: ChallengeRec = { id, view_id: v.id, stage: 're_challenge', created_at: ctx.now(), findings: numberFindings(id, 're_challenge', rule, norm.findings), lines: [...keys], input_package: pkg, model, prompt_version: prompts.version.id, dropped: norm.dropped }
   v = transition(ctx, { ...v, unchallenged: [] }, 'PENDING_APPROVAL', 'Đã phản biện lại các dòng CIO sửa')
   const uow = ctx.uow()
-  uow.put('challenges', ch as never).put('views', v as never)
+  uow.insert('challenges', ch as never).update('views', v as never)
   uow.audit({ actor: 'AGENT:challenger', action: 'agent.challenge', object: id, data: { view_id: v.id, stage: 're_challenge', lines: [...keys], model, input_package: pkg, findings: ch.findings.map(f => ({ id: f.finding_id, severity: f.severity })) } })
   await uow.commit()
   return v
@@ -333,7 +332,7 @@ export async function decide(ctx: AppCtx, viewId: string, body: { action: string
   } else if (action === 'REWORK') v = transition(ctx, v, 'REWORK_REQUESTED', reason)
   else v = transition(ctx, v, 'REJECTED', reason)
   uow.insert('decisions', d as never)
-  uow.put('views', v as never)
+  uow.update('views', v as never)
   uow.audit({ actor: actor(ctx), action: `decision.${action.toLowerCase()}`, object: viewId, data: { reason, idempotency_key: idem, run_id: d.run_id } })
   await uow.commit()
   if (action === 'REWORK') {
@@ -357,8 +356,7 @@ export async function createManualView(ctx: AppCtx, raw: unknown, eventId: strin
   const e = await getEvent(ctx, eventId)
   const news = await eventNews(ctx, e)
   const vctx = await viewContext(ctx, e, news)
-  const existing = await ctx.repo.list<ViewRec>('views', 'event_id = ?', [e.id], 'version DESC')
-  const version = (existing[0]?.version ?? 0) + 1
+  const version = await nextViewVersion(ctx, e.id)
   const viewId = `VW-${evNum(e.id)}-v${version}`
   const val = validateView({ ...(raw as object), event_id: e.id, view_id: viewId, event_type: e.type }, vctx)
   if (!val.ok) throw new HttpError(422, 'Nhận định nhập tay không đúng schema Mục 7.3', val.errors)
@@ -369,7 +367,7 @@ export async function createManualView(ctx: AppCtx, raw: unknown, eventId: strin
   v = transition(ctx, v, 'APPROVED', note); v.approved_at = now
   const uow = ctx.uow()
   const r = await apply(v, uow)
-  uow.put('views', v as never)
+  uow.insert('views', v as never)
   uow.audit({ actor: actor(ctx), action: 'view.manual_apply', object: viewId, data: { note, run_id: r.run_id } })
   await uow.commit()
   return { view: v, run_id: r.run_id }

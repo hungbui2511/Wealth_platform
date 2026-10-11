@@ -104,6 +104,6 @@ export async function addNote(ctx: AppCtx, familyId: string, body: { run_id?: st
   assertFamily(ctx, familyId)
   if (ctx.user.role !== 'RM') throw new HttpError(403, 'Chỉ RM ghi chú')
   const note = { id: `NOTE-${familyId}-${await ctx.repo.nextSeq('NOTE')}`, family_id: familyId, user_id: ctx.user.id, run_id: body.run_id, text: String(body.text ?? '').slice(0, 2000), seen: !!body.seen, at: ctx.now() }
-  const u = ctx.uow(); u.put('rm_notes', note as never); u.audit({ actor: actor(ctx), action: 'rm.note', object: familyId, data: note }); await u.commit()
+  const u = ctx.uow(); u.insert('rm_notes', note as never); u.audit({ actor: actor(ctx), action: 'rm.note', object: familyId, data: note }); await u.commit()
   return note
 }

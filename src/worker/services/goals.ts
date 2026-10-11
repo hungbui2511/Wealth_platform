@@ -43,10 +43,12 @@ export async function createGoal(ctx: AppCtx, familyId: string, input: Partial<G
   requireRole(ctx, 'RM'); assertFamily(ctx, familyId)
   const f = await loadFamily(ctx, familyId)
   const others = await loadGoals(ctx, familyId)
-  const n = String(Math.max(0, ...others.map(g => Number(g.id.slice(-2)))) + 1).padStart(2, '0')
-  const g = normalize(input, familyId, `GL-F${familyId.slice(-2)}-${n}`)
-  validate(g, new Set(f.holdings.map(h => h.id)), others)
-  const u = ctx.uow(); u.put('goals', g as never); u.audit({ actor: actor(ctx), action: 'goal.created', object: g.id, data: g }); await u.commit()
+  const draft = normalize(input, familyId, '')
+  validate(draft, new Set(f.holdings.map(h => h.id)), others)
+  // Cấp mã sau khi hợp lệ để mục tiêu bị từ chối không chiếm số
+  const n = String(await ctx.repo.nextSeq(`goal:${familyId}`, 'SELECT max(CAST(substr(id, -2) AS INTEGER)) FROM goals WHERE family_id = ?', [familyId])).padStart(2, '0')
+  const g = { ...draft, id: `GL-F${familyId.slice(-2)}-${n}` }
+  const u = ctx.uow(); u.insert('goals', g as never); u.audit({ actor: actor(ctx), action: 'goal.created', object: g.id, data: g }); await u.commit()
   return g
 }
 
@@ -58,7 +60,7 @@ export async function updateGoal(ctx: AppCtx, id: string, input: Partial<Goal>) 
   const f = await loadFamily(ctx, prev.family_id)
   const g = normalize(input, prev.family_id, id, prev)
   validate(g, new Set(f.holdings.map(h => h.id)), await loadGoals(ctx, prev.family_id))
-  const u = ctx.uow(); u.put('goals', g as never); u.audit({ actor: actor(ctx), action: 'goal.updated', object: id, data: { before: prev, after: g } }); await u.commit()
+  const u = ctx.uow(); u.update('goals', g as never); u.audit({ actor: actor(ctx), action: 'goal.updated', object: id, data: { before: prev, after: g } }); await u.commit()
   return g
 }
 
@@ -68,6 +70,6 @@ export async function closeGoal(ctx: AppCtx, id: string, note: string) {
   if (!prev) throw new HttpError(404, `Không có mục tiêu ${id}`)
   assertFamily(ctx, prev.family_id)
   const g = { ...prev, status: 'closed' as const }
-  const u = ctx.uow(); u.put('goals', g as never); u.audit({ actor: actor(ctx), action: 'goal.closed', object: id, data: { note } }); await u.commit()
+  const u = ctx.uow(); u.update('goals', g as never); u.audit({ actor: actor(ctx), action: 'goal.closed', object: id, data: { note } }); await u.commit()
   return g
 }

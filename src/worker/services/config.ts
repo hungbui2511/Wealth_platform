@@ -97,12 +97,12 @@ export async function proposeConfig(ctx: AppCtx, kind: ConfigKind, content: unkn
   requireRole(ctx, meta.owner)
   const reason = minReason(reasonRaw)
   validateContent(kind, content)
-  const seq = (await ctx.repo.list<ConfigVersion>('config_versions', 'kind = ?', [kind], 'seq DESC'))[0]?.seq ?? 0
+  const seq = await ctx.repo.nextSeq(`config:${kind}`, 'SELECT max(seq) FROM config_versions WHERE kind = ?', [kind])
   const now = ctx.now()
-  const v: ConfigVersion = { id: `CFG-${kind}-${seq + 1}`, kind, seq: seq + 1, status: meta.twoPerson ? 'PENDING_CONFIRM' : 'ACTIVE', created_at: now, content, proposed_by: actor(ctx), reason, ...(meta.twoPerson ? {} : { effective_at: now }) }
+  const v: ConfigVersion = { id: `CFG-${kind}-${seq}`, kind, seq, status: meta.twoPerson ? 'PENDING_CONFIRM' : 'ACTIVE', created_at: now, content, proposed_by: actor(ctx), reason, ...(meta.twoPerson ? {} : { effective_at: now }) }
   const uow = uowIn ?? ctx.uow()
-  if (!meta.twoPerson) for (const old of await ctx.repo.list<ConfigVersion>('config_versions', "kind = ? AND status = 'ACTIVE'", [kind])) uow.put('config_versions', { ...old, status: 'SUPERSEDED' } as never)
-  uow.put('config_versions', v as never)
+  if (!meta.twoPerson) for (const old of await ctx.repo.list<ConfigVersion>('config_versions', "kind = ? AND status = 'ACTIVE'", [kind])) uow.update('config_versions', { ...old, status: 'SUPERSEDED' } as never)
+  uow.insert('config_versions', v as never)
   uow.audit({ actor: actor(ctx), action: meta.twoPerson ? 'config.proposed' : 'config.changed', object: v.id, data: { kind, reason, content } })
   if (!uowIn) await uow.commit()
   return v
@@ -117,9 +117,9 @@ export async function decideConfig(ctx: AppCtx, id: string, approve: boolean, re
   if (v.proposed_by.includes(`:${ctx.user.id}`)) throw new HttpError(409, 'Người xác nhận phải khác người đề xuất')
   const uow = ctx.uow()
   const now = ctx.now()
-  if (approve) for (const old of await ctx.repo.list<ConfigVersion>('config_versions', "kind = ? AND status = 'ACTIVE'", [v.kind])) uow.put('config_versions', { ...old, status: 'SUPERSEDED' } as never)
+  if (approve) for (const old of await ctx.repo.list<ConfigVersion>('config_versions', "kind = ? AND status = 'ACTIVE'", [v.kind])) uow.update('config_versions', { ...old, status: 'SUPERSEDED' } as never)
   const nv: ConfigVersion = { ...v, status: approve ? 'ACTIVE' : 'REJECTED', confirmed_by: actor(ctx), confirmed_at: now, ...(approve ? { effective_at: now } : {}) }
-  uow.put('config_versions', nv as never)
+  uow.update('config_versions', nv as never)
   uow.audit({ actor: actor(ctx), action: approve ? 'config.confirmed' : 'config.rejected', object: id, data: { kind: v.kind, reason } })
   await uow.commit()
   return nv

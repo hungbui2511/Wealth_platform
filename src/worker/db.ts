@@ -21,7 +21,7 @@ export const TABLES: Record<string, string[]> = {
   family_impacts: ['id', 'run_id', 'family_id'],
   goal_impacts: ['id', 'run_id', 'family_id'],
   config_versions: ['id', 'kind', 'seq', 'status', 'created_at'],
-  policy_documents: ['id', 'status'],
+  policy_documents: ['id', 'state'],
   policy_matches: ['id', 'doc_id', 'family_id'],
   research_releases: ['id', 'view_id', 'status'],
   rm_notes: ['id', 'family_id', 'user_id'],
@@ -43,55 +43,91 @@ export class Repo {
     return (r.results ?? []).map(x => JSON.parse(x.data) as T)
   }
 
-  // Mã tiếp theo theo số lớn nhất đang có (tránh trùng với mã cố định của gói mẫu); một truy vấn
-  async nextId(table: string, prefix: string, width: number): Promise<string> {
-    const r = await this.db.prepare(`SELECT id FROM ${table} WHERE id LIKE ? ORDER BY id DESC LIMIT 1`).bind(prefix + '%').first<{ id: string }>()
-    const n = r ? Number(r.id.slice(prefix.length)) + 1 : 1
-    return prefix + String(n).padStart(width, '0')
+  // Cấp số tăng dần nguyên tử (một câu lệnh, D1 chạy tuần tự nên hai yêu cầu song song không nhận trùng số).
+  // floorSql (tùy chọn) trả về số lớn nhất đang có, để không trùng với mã cố định của gói mẫu.
+  // step > 1 giữ chỗ một khối số liên tiếp; trả về số cuối của khối.
+  async nextSeq(name: string, floorSql?: string, floorParams: unknown[] = [], step = 1): Promise<number> {
+    const n = Math.max(1, Math.trunc(step))
+    const floor = floorSql ? `COALESCE((${floorSql}), 0) + ${n}` : String(n)
+    const r = await this.db.prepare(`INSERT INTO counters (name, value) VALUES (?, ${floor}) ON CONFLICT(name) DO UPDATE SET value = max(counters.value + ${n}, excluded.value) RETURNING value`).bind(name, ...floorParams).first<{ value: number }>()
+    return r!.value
   }
 
-  async nextSeq(name: string): Promise<number> {
-    const r = await this.db.prepare('INSERT INTO counters (name, value) VALUES (?, 1) ON CONFLICT(name) DO UPDATE SET value = value + 1 RETURNING value').bind(name).first<{ value: number }>()
-    return r!.value
+  // Mã kế tiếp dạng <prefix><số> (ví dụ EV-2026-0008)
+  async nextId(table: string, prefix: string, width: number): Promise<string> {
+    return (await this.nextIds(table, prefix, width, 1))[0]
+  }
+  async nextIds(table: string, prefix: string, width: number, count: number): Promise<string[]> {
+    const last = await this.nextSeq(`id:${prefix}`, `SELECT CAST(substr(id, ${prefix.length + 1}) AS INTEGER) FROM ${table} WHERE id LIKE ? ORDER BY id DESC LIMIT 1`, [prefix + '%'], count)
+    return Array.from({ length: count }, (_, i) => prefix + String(last - count + 1 + i).padStart(width, '0'))
   }
 }
 
+// Bản ghi đã bị yêu cầu khác thay đổi sau khi đọc (khóa lạc quan theo trường rev) → HTTP 409
+export class ConflictError extends Error {
+  constructor() { super('Dữ liệu vừa được người khác thay đổi; tải lại rồi thử lại') }
+}
+const CONFLICT_GUARD = "INSERT INTO counters (name, value) SELECT '__conflict__', NULL WHERE changes() = 0"
+const isConflict = (e: unknown) => /NOT NULL constraint failed: counters\.value/i.test(String(e))
+
 export interface AuditInput { actor: string; action: string; object?: string; data?: unknown }
 
-// Đơn vị công việc: gom mọi lệnh ghi và bản ghi nhật ký của một yêu cầu vào một lô nguyên tử
+// Đơn vị công việc: gom mọi lệnh ghi và bản ghi nhật ký của một yêu cầu vào một lô nguyên tử.
+// put: ghi đè (dữ liệu tham chiếu, kết quả tính lại được). insert: bản ghi mới, trùng mã thì lỗi.
+// update: sửa bản ghi đã đọc, chỉ thành công nếu rev chưa đổi kể từ lúc đọc; ghi rev + 1.
+type WriteMode = 'upsert' | 'insert' | 'update'
 export class UnitOfWork {
-  private writes: { table: string; doc: Doc; mode: 'upsert' | 'insert' }[] = []
+  private writes = new Map<string, { table: string; doc: Doc; mode: WriteMode; rev?: number }>()
   private audits: AuditInput[] = []
   private pre: D1PreparedStatement[] = []
   constructor(private repo: Repo, private now: () => string) {}
 
-  put(table: string, doc: Doc) { this.writes.push({ table, doc, mode: 'upsert' }); return this }
-  insert(table: string, doc: Doc) { this.writes.push({ table, doc, mode: 'insert' }); return this }
+  private add(table: string, doc: Doc, mode: WriteMode) {
+    const key = `${table}|${doc.id}`
+    const prev = this.writes.get(key)
+    if (!prev) {
+      const rev = mode === 'update' ? Number(doc.rev ?? 0) : undefined
+      this.writes.set(key, { table, doc: mode === 'update' ? { ...doc, rev: rev! + 1 } : doc, mode, rev })
+    } else if (prev.mode === 'update') {
+      // Ghi lần nữa trong cùng yêu cầu: giữ rev lúc đọc ban đầu
+      this.writes.set(key, { ...prev, doc: { ...doc, rev: prev.rev! + 1 } })
+    } else this.writes.set(key, { ...prev, doc })
+    return this
+  }
+  put(table: string, doc: Doc) { return this.add(table, doc, 'upsert') }
+  insert(table: string, doc: Doc) { return this.add(table, doc, 'insert') }
+  update(table: string, doc: Doc) { return this.add(table, doc, 'update') }
   audit(a: AuditInput) { this.audits.push(a); return this }
   // Câu lệnh chạy đầu lô, cùng giao dịch với phần ghi (ví dụ xóa dữ liệu khi nạp lại)
   raw(stmt: D1PreparedStatement) { this.pre.push(stmt); return this }
-  get pending() { return this.writes.length + this.audits.length }
+  get pending() { return this.writes.size + this.audits.length }
 
   private statements(): D1PreparedStatement[] {
     const db = this.repo.db
     const out: D1PreparedStatement[] = [...this.pre]
+    const colsOf = (table: string) => { const c = TABLES[table]; if (!c) throw new Error(`Bảng không được khai báo: ${table}`); return c }
     // Gom theo bảng/chế độ: một lệnh INSERT ... SELECT FROM json_each(?) cho nhiều bản ghi
     const groups = new Map<string, Doc[]>()
-    for (const w of this.writes) {
+    for (const w of this.writes.values()) {
+      if (w.mode === 'update') continue
       const k = `${w.table}|${w.mode}`
       groups.set(k, [...(groups.get(k) ?? []), w.doc])
     }
     for (const [k, docs] of groups) {
       const [table, mode] = k.split('|')
-      const cols = TABLES[table]
-      if (!cols) throw new Error(`Bảng không được khai báo: ${table}`)
+      const cols = colsOf(table)
       const verb = mode === 'insert' ? 'INSERT' : 'INSERT OR REPLACE'
-      // Bản ghi sau cùng với cùng id thắng
-      const dedup = new Map<string, Doc>()
-      for (const d of docs) dedup.set(d.id, d)
-      const rows = [...dedup.values()].map(d => ({ ...Object.fromEntries(cols.map(c => [c, d[c] ?? null])), data: JSON.stringify(d) }))
+      const rows = docs.map(d => ({ ...Object.fromEntries(cols.map(c => [c, d[c] ?? null])), data: JSON.stringify(d) }))
       const select = [...cols, 'data'].map(c => `json_extract(value, '$.${c}')`).join(', ')
       out.push(db.prepare(`${verb} INTO ${table} (${[...cols, 'data'].join(', ')}) SELECT ${select} FROM json_each(?)`).bind(JSON.stringify(rows)))
+    }
+    // Sửa có điều kiện: mỗi bản ghi một câu UPDATE, theo sau là câu chặn làm hỏng cả lô nếu không sửa được dòng nào
+    for (const w of this.writes.values()) {
+      if (w.mode !== 'update') continue
+      const cols = colsOf(w.table).filter(c => c !== 'id')
+      const set = [...cols.map(c => `${c} = json_extract(?1, '$.${c}')`), 'data = ?1'].join(', ')
+      out.push(db.prepare(`UPDATE ${w.table} SET ${set} WHERE id = ?2 AND COALESCE(json_extract(data, '$.rev'), 0) = ?3`).bind(JSON.stringify(w.doc), w.doc.id, w.rev))
+      out.push(db.prepare(CONFLICT_GUARD))
     }
     return out
   }
@@ -120,11 +156,14 @@ export class UnitOfWork {
       if (!stmts.length) return { audit: [] }
       try {
         await this.repo.db.batch(stmts)
-        this.writes = []; this.audits = []; this.pre = []
+        this.writes.clear(); this.audits = []; this.pre = []
         return { audit: auditRows.map(r => ({ seq: r.seq, hash: r.hash })) }
       } catch (e) {
+        if (isConflict(e)) throw new ConflictError()
         // Xung đột số thứ tự nhật ký khi có yêu cầu song song: thử lại với đầu chuỗi mới
-        if (attempt < 2 && /UNIQUE|PRIMARY KEY|constraint/i.test(String(e)) && this.audits.length) continue
+        if (/audit_log/i.test(String(e)) && this.audits.length) { if (attempt < 2) continue; throw e }
+        // Bản ghi mới trùng mã hoặc trùng khóa chống lặp: yêu cầu khác đã ghi trước
+        if (/UNIQUE constraint failed/i.test(String(e))) throw new ConflictError()
         throw e
       }
     }

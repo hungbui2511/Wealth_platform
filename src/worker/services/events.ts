@@ -34,9 +34,9 @@ export async function createEvent(ctx: AppCtx, input: { type: string; title?: st
   const id = opts.fixedId ?? input.id ?? await ctx.repo.nextId('events', `EV-${year}-`, 4)
   if (input.id && await ctx.repo.get('events', id)) throw new HttpError(409, `Sự kiện ${id} đã tồn tại`)
   const news: NewsItem[] = []
-  const firstNw = input.newsIds ? 0 : Number((await ctx.repo.nextId('news_items', 'NW-', 4)).slice(3))
+  const newsIds = input.newsIds ?? await ctx.repo.nextIds('news_items', 'NW-', 4, input.items.length)
   for (const [i, it] of input.items.entries()) {
-    const nid = input.newsIds?.[i] ?? `NW-${String(firstNw + i).padStart(4, '0')}`
+    const nid = newsIds[i]
     news.push({ id: nid, event_id: id, title: it.title, source: it.source ?? new URL(it.url!).hostname, url: it.url!, published_at: it.published_at!, ingested_at: now, summary: it.summary, language: it.language ?? 'vi', simulated: it.simulated ?? false, ...(it.policy_change ? { policy_change: it.policy_change } : {}) })
   }
   const published = news.map(n => n.published_at).sort((a, b) => Date.parse(a) - Date.parse(b))[0]
@@ -49,8 +49,8 @@ export async function createEvent(ctx: AppCtx, input: { type: string; title?: st
     ...(input.policy_doc_id ? { policy_doc_id: input.policy_doc_id } : {}),
   }
   const uow = opts.uow ?? ctx.uow()
-  for (const n of news) uow.put('news_items', n as never)
-  uow.put('events', ev as never)
+  for (const n of news) uow.insert('news_items', n as never)
+  uow.insert('events', ev as never)
   uow.audit({ actor: actor(ctx), action: 'event.created', object: id, data: { type: ev.type, news: news.map(n => ({ id: n.id, url: n.url, published_at: n.published_at })), restricted_hold: ev.hold ?? null } })
   if (!opts.uow) await uow.commit()
   return { event: ev, news }
@@ -90,7 +90,7 @@ export async function allowEvent(ctx: AppCtx, id: string, note: string) {
   if (!e.hold || e.hold.status !== 'PENDING') throw new HttpError(409, 'Sự kiện không ở trạng thái chờ Tuân thủ cho phép')
   const ne: EventRec = { ...e, hold: { ...e.hold, status: 'ALLOWED', allowed_by: actor(ctx), allowed_at: ctx.now(), note } }
   const u = ctx.uow()
-  u.put('events', ne as never)
+  u.update('events', ne as never)
   u.audit({ actor: actor(ctx), action: 'event.compliance_allowed', object: id, data: { note, entries: e.hold.entries } })
   await u.commit()
   return ne
@@ -111,6 +111,6 @@ export async function setTimestamp(ctx: AppCtx, id: string, field: TimestampFiel
     const u = ctx.uow(); u.audit({ actor: actor(ctx), action: 'event.timestamp_rejected', object: id, data: { field, value, error: (err as Error).message } }); await u.commit()
     throw err
   }
-  const u = ctx.uow(); u.put('events', ne as never); u.audit({ actor: actor(ctx), action: 'event.timestamp_set', object: id, data: { field, value } }); await u.commit()
+  const u = ctx.uow(); u.update('events', ne as never); u.audit({ actor: actor(ctx), action: 'event.timestamp_set', object: id, data: { field, value } }); await u.commit()
   return ne
 }

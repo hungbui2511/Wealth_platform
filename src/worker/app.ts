@@ -5,6 +5,7 @@ import { isWhitelistedUrl } from '../compliance/controls'
 import { TransitionError } from '../engine/states'
 import { actor, HttpError, makeCtx, requireRole, type AppCtx, type Env, type User } from './ctx'
 import { reseed } from './services/admin'
+import { ConflictError } from './db'
 import { authenticate, authMode, verifiedEmail, roleMap } from './auth'
 import { CONFIG_KINDS, decideConfig, loadConfigs, proposeConfig, redactConfig, activeConfig, type ConfigKind, type ConfigVersion } from './services/config'
 import { createEvent, loadSampleEvents, allowEvent, getEvent, eventNews, setTimestamp, type EventRec } from './services/events'
@@ -27,7 +28,7 @@ export function createApp(opts: AppOptions = {}) {
 
   app.onError((err, c) => {
     if (err instanceof HttpError) return c.json({ error: err.message, details: err.details ?? null }, err.status as 400)
-    if (err instanceof TransitionError) return c.json({ error: err.message }, 409)
+    if (err instanceof TransitionError || err instanceof ConflictError) return c.json({ error: err.message }, 409)
     console.error(err)
     return c.json({ error: 'Lỗi máy chủ', message: String((err as Error).message ?? err) }, 500)
   })
