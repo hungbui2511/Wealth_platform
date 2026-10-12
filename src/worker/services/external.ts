@@ -69,6 +69,9 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     try {
       const out = await addToInbox(ctx, items, { trigger: 'claude', minRelevance: 0, maxAgeDays: 7 })
       report.news.rows++; for (const k of ['created', 'duplicate', 'rejected', 'too_old', 'irrelevant'] as const) report.news[k] += out.report[k]
+      // Tin bị từ chối chỉ vì miền chưa có trong danh sách nguồn công khai: giữ chờ tối đa 3 ngày để Tuân thủ xem xét bổ sung
+      const onlyDomain = !out.report.created && !out.report.duplicate && out.report.rejected > 0 && out.report.rejected_items.every(x => x.errors.every(e => e.startsWith('Miền ')))
+      if (onlyDomain && !tooOld(ctx, r)) { await mark(ctx, r, { status: 'READY', note: 'Chờ Tuân thủ bổ sung miền vào danh sách nguồn công khai', result: out.report }); report.waiting.push({ id: r.id, reason: 'miền chưa thuộc danh sách nguồn công khai' }); continue }
       await mark(ctx, r, { status: out.report.created || out.report.duplicate ? 'IMPORTED' : 'REJECTED', result: { ids_by_url: out.ids_by_url, ...out.report } })
     } catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e) }) }
   }

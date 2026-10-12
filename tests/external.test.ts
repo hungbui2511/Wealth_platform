@@ -83,3 +83,14 @@ describe('Nhập kết quả Claude', () => {
     expect(a.length).toBeGreaterThan(0)
   })
 })
+
+describe('Miền chưa thuộc danh sách nguồn công khai', () => {
+  it('giữ chờ (không hủy) để Tuân thủ xem xét; tin vẫn không vào hệ thống', async () => {
+    await push('news', null, { items: [{ title: 'Lãi suất liên ngân hàng tăng', url: 'https://cafef.vn/lai-suat-lnh.chn', published_at: '2026-10-09T08:00:00+07:00', summary: 'Lãi suất liên ngân hàng tăng' }] })
+    const r = await h.ok('ADM1', 'POST', '/api/external/import')
+    expect(r.news.created).toBe(0)
+    expect(r.waiting.some((w: any) => w.reason.includes('danh sách nguồn công khai'))).toBe(true)
+    const row = (await h.ok('CIO1', 'GET', '/api/external')).find((x: any) => x.id === `EXT-T-${seq}`)
+    expect(row.status).toBe('READY')
+  })
+})

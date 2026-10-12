@@ -31,7 +31,7 @@ export async function createEvent(ctx: AppCtx, input: { type: string; title?: st
     throw new HttpError(422, 'Không tạo được sự kiện: tin không qua kiểm soát nguồn công khai (BR-26)', problems)
   }
   const year = now.slice(0, 4)
-  const id = opts.fixedId ?? input.id ?? await ctx.repo.nextId('events', `EV-${year}-`, 4)
+  const id = opts.fixedId ?? input.id ?? await newEventId(ctx, year)
   if (input.id && await ctx.repo.get('events', id)) throw new HttpError(409, `Sự kiện ${id} đã tồn tại`)
   const news: NewsItem[] = []
   const newsIds = input.newsIds ?? await ctx.repo.nextIds('news_items', 'NW-', 4, input.items.length)
@@ -54,6 +54,13 @@ export async function createEvent(ctx: AppCtx, input: { type: string; title?: st
   uow.audit({ actor: actor(ctx), action: 'event.created', object: id, data: { type: ev.type, news: news.map(n => ({ id: n.id, url: n.url, published_at: n.published_at })), restricted_hold: ev.hold ?? null } })
   if (!opts.uow) await uow.commit()
   return { event: ev, news }
+}
+
+// Mã sự kiện mới không trùng mã cố định của gói sự kiện mẫu (gói mẫu có thể được nạp sau sự kiện thật)
+async function newEventId(ctx: AppCtx, year: string): Promise<string> {
+  let id = await ctx.repo.nextId('events', `EV-${year}-`, 4)
+  while (SEED.events.some(e => e.id === id)) id = await ctx.repo.nextId('events', `EV-${year}-`, 4)
+  return id
 }
 
 // Gói sự kiện mẫu (FR-201): tạo sự kiện với mã cố định của gói
@@ -134,7 +141,7 @@ export async function createEventFromNews(ctx: AppCtx, input: { news_ids: string
   const now = ctx.now()
   const problems = news.map(n => ({ id: n.id, errors: checkPublicSource(n, cfg.whitelist, now) })).filter(p => p.errors.length)
   if (problems.length) throw new HttpError(422, 'Có tin không qua kiểm soát nguồn công khai (BR-26)', problems)
-  const id = await ctx.repo.nextId('events', `EV-${now.slice(0, 4)}-`, 4)
+  const id = await newEventId(ctx, now.slice(0, 4))
   const published = news.map(n => n.published_at).sort((a, b) => Date.parse(a) - Date.parse(b))[0]
   const hits = restrictedHits(news.flatMap(n => [n.title, n.summary]), activeRestricted(cfg, now))
   const ev: EventRec = {
