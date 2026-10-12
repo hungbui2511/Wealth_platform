@@ -139,7 +139,12 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
       const rec = await importPrices(ctx, r.data)
       await mark(ctx, r, { status: 'IMPORTED', result: { snapshot_id: rec.id, price_date: rec.price_date, updated: rec.updated } })
       report.prices.push(rec.id)
-    } catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 1000) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
+    } catch (e) {
+      // Mọi mã đều chưa có trong ảnh chụp giá (ví dụ cơ sở dữ liệu chưa nạp lại danh mục công cụ mới): giữ chờ tối đa 3 ngày
+      const det = (e as HttpError).details as string[] | undefined
+      if (Array.isArray(det) && det.length && det.every(x => x.includes('mã không có trong ảnh chụp giá')) && !tooOld(ctx, r)) { await mark(ctx, r, { status: 'READY', note: 'Chờ danh mục công cụ khớp với bảng giá (nạp lại dữ liệu mẫu)' }); report.waiting.push({ id: r.id, reason: 'mã giá chưa có trong danh mục công cụ' }); continue }
+      await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 1000) + (det ? ': ' + JSON.stringify(det).slice(0, 800) : '') }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) })
+    }
   }
 
   // Chỉ ghi nhật ký khi có thay đổi (tránh một bản ghi mỗi 10 phút khi các bản ghi chỉ đang chờ)
