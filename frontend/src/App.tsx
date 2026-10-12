@@ -85,11 +85,13 @@ function AgentStatus({ user }: { user: User }) {
   const live = health.agent_mode === 'live'
   return (
     <div className="relative flex items-center gap-2">
-      <Badge tone={live ? (health.llm_key ? 'green' : 'red') : 'low'} title={live ? 'Agent gọi Claude qua API' : 'Chưa bật AI thật: sự kiện mẫu dùng đầu ra ghi sẵn, tin mới dùng luật từ khóa'}>{live ? (health.llm_key ? 'AI: Claude (live)' : 'AI live: thiếu khóa API') : 'AI: mô phỏng'}</Badge>
-      {staff && jobs.length > 0 && <button onClick={() => setOpen(!open)} className="inline-flex items-center gap-1 text-primary"><Bot size={14} className="animate-pulse" />{jobs.length} tác vụ AI đang chạy</button>}
+      {health.agent_mode === 'external'
+        ? <Badge tone="green" title="Claude chạy các agent trong phiên làm việc rồi đẩy kết quả lên; hệ thống nhập mỗi 10 phút qua cùng các kiểm soát">AI: Claude (đồng bộ theo phiên)</Badge>
+        : <Badge tone={live ? (health.llm_key ? 'green' : 'red') : 'low'} title={live ? 'Agent gọi Claude qua API' : 'Chưa bật AI thật: sự kiện mẫu dùng đầu ra ghi sẵn, tin mới dùng luật từ khóa'}>{live ? (health.llm_key ? 'AI: Claude (live)' : 'AI live: thiếu khóa API') : 'AI: mô phỏng'}</Badge>}
+      {staff && jobs.length > 0 && <button onClick={() => setOpen(!open)} className="inline-flex items-center gap-1 text-primary"><Bot size={14} className="animate-pulse" />{jobs.length} tác vụ AI đang chờ/chạy</button>}
       {open && jobs.length > 0 && (
         <div className="absolute right-0 top-7 z-50 w-80 bg-card border border-border rounded-md p-3 shadow-lg text-[13px] space-y-2">
-          {jobs.map(j => <div key={j.id}><div className="font-medium">{({ cio_run: 'Agent CIO', challenge_retry: 'Agent Phản biện', rechallenge: 'Phản biện lại', policy_analyze: 'Agent Chính sách' } as Record<string, string>)[j.kind] ?? j.kind} · <span className="mono">{j.subject}</span></div><div className="text-fgm">{j.status === 'QUEUED' ? 'Đang chờ chạy' : j.steps.length ? `Đang: ${stepLabel(j.steps[j.steps.length - 1].step)} (${j.steps.length} bước)` : 'Đang chuẩn bị dữ liệu'}</div></div>)}
+          {jobs.map(j => <div key={j.id}><div className="font-medium">{({ cio_run: 'Agent CIO', challenge_retry: 'Agent Phản biện', rechallenge: 'Phản biện lại', policy_analyze: 'Agent Chính sách' } as Record<string, string>)[j.kind] ?? j.kind} · <span className="mono">{j.subject}</span></div><div className="text-fgm">{j.status === 'WAITING_EXTERNAL' ? 'Chờ Claude phân tích (lần đồng bộ kế tiếp)' : j.status === 'QUEUED' ? 'Đang chờ chạy' : j.steps.length ? `Đang: ${stepLabel(j.steps[j.steps.length - 1].step)} (${j.steps.length} bước)` : 'Đang chuẩn bị dữ liệu'}</div></div>)}
         </div>
       )}
     </div>

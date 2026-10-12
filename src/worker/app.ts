@@ -19,7 +19,8 @@ import { addNote, familyImpacts, familyList, interpretation } from './services/r
 import { closeGoal, createGoal, updateGoal } from './services/goals'
 import { addPolicy, analyzePolicy, confirmSource, loadSamplePolicies, policyDetail, radar } from './services/policy'
 import { createRelease, reviewRelease, submitRelease, updateRelease } from './services/releases'
-import { backgroundEnabled, getJob, listJobs, runOrQueue, startJob } from './services/jobs'
+import { backgroundEnabled, getJob, listJobs, requestExternal, runOrQueue, startJob } from './services/jobs'
+import { importExternal, listExternal } from './services/external'
 import { agentCatalog, agentRunTrace, auditExport, auditList, traceFamily, verifyChain } from './services/trace'
 import type { FamilyImpactResult } from '../engine/apply'
 import type { TimestampField } from '../compliance/controls'
@@ -114,10 +115,12 @@ export function createApp(opts: AppOptions = {}) {
   app.post('/api/events/:id/run-agent', async c => {
     const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN')
     const id = c.req.param('id')
-    if (backgroundEnabled(ctx)) {
+    if (backgroundEnabled(ctx) || ctx.agentMode === 'external') {
       // Kiểm tra ngay những điều kiện chặn (BR-27) để người dùng biết liền, không phải chờ tác vụ nền
       const e = await getEvent(ctx, id)
       if (e.hold?.status === 'PENDING') return c.json(await runCioAgent(ctx, id)) // ném lỗi 409 và ghi nhật ký như chạy trực tiếp
+      // Chế độ external: sự kiện từ tin thật chờ Claude phân tích trong phiên làm việc; sự kiện của gói mẫu chạy ngay
+      if (ctx.agentMode === 'external' && !(await eventNews(ctx, e)).every(n => n.simulated)) return c.json({ job: await requestExternal(ctx, 'cio_run', id, { event_id: id }) })
     }
     return c.json(await runOrQueue(ctx, 'cio_run', id, { event_id: id }, () => runCioAgent(ctx, id)))
   })
@@ -148,7 +151,7 @@ export function createApp(opts: AppOptions = {}) {
   app.post('/api/views/:id/challenge', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN'); const id = c.req.param('id'); return c.json(await runOrQueue(ctx, 'challenge_retry', id, { view_id: id }, () => retryPreChallenge(ctx, id))) })
   app.post('/api/views/:id/rechallenge', async c => { const ctx = X(c); requireRole(ctx, 'CIO'); const id = c.req.param('id'); return c.json(await runOrQueue(ctx, 'rechallenge', id, { view_id: id }, () => runReChallenge(ctx, id))) })
   app.post('/api/views/:id/findings/:fid/response', async c => c.json(await respondFinding(X(c), c.req.param('id'), c.req.param('fid'), await body(c))))
-  app.post('/api/views/:id/decision', async c => { const ctx = X(c); return c.json(await decide(ctx, c.req.param('id'), await body(c), (v, uow) => createApplication(ctx, v, uow), { queueRework: async (eventId, instructions) => backgroundEnabled(ctx) ? startJob(ctx, 'cio_run', eventId, { event_id: eventId, instructions }) : null })) })
+  app.post('/api/views/:id/decision', async c => { const ctx = X(c); return c.json(await decide(ctx, c.req.param('id'), await body(c), (v, uow) => createApplication(ctx, v, uow), { queueRework: async (eventId, instructions) => backgroundEnabled(ctx) ? startJob(ctx, 'cio_run', eventId, { event_id: eventId, instructions }) : ctx.agentMode === 'external' && !(await eventNews(ctx, await getEvent(ctx, eventId))).every(n => n.simulated) ? requestExternal(ctx, 'cio_run', eventId, { event_id: eventId, instructions }) : null })) })
   app.post('/api/views/:id/withdraw', async c => c.json(await withdrawView(X(c), c.req.param('id'), (await body(c)).reason)))
   app.post('/api/manual-apply', async c => { const ctx = X(c); const b = await body<{ event_id: string; view: unknown }>(c); return c.json(await createManualView(ctx, b.view, b.event_id, (v, uow) => createApplication(ctx, v, uow))) })
   app.get('/api/agent-runs/:id', async c => c.json(await agentRunTrace(X(c), c.req.param('id'))))
@@ -198,7 +201,20 @@ export function createApp(opts: AppOptions = {}) {
   app.post('/api/policies', async c => c.json(await addPolicy(X(c), await body(c))))
   app.get('/api/policies/:id', async c => c.json(await policyDetail(X(c), c.req.param('id'))))
   app.post('/api/policies/:id/confirm-source', async c => c.json(await confirmSource(X(c), c.req.param('id'), String((await body(c)).note ?? ''))))
-  app.post('/api/policies/:id/analyze', async c => { const ctx = X(c); requireRole(ctx, 'ADMIN', 'CIO'); const id = c.req.param('id'); return c.json(await runOrQueue(ctx, 'policy_analyze', id, { doc_id: id }, () => analyzePolicy(ctx, id))) })
+  app.post('/api/policies/:id/analyze', async c => {
+    const ctx = X(c); requireRole(ctx, 'ADMIN', 'CIO'); const id = c.req.param('id')
+    if (ctx.agentMode === 'external') {
+      const d = await ctx.repo.get<{ simulated?: boolean; state: string }>('policy_documents', id)
+      if (!d) throw new HttpError(404, `Không có văn bản ${id}`)
+      if (d.state !== 'SOURCE_CONFIRMED') return c.json(await analyzePolicy(ctx, id)) // ném lỗi 409 như chạy trực tiếp
+      if (!d.simulated) return c.json({ job: await requestExternal(ctx, 'policy_analyze', id, { doc_id: id }) })
+    }
+    return c.json(await runOrQueue(ctx, 'policy_analyze', id, { doc_id: id }, () => analyzePolicy(ctx, id)))
+  })
+
+  // ----- Kết quả do Claude lập trong phiên làm việc (chế độ external) -----
+  app.get('/api/external', async c => c.json(await listExternal(X(c))))
+  app.post('/api/external/import', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN'); return c.json(await importExternal(c.env, { now: opts.now, fetchFn: opts.fetchFn, accessEmail: ctx.accessEmail, trigger: 'manual' })) })
 
   // ----- Tác vụ agent chạy nền -----
   app.get('/api/jobs', async c => c.json(await listJobs(X(c), { active: c.req.query('active') === '1', limit: Number(c.req.query('limit') ?? 20) })))

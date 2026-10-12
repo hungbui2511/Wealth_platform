@@ -75,7 +75,7 @@ export async function confirmSource(ctx: AppCtx, id: string, note: string) {
 }
 
 // Agent Chính sách (FR-1003) + khớp đối tượng (FR-1004) + tạo sự kiện policy (FR-1005)
-export async function analyzePolicy(ctx: AppCtx, id: string) {
+export async function analyzePolicy(ctx: AppCtx, id: string, opts: { external?: { summary: unknown; meta?: { model?: string } } } = {}) {
   requireRole(ctx, 'ADMIN', 'CIO')
   const d = await getDoc(ctx, id)
   if (d.state !== 'SOURCE_CONFIRMED') throw new HttpError(409, 'Agent Chính sách chỉ đọc văn bản đã được Tuân thủ xác nhận nguồn công khai (BR-26)')
@@ -84,7 +84,8 @@ export async function analyzePolicy(ctx: AppCtx, id: string) {
   // Rào chắn (BR-28): agent chỉ nhận văn bản đã qua BR-26 và danh mục chủ đề, không nhận dữ liệu danh mục
   const pkg = { title: d.title, agency: d.agency, kind: d.kind, published_at: d.published_at, url: d.url, content: d.content, topics_catalog: POLICY_TOPICS }
   let raw: unknown, model: string
-  if (ctx.agentMode === 'mock') {
+  if (opts.external) { raw = opts.external.summary; model = `Claude – phiên làm việc (${opts.external.meta?.model ?? 'gói subscription'})` }
+  else if (ctx.agentMode !== 'live') {
     raw = MOCK.policy[d.id]
     model = `mock (${models.content.policy.model})`
     if (!raw) throw new HttpError(409, 'Chưa có tóm tắt ghi sẵn cho văn bản này: chạy AGENT_MODE=live hoặc thêm tóm tắt đã duyệt vào data/mock_agent/policy/')
@@ -92,7 +93,7 @@ export async function analyzePolicy(ctx: AppCtx, id: string) {
   const runId = `RUN-POL-${d.id}-${await ctx.repo.nextSeq('RUN-POL')}`
   const val = validatePolicySummary(raw, d.content, d.kind)
   const u = ctx.uow()
-  u.insert('agent_runs', { id: runId, agent: 'policy', subject_id: d.id, created_at: ctx.now(), mode: ctx.agentMode, model, prompt_version: prompts.version.id, prompt: promptText, input_package: pkg, output: raw, ok: val.ok, errors: val.errors } as never)
+  u.insert('agent_runs', { id: runId, agent: 'policy', subject_id: d.id, created_at: ctx.now(), mode: opts.external ? 'external' : ctx.agentMode, model, prompt_version: prompts.version.id, prompt: promptText, input_package: pkg, output: raw, ok: val.ok, errors: val.errors } as never)
   u.audit({ actor: 'AGENT:policy', action: 'agent.policy_run', object: d.id, data: { run_id: runId, model, ok: val.ok, errors: val.errors } })
   if (!val.ok) { const nd = { ...d, state: 'ERROR' as const, errors: val.errors }; save(u, nd); await u.commit(); throw new HttpError(422, 'Tóm tắt chính sách không đúng schema hoặc trích dẫn sai', val.errors) }
   // Khớp đối tượng xác định (BR-30)

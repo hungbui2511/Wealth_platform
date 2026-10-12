@@ -21,8 +21,8 @@ export async function ingestNews(ctx: AppCtx, opts: { trigger: 'cron' | 'manual'
   const now = ctx.now()
   // Đường dẫn đã có (trùng thì bỏ qua): một truy vấn
   const seen = new Set(((await ctx.env.DB.prepare("SELECT json_extract(data, '$.url') AS u FROM news_items ORDER BY id DESC LIMIT 3000").all<{ u: string }>()).results ?? []).map(r => r.u))
-  const report = { trigger: opts.trigger, sources: sources.length, fetched: 0, created: 0, duplicate: 0, irrelevant: 0, too_old: 0, rejected: 0, errors: [] as { source: string; error: string }[] }
-  const fresh: { feed: string; item: ReturnType<typeof parseFeed>[number] }[] = []
+  const report = { trigger: opts.trigger, sources: sources.length, fetched: 0, errors: [] as { source: string; error: string }[] }
+  const fresh: IncomingItem[] = []
   const results = await Promise.allSettled(sources.map(async s => {
     const res = await ctx.fetchFn(s.url, { headers: { 'user-agent': 'Mozilla/5.0 (compatible; WealthPlatformDemo/1.0; +internal demo)', accept: 'application/rss+xml, application/xml, text/xml' }, signal: AbortSignal.timeout(15000) })
     if (!res.ok) throw new Error(`HTTP ${res.status}`)
@@ -33,36 +33,52 @@ export async function ingestNews(ctx: AppCtx, opts: { trigger: 'cron' | 'manual'
     report.fetched += r.value.items.length
     for (const it of r.value.items) fresh.push({ feed: r.value.s.name, item: it })
   })
+  if (report.errors.length) { const u = ctx.uow(); u.audit({ actor: opts.trigger === 'cron' ? 'SYSTEM:cron' : `${ctx.user.role}:${ctx.user.id}`, action: 'news.ingest_errors', object: 'NEWS_SOURCES', data: report }); await u.commit() }
+  const added = await addToInbox(ctx, fresh, { trigger: opts.trigger, cfg, tickers, seen })
+  return { ...report, ...added.report, errors: report.errors, sources: report.sources, fetched: report.fetched }
+}
+
+export interface IncomingItem { feed: string; item: { title: string; url: string; published_at: string; summary: string }; suggested_type?: string }
+
+// Đưa tin vào hộp tin mới qua kiểm soát BR-26 (dùng chung cho RSS và tin do Claude tìm). Trả mã tin theo đường dẫn.
+export async function addToInbox(ctx: AppCtx, fresh: IncomingItem[], o: { trigger: 'cron' | 'manual' | 'claude'; cfg?: Awaited<ReturnType<typeof loadConfigs>>; tickers?: string[]; seen?: Set<string>; minRelevance?: number; maxAgeDays?: number }) {
+  const cfg = o.cfg ?? await loadConfigs(ctx)
+  const tickers = o.tickers ?? Object.values(await loadInstruments(ctx)).filter(i => i.listed && /^[A-Z0-9]{3,10}$/.test(i.id) && !i.id.startsWith('DM')).map(i => i.id)
+  const seen = o.seen ?? new Set(((await ctx.env.DB.prepare("SELECT json_extract(data, '$.url') AS u FROM news_items ORDER BY id DESC LIMIT 3000").all<{ u: string }>()).results ?? []).map(r => r.u))
+  const now = ctx.now()
+  const report = { created: 0, duplicate: 0, irrelevant: 0, too_old: 0, rejected: 0, rejected_items: [] as { url: string; errors: string[] }[] }
   const restricted = activeRestricted(cfg, now)
-  const candidates: { feed: string; item: ReturnType<typeof parseFeed>[number]; cls: ReturnType<typeof classifyNews> }[] = []
+  const candidates: (IncomingItem & { cls: ReturnType<typeof classifyNews> })[] = []
   for (const f of fresh) {
     if (seen.has(f.item.url)) { report.duplicate++; continue }
     seen.add(f.item.url)
-    if (Date.parse(now) - Date.parse(f.item.published_at) > MAX_AGE_DAYS * 864e5) { report.too_old++; continue }
+    if (Date.parse(now) - Date.parse(f.item.published_at) > (o.maxAgeDays ?? MAX_AGE_DAYS) * 864e5) { report.too_old++; continue }
     // BR-26: miền thuộc danh sách nguồn công khai, có thời điểm công bố, không muộn hơn lúc nạp
-    if (checkPublicSource({ url: f.item.url, published_at: f.item.published_at < now ? f.item.published_at : now }, cfg.whitelist, now).length) { report.rejected++; continue }
+    const errs = checkPublicSource({ url: f.item.url, published_at: f.item.published_at < now ? f.item.published_at : now }, cfg.whitelist, now)
+    if (errs.length) { report.rejected++; report.rejected_items.push({ url: f.item.url, errors: errs }); continue }
     const cls = classifyNews(f.item, tickers)
-    if (cls.relevance < 2) { report.irrelevant++; continue }
+    if (cls.relevance < (o.minRelevance ?? 2)) { report.irrelevant++; continue }
     candidates.push({ ...f, cls })
   }
   candidates.sort((a, b) => b.cls.relevance - a.cls.relevance || Date.parse(b.item.published_at) - Date.parse(a.item.published_at))
   const take = candidates.slice(0, MAX_NEW_PER_RUN)
+  const ids_by_url: Record<string, string> = {}
   if (take.length) {
     const ids = await ctx.repo.nextIds('news_items', 'NW-', 4, take.length)
     const u = ctx.uow()
     take.forEach((c, i) => {
       const published = c.item.published_at < now ? c.item.published_at : now
       const hit = restrictedHits([c.item.title, c.item.summary], restricted).length > 0
-      const n: InboxItem = { id: ids[i], event_id: null as never, title: c.item.title, source: new URL(c.item.url).hostname, url: c.item.url, published_at: published, ingested_at: now, summary: c.item.summary, language: 'vi', simulated: false, auto: true, feed: c.feed, relevance: c.cls.relevance, suggested_type: c.cls.suggested_type, keywords: c.cls.keywords, tickers: c.cls.tickers, ...(hit ? { restricted_hit: true } : {}) }
+      const n: InboxItem = { id: ids[i], event_id: null as never, title: c.item.title, source: new URL(c.item.url).hostname, url: c.item.url, published_at: published, ingested_at: now, summary: c.item.summary, language: 'vi', simulated: false, auto: true, feed: c.feed, relevance: c.cls.relevance, suggested_type: c.suggested_type ?? c.cls.suggested_type, keywords: c.cls.keywords, tickers: c.cls.tickers, ...(hit ? { restricted_hit: true } : {}), ...(o.trigger === 'claude' ? { by_claude: true } : {}) }
       u.insert('news_items', n as never)
+      ids_by_url[c.item.url] = ids[i]
     })
     report.created = take.length
-    u.audit({ actor: opts.trigger === 'cron' ? 'SYSTEM:cron' : `${ctx.user.role}:${ctx.user.id}`, action: 'news.ingested', object: 'NEWS_SOURCES', data: { ...report, news_ids: ids } })
+    const who = o.trigger === 'cron' ? 'SYSTEM:cron' : `${ctx.user.role}:${ctx.user.id}`
+    u.audit({ actor: who, action: 'news.ingested', object: o.trigger === 'claude' ? 'CLAUDE_SESSION' : 'NEWS_SOURCES', data: { trigger: o.trigger, ...report, news_ids: ids } })
     await u.commit()
-  } else if (report.errors.length) {
-    const u = ctx.uow(); u.audit({ actor: opts.trigger === 'cron' ? 'SYSTEM:cron' : `${ctx.user.role}:${ctx.user.id}`, action: 'news.ingest_errors', object: 'NEWS_SOURCES', data: report }); await u.commit()
   }
-  return report
+  return { report, ids_by_url }
 }
 
 // Cron: chạy với tác nhân hệ thống; bỏ qua nếu cơ sở dữ liệu chưa nạp dữ liệu

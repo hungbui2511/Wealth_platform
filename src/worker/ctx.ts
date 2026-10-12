@@ -7,7 +7,9 @@ export interface User { id: string; name: string; role: Role; families: string[]
 export interface Env {
   DB: D1Database
   ASSETS?: Fetcher
-  AGENT_MODE?: string // mock | live | auto (auto: live khi đã có ANTHROPIC_API_KEY, ngược lại mock)
+  // mock | live | external | auto. external: Claude chạy agent trong phiên làm việc (gói subscription) rồi đẩy kết quả vào
+  // bảng external_outputs; hệ thống nhập qua cùng kiểm tra như chế độ live. auto: live khi có ANTHROPIC_API_KEY, ngược lại external
+  AGENT_MODE?: string
   PRICE_MODE?: string // sample | live
   ANTHROPIC_API_KEY?: string
   OPENAI_API_KEY?: string
@@ -31,7 +33,7 @@ export interface AppCtx {
   accessEmail?: string
   now: () => string
   uow: () => UnitOfWork
-  agentMode: 'mock' | 'live'
+  agentMode: 'mock' | 'live' | 'external'
   priceMode: 'sample' | 'live'
   fetchFn: typeof fetch
   background?: (p: Promise<unknown>) => void
@@ -39,8 +41,10 @@ export interface AppCtx {
   progress?: (step: string) => Promise<void>
 }
 
-export function resolveAgentMode(env: Env): 'mock' | 'live' {
-  return env.AGENT_MODE === 'live' || (env.AGENT_MODE === 'auto' && !!env.ANTHROPIC_API_KEY) ? 'live' : 'mock'
+export function resolveAgentMode(env: Env): 'mock' | 'live' | 'external' {
+  if (env.AGENT_MODE === 'live' || (env.AGENT_MODE === 'auto' && !!env.ANTHROPIC_API_KEY)) return 'live'
+  if (env.AGENT_MODE === 'external' || env.AGENT_MODE === 'auto') return 'external'
+  return 'mock'
 }
 
 export function makeCtx(env: Env, user: User, opts: { now?: () => string; fetchFn?: typeof fetch; accessEmail?: string; background?: (p: Promise<unknown>) => void; progress?: (step: string) => Promise<void> } = {}): AppCtx {

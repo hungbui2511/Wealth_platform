@@ -7,7 +7,7 @@ compatibility_flags = ["nodejs_compat"]
 keep_vars = true
 
 [vars]
-AGENT_MODE = "auto"   # auto: dùng Claude khi đã đặt bí mật ANTHROPIC_API_KEY, chưa có thì mock · mock · live
+AGENT_MODE = "auto"   # auto: có ANTHROPIC_API_KEY thì gọi Claude qua API (live); chưa có thì Claude chạy agent trong phiên làm việc và đẩy kết quả lên (external) · mock · live · external
 PRICE_MODE = "sample" # sample | live (live cần thỏa thuận dữ liệu và thông tin truy cập nguồn)
 AUTH_MODE = "access"  # access: chỉ tin JWT Cloudflare Access đã xác minh. dev: chỉ dùng trên máy (.dev.vars)
 ACCESS_TEAM_DOMAIN = "bitter-tree-c714.cloudflareaccess.com" # team Cloudflare Access (khóa ký JWT lấy từ /cdn-cgi/access/certs)
@@ -26,9 +26,9 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 run_worker_first = ["/api/*"]
 
-# Lấy tin tự động từ nguồn công khai mỗi 30 phút (src/worker/services/ingest.ts)
+# Mỗi 10 phút: lấy tin RSS công khai (ingest.ts) và nhập kết quả Claude đẩy lên (external.ts)
 [triggers]
-crons = ["*/30 * * * *"]
+crons = ["*/10 * * * *"]
 
 # Chạy nền các lượt agent ở chế độ live (src/worker/workflow.ts); chế độ mock vẫn chạy trực tiếp trong yêu cầu
 [[workflows]]

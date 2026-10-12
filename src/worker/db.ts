@@ -26,6 +26,7 @@ export const TABLES: Record<string, string[]> = {
   research_releases: ['id', 'view_id', 'status'],
   rm_notes: ['id', 'family_id', 'user_id'],
   jobs: ['id', 'kind', 'status', 'subject', 'created_at'],
+  external_outputs: ['id', 'kind', 'subject', 'status', 'created_at'],
 }
 
 export type Doc = Record<string, unknown> & { id: string }

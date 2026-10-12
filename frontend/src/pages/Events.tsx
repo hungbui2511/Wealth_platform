@@ -14,6 +14,7 @@ export default function Events() {
   const [open, setOpen] = useState<string | null>(null)
   const [err, setErr] = useState<unknown>(null)
   const [form, setForm] = useState<any>(null)
+  const [info, setInfo] = useState<string | null>(null)
   const navigate = useNavigate()
   const act = (fn: () => Promise<unknown>) => async () => { setErr(null); try { await fn(); reload() } catch (e) { setErr(e) } }
   return (
@@ -24,6 +25,7 @@ export default function Events() {
       {(user.role === 'CIO' || user.role === 'ADMIN' || user.role === 'COMPLIANCE') && <NewsInbox onCreated={reload} />}
       <Note>Sự kiện được lập từ tin lấy tự động (hộp tin mới), gói mẫu hoặc tin dán tay. Mọi tin phải có đường dẫn công khai thuộc danh sách nguồn công khai và thời điểm công bố không muộn hơn lúc nạp (BR-26). Tin nhắc tới tổ chức trong danh sách hạn chế phải chờ Tuân thủ cho phép (BR-27).</Note>
       <ErrorBox error={err} />
+      {info && <Note>{info}</Note>}
       {form && (
         <Card title="Dán tin thủ công">
           <div className="space-y-2 text-sm">
@@ -51,7 +53,7 @@ export default function Events() {
                   <td>{e.views.map((v: any) => <div key={v.id}><Link to={`/views/${v.id}`} className="text-primary mono hover:underline">{v.id}</Link> <StatusBadge s={v.status} /></div>)}</td>
                   <td>{e.runs.map((r: any) => <div key={r.id}><Link to={`/runs/${r.id}`} className="text-primary mono hover:underline">{r.id}</Link> <StatusBadge s={r.status} /></div>)}</td>
                   <td><div className="flex flex-col gap-1 items-start">
-                    {(user.role === 'CIO' || user.role === 'ADMIN') && <Btn small onClick={act(async () => { const v: any = await apiJob(`/api/events/${e.id}/run-agent`, { method: 'POST' }); const id = v?.view_id ?? v?.id; if (id) navigate(`/views/${id}`) })}>Chạy Agent CIO</Btn>}
+                    {(user.role === 'CIO' || user.role === 'ADMIN') && <Btn small onClick={act(async () => { const v: any = await apiJob(`/api/events/${e.id}/run-agent`, { method: 'POST' }); if (v?.waiting) { setInfo(`Đã gửi yêu cầu phân tích ${e.id} cho Claude (${v.job.id}). Kết quả vào hệ thống ở lần đồng bộ kế tiếp, CIO sẽ thấy nhận định ở Bàn duyệt.`); return } const id = v?.view_id ?? v?.id; if (id) navigate(`/views/${id}`) })}>Chạy Agent CIO</Btn>}
                     {user.role === 'COMPLIANCE' && e.hold?.status === 'PENDING' && <Btn small onClick={act(() => api(`/api/events/${e.id}/allow`, { method: 'POST', body: { note: 'Thông tin đã được công bố công khai' } }))}>Cho phép chạy agent</Btn>}
                   </div></td>
                 </tr>

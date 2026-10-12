@@ -6,7 +6,8 @@ import { analyzePolicy } from './policy'
 import { retryPreChallenge, runCioAgent, runReChallenge } from './views'
 
 export type JobKind = 'cio_run' | 'challenge_retry' | 'rechallenge' | 'policy_analyze'
-export type JobStatus = 'QUEUED' | 'RUNNING' | 'DONE' | 'FAILED'
+// WAITING_EXTERNAL: chế độ external, chờ Claude lập kết quả trong phiên làm việc rồi hệ thống nhập (services/external.ts)
+export type JobStatus = 'QUEUED' | 'RUNNING' | 'DONE' | 'FAILED' | 'WAITING_EXTERNAL'
 
 export interface JobRec {
   id: string; kind: JobKind; status: JobStatus; subject: string; created_at: string
@@ -36,7 +37,7 @@ export async function getJob(ctx: AppCtx, id: string): Promise<JobRec & { steps:
 
 export async function listJobs(ctx: AppCtx, opts: { active?: boolean; limit?: number } = {}) {
   requireRole(ctx, 'CIO', 'ADMIN', 'COMPLIANCE')
-  const rows = await ctx.repo.list<JobRec>('jobs', opts.active ? "status IN ('QUEUED','RUNNING')" : '', [], 'created_at DESC')
+  const rows = await ctx.repo.list<JobRec>('jobs', opts.active ? "status IN ('QUEUED','RUNNING','WAITING_EXTERNAL')" : '', [], 'created_at DESC')
   const out = rows.slice(0, opts.limit ?? 20)
   const steps = out.length ? await ctx.env.DB.prepare(`SELECT job_id, at, step FROM job_steps WHERE job_id IN (${out.map(() => '?').join(',')}) ORDER BY id`).bind(...out.map(j => j.id)).all<{ job_id: string; at: string; step: string }>() : { results: [] }
   return out.map(j => ({ ...j, steps: (steps.results ?? []).filter(s => s.job_id === j.id).map(s => ({ at: s.at, step: s.step })) }))
@@ -45,7 +46,7 @@ export async function listJobs(ctx: AppCtx, opts: { active?: boolean; limit?: nu
 // Tạo tác vụ và giao cho Workflows. Đang có tác vụ cùng loại, cùng đối tượng chưa xong thì trả lại tác vụ đó (bấm hai lần).
 export async function startJob(ctx: AppCtx, kind: JobKind, subject: string, params: JobRec['params']): Promise<JobRec> {
   if (!ctx.env.AGENT_JOBS) throw new HttpError(503, 'Chưa cấu hình Workflows (AGENT_JOBS) để chạy agent nền')
-  const running = (await ctx.repo.list<JobRec>('jobs', "status IN ('QUEUED','RUNNING') AND kind = ? AND subject = ?", [kind, subject]))[0]
+  const running = (await ctx.repo.list<JobRec>('jobs', "status IN ('QUEUED','RUNNING','WAITING_EXTERNAL') AND kind = ? AND subject = ?", [kind, subject]))[0]
   if (running) return running
   const id = `JOB-${ctx.now().slice(0, 10).replace(/-/g, '')}-${String(await ctx.repo.nextSeq('JOB')).padStart(4, '0')}`
   const job: JobRec = { id, kind, status: 'QUEUED', subject, created_at: ctx.now(), user: ctx.user, ...(ctx.accessEmail ? { access_email: ctx.accessEmail } : {}), params }
@@ -102,6 +103,30 @@ export async function executeJob(env: Env, jobId: string, opts: { now?: () => st
     const msg = err instanceof HttpError ? err.message + (err.details ? `: ${JSON.stringify(err.details).slice(0, 500)}` : '') : String((err as Error).message ?? err)
     return await finish(boot, { ...job, status: 'RUNNING', started_at: startedAt, rev: (job.rev ?? 0) + 1 }, 'FAILED', { error: msg.slice(0, 1500) })
   }
+}
+
+// Chế độ external: ghi yêu cầu chờ Claude phân tích (không gọi mô hình). Claude đọc các yêu cầu này trong phiên làm việc.
+export async function requestExternal(ctx: AppCtx, kind: JobKind, subject: string, params: JobRec['params']): Promise<JobRec> {
+  const running = (await ctx.repo.list<JobRec>('jobs', "status IN ('QUEUED','RUNNING','WAITING_EXTERNAL') AND kind = ? AND subject = ?", [kind, subject]))[0]
+  if (running) return running
+  const id = `JOB-${ctx.now().slice(0, 10).replace(/-/g, '')}-${String(await ctx.repo.nextSeq('JOB')).padStart(4, '0')}`
+  const job: JobRec = { id, kind, status: 'WAITING_EXTERNAL', subject, created_at: ctx.now(), user: ctx.user, ...(ctx.accessEmail ? { access_email: ctx.accessEmail } : {}), params }
+  const u = ctx.uow()
+  u.insert('jobs', job as never)
+  u.audit({ actor: actor(ctx), action: 'agent.external_requested', object: id, data: { kind, subject, params } })
+  await u.commit()
+  return job
+}
+
+export async function completeWaiting(ctx: AppCtx, kind: JobKind, subject: string, result: Record<string, unknown>) {
+  const jobs = await ctx.repo.list<JobRec>('jobs', "status = 'WAITING_EXTERNAL' AND kind = ? AND subject = ?", [kind, subject])
+  if (!jobs.length) return
+  const u = ctx.uow()
+  for (const j of jobs) {
+    u.update('jobs', { ...j, status: 'DONE', ended_at: ctx.now(), result } as never)
+    u.audit({ actor: 'SYSTEM', action: 'agent.job_done', object: j.id, data: { kind, subject, result, via: 'external' } })
+  }
+  await u.commit()
 }
 
 // Dùng ở route: chạy nền nếu được, nếu không chạy trực tiếp

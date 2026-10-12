@@ -35,6 +35,8 @@ export async function apiJob<T = any>(path: string, opts: { method?: string; bod
   const first = await api<any>(path, opts)
   if (!first?.job) return first as T
   let job = first.job
+  // Chế độ external: yêu cầu đã ghi, Claude phân tích ở lần đồng bộ kế tiếp; không chờ trên trình duyệt
+  if (job.status === 'WAITING_EXTERNAL') return { job, waiting: true } as T
   const startedAt = Date.now()
   while (job.status === 'QUEUED' || job.status === 'RUNNING') {
     onProgress?.(job)

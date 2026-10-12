@@ -80,7 +80,7 @@ export async function interpretation(ctx: AppCtx, runId: string, familyId: strin
   const restrictedEntries = activeRestricted(cfg, ctx.now())
   const restricted = new Set(restrictedEntries.flatMap(e => e.instruments))
   let text: string, model: string
-  if (ctx.agentMode === 'mock') { text = mockInterpretation(fam.name, familyId, r, redactRestricted(run.view_body.summary, restrictedEntries), restricted); model = 'mock' }
+  if (ctx.agentMode !== 'live') { text = mockInterpretation(fam.name, familyId, r, redactRestricted(run.view_body.summary, restrictedEntries), restricted); model = 'mock' }
   else {
     const models = await activeConfig<ModelSet>(ctx, 'MODEL'); const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
     const pkg = { family_name: fam.name, result: { ...r, top_instruments: r.top_instruments.filter(t => !restricted.has(t.instrument_id)), positions: undefined }, view: { summary: run.view_body.summary, impacts: run.view_body.impacts.filter(l => l.level !== 0) } }

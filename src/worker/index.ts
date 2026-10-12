@@ -3,6 +3,7 @@
 import { createApp } from './app'
 import type { Env } from './ctx'
 import { scheduledIngest } from './services/ingest'
+import { importExternal } from './services/external'
 
 export { AgentJobs } from './workflow'
 
@@ -16,6 +17,7 @@ export default {
     return new Response('Giao diện chưa được build (npm run build)', { status: 404 })
   },
   async scheduled(_controller: ScheduledController, env: Env, ctx: ExecutionContext): Promise<void> {
-    ctx.waitUntil(scheduledIngest(env))
+    // Lấy tin RSS, rồi nhập kết quả Claude đã đẩy lên (chế độ external)
+    ctx.waitUntil(scheduledIngest(env).then(() => importExternal(env, { trigger: 'cron' })).catch(err => console.error('scheduled', err)))
   },
 }

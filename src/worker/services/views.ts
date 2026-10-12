@@ -67,7 +67,23 @@ function fillSources(v: unknown, news: NewsItem[]): unknown {
 function mockKey(e: EventRec) { return e.policy_doc_id ? `policy-${e.policy_doc_id}` : e.id }
 
 // Chạy Agent CIO cho một sự kiện, tạo phiên bản nhận định mới
-export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instructions?: string; skipRole?: boolean } = {}): Promise<ViewRec> {
+// Kết quả do Claude lập trong phiên làm việc (chế độ external): đầu ra từng nút, nhận định cuối, phản biện.
+// source_ids có thể ghi bằng đường dẫn tin (URL) hoặc {{SRCn}}; hệ thống đổi sang mã tin của sự kiện.
+export interface ExternalCio {
+  view: { summary?: string; impacts: unknown[] }
+  nodes?: Record<string, unknown>
+  challenger?: { findings: unknown[]; counter_scenario?: string }
+  meta?: { model?: string; session?: string; note?: string; prepared_at?: string }
+}
+export function externalLabel(meta?: ExternalCio['meta']) { return `Claude – phiên làm việc (${meta?.model ?? 'gói subscription'})` }
+function mapSources(v: unknown, news: NewsItem[]): unknown {
+  const byUrl = new Map(news.map(n => [n.url, n.id]))
+  return JSON.parse(JSON.stringify(v ?? null), (k, val) => k === 'source_ids' && Array.isArray(val)
+    ? val.map((s: string) => byUrl.get(s) ?? (/^\{\{SRC(\d+)\}\}$/.test(s) ? news[Number(s.slice(5, -2)) - 1]?.id ?? s : s))
+    : val)
+}
+
+export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instructions?: string; skipRole?: boolean; external?: ExternalCio } = {}): Promise<ViewRec> {
   if (!opts.skipRole) requireRole(ctx, 'CIO', 'ADMIN')
   const e = await getEvent(ctx, eventId)
   if (e.hold?.status === 'PENDING') {
@@ -95,7 +111,16 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
   const exec = {
     async run(node: string, payload: unknown, attempt: number) {
       const promptText = node.startsWith('analyst_') ? prompts.content.cio.analyst.replace('{{GROUP}}', ANALYSTS[node as keyof typeof ANALYSTS].name).replace('{{CLASSES}}', ANALYSTS[node as keyof typeof ANALYSTS].classes.join(', ')) : node === 'debate' ? prompts.content.cio.debate : prompts.content.cio.synthesize
-      if (ctx.agentMode === 'mock') {
+      if (opts.external) {
+        const ext = mapSources(opts.external, news) as ExternalCio
+        let output: unknown
+        if (node === 'synthesize') output = { summary: ext.view.summary || e.title, impacts: ext.view.impacts }
+        else if (ext.nodes?.[node]) output = ext.nodes[node]
+        else if (node === 'debate') output = { topics: [] }
+        else { const cls = ANALYSTS[node as keyof typeof ANALYSTS]; output = { lines: (ext.view.impacts as ImpactLine[]).filter(l => (l.scope === 'asset_class' && (cls.classes as readonly string[]).includes(l.target)) || (l.scope === 'fx' && cls.fx)), notes: 'Trích từ nhận định cuối do Claude lập' } }
+        return { output, prompt: promptText, prompt_version: `${pv}:${prompts.content.version}`, model: externalLabel(opts.external.meta) }
+      }
+      if (ctx.agentMode !== 'live') {
         let output: unknown
         // Sự kiện mẫu: đầu ra ghi sẵn. Tin mới: nhận định mô phỏng theo từ khóa (ghi rõ không phải AI)
         const kw = mockVer ? null : keywordView(e.title, news)
@@ -129,9 +154,9 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
     created_at: now, history: [{ at: now, from: '', to: 'DRAFTING', by: actor(ctx) }], ...(opts.instructions ? { instructions: opts.instructions } : {}),
   }
   const uow = ctx.uow()
-  uow.insert('agent_runs', { id: runId, agent: 'cio', subject_id: viewId, created_at: now, event_id: e.id, mode: ctx.agentMode, model: models.content.cio, prompt_version: pv, input_package: input, ok: !!final.result?.ok, errors: final.result?.errors ?? (fatal ? [fatal] : []), params: { max_retries: 2 } } as never)
+  uow.insert('agent_runs', { id: runId, agent: 'cio', subject_id: viewId, created_at: now, event_id: e.id, mode: opts.external ? 'external' : ctx.agentMode, ...(opts.external?.meta ? { external_meta: opts.external.meta } : {}), model: models.content.cio, prompt_version: pv, input_package: input, ok: !!final.result?.ok, errors: final.result?.errors ?? (fatal ? [fatal] : []), params: { max_retries: 2 } } as never)
   final.nodeRuns.forEach(n => uow.insert('agent_node_runs', { id: `${runId}-N${String(n.seq).padStart(2, '0')}`, run_id: runId, ...n } as never))
-  uow.audit({ actor: 'AGENT:cio', action: 'agent.cio_run', object: viewId, data: { run_id: runId, mode: ctx.agentMode, model: models.content.cio.model, prompt_version: pv, input_package: input, nodes: final.nodeRuns.map(n => n.node), ok: !!final.result?.ok, errors: final.result?.errors ?? [fatal] } })
+  uow.audit({ actor: 'AGENT:cio', action: 'agent.cio_run', object: viewId, data: { run_id: runId, mode: opts.external ? 'external' : ctx.agentMode, model: models.content.cio.model, prompt_version: pv, input_package: input, nodes: final.nodeRuns.map(n => n.node), ok: !!final.result?.ok, errors: final.result?.errors ?? [fatal] } })
   if (!final.result?.ok) {
     v = transition(ctx, { ...v, errors: final.result?.errors ?? [fatal ?? 'Lỗi không xác định'] }, 'AGENT_ERROR', 'Sai schema sau 2 lần thử lại')
     uow.insert('views', v as never)
@@ -145,7 +170,7 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
   await uow.commit()
   // FR-401: phản biện chạy tự động khi nhận định qua kiểm tra schema. Agent Phản biện lỗi (chế độ live) thì nhận định
   // giữ trạng thái chờ phản biện, ghi nhật ký và CIO chạy lại bằng /api/views/:id/challenge; không mất nhận định.
-  try { return await runPreChallenge(ctx, viewId) }
+  try { return await runPreChallenge(ctx, viewId, opts.external ? { ...(mapSources(opts.external.challenger ?? { findings: [] }, news) as { findings: unknown[]; counter_scenario?: string }), model: externalLabel(opts.external.meta) } : undefined) }
   catch (err) {
     if (!(err instanceof ChallengerError)) throw err
     return { ...(await getView(ctx, viewId)), challenge_error: err.message }
@@ -191,7 +216,7 @@ async function policyCitationFindings(ctx: AppCtx, e: EventRec, news: NewsItem[]
 }
 
 // Phản biện trước duyệt (FR-401 đến FR-404)
-export async function runPreChallenge(ctx: AppCtx, viewId: string): Promise<ViewRec> {
+export async function runPreChallenge(ctx: AppCtx, viewId: string, external?: { findings: unknown[]; counter_scenario?: string; model: string }): Promise<ViewRec> {
   let v = await getView(ctx, viewId)
   if (v.status !== 'PENDING_CHALLENGE') throw new HttpError(409, 'Nhận định không ở trạng thái chờ phản biện')
   const e = await getEvent(ctx, v.event_id)
@@ -206,7 +231,8 @@ export async function runPreChallenge(ctx: AppCtx, viewId: string): Promise<View
   const models = await activeConfig<ModelSet>(ctx, 'MODEL')
   const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
   let llmRaw: unknown[] = [], counter = '', model = `mock (${models.content.challenger.model})`
-  if (ctx.agentMode === 'mock') {
+  if (external) { llmRaw = external.findings ?? []; counter = external.counter_scenario ?? ''; model = external.model }
+  else if (ctx.agentMode !== 'live') {
     const m = news.every(n => n.simulated) ? MOCK.challenger[mockKey(e)] : undefined
     const part = v.version >= 2 && m?.pre_v2 ? m.pre_v2 : m?.pre
     llmRaw = part?.findings ?? []; counter = part?.counter_scenario ?? ''
@@ -282,7 +308,7 @@ export async function runReChallenge(ctx: AppCtx, viewId: string): Promise<ViewR
   const models = await activeConfig<ModelSet>(ctx, 'MODEL')
   const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
   let llmRaw: unknown[] = [], model = `mock (${models.content.challenger.model})`
-  if (ctx.agentMode === 'mock') llmRaw = news.every(n => n.simulated) ? [...keys].flatMap(k => MOCK.challenger[mockKey(e)]?.re_challenge?.[k] ?? []) : []
+  if (ctx.agentMode !== 'live') llmRaw = news.every(n => n.simulated) ? [...keys].flatMap(k => MOCK.challenger[mockKey(e)]?.re_challenge?.[k] ?? []) : []
   else { await ctx.progress?.('challenger_re'); const r = await callChallenger(ctx, v.id, 're_challenge', () => callJson(ctx.env, models.content.challenger, prompts.content.challenger.re_challenge, wrapData('gói phản biện lại', pkg), ctx.fetchFn)); llmRaw = (r.json as { findings?: unknown[] }).findings ?? []; model = r.model }
   const norm = normalizeLlmFindings(llmRaw.map(f => ({ ...(f as object), stage: 're_challenge' })), vctx.newsIds)
   const n = await nextChallengeNo(ctx, v.id, 're_challenge')

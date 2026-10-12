@@ -20,8 +20,8 @@ export default function NewsInbox({ onCreated }: { onCreated: () => void }) {
   const toggle = (id: string) => setSel(s => s.includes(id) ? s.filter(x => x !== id) : [...s, id])
   const run = (fn: () => Promise<unknown>) => async () => { setErr(null); setMsg(null); try { await fn() } catch (e) { setErr(e) } }
   return (
-    <Card title={<span>Hộp tin mới <span className="text-fgm font-normal text-[13px]">· lấy tự động từ báo chính thống mỗi 30 phút</span></span>}
-      actions={canAct && <Btn small kind="secondary" onClick={run(async () => { const r: any = await api('/api/news/ingest', { method: 'POST' }); setMsg(`Đã lấy ${r.created} tin mới (đọc ${r.fetched} tin từ ${r.sources} nguồn; trùng ${r.duplicate}, không liên quan ${r.irrelevant}, quá cũ ${r.too_old}, ngoài danh sách nguồn ${r.rejected}${r.errors.length ? `; ${r.errors.length} nguồn lỗi: ${r.errors.map((e: any) => e.source).join(', ')}` : ''})`); reload() })}>Lấy tin ngay</Btn>}>
+    <Card title={<span>Hộp tin mới <span className="text-fgm font-normal text-[13px]">· tin báo chính thống (RSS) và tin Claude tìm, đồng bộ mỗi 10 phút</span></span>}
+      actions={canAct && <div className="flex gap-2"><Btn small kind="secondary" onClick={run(async () => { const r: any = await api('/api/external/import', { method: 'POST' }); setMsg(r.skipped ? r.skipped : `Nhập kết quả Claude: ${r.news.created} tin mới, ${r.events.length} sự kiện, ${r.views.length} nhận định${r.views.length ? ` (${r.views.map((v: any) => v.view_id).join(', ')})` : ''}${r.rejected.length ? `; ${r.rejected.length} bản bị từ chối` : ''}${r.waiting.length ? `; ${r.waiting.length} bản đang chờ` : ''}`); reload(); onCreated() })}>Nhập kết quả Claude</Btn><Btn small kind="secondary" onClick={run(async () => { const r: any = await api('/api/news/ingest', { method: 'POST' }); setMsg(`Đã lấy ${r.created} tin mới (đọc ${r.fetched} tin từ ${r.sources} nguồn; trùng ${r.duplicate}, không liên quan ${r.irrelevant}, quá cũ ${r.too_old}, ngoài danh sách nguồn ${r.rejected}${r.errors.length ? `; ${r.errors.length} nguồn lỗi: ${r.errors.map((e: any) => e.source).join(', ')}` : ''})`); reload() })}>Lấy tin ngay</Btn></div>}>
       <ErrorBox error={err ?? error} />
       {msg && <p className="text-[13px] text-fgm mb-2">{msg}</p>}
       {!data ? <Loading /> : data.length === 0 ? <p className="text-fgm text-sm">Chưa có tin mới. {canAct && 'Bấm "Lấy tin ngay" hoặc chờ lần lấy tin tự động kế tiếp.'}</p> : (
@@ -33,7 +33,7 @@ export default function NewsInbox({ onCreated }: { onCreated: () => void }) {
                 <div className="min-w-0 flex-1 text-[13px]">
                   <div className="flex flex-wrap items-center gap-1.5"><b className="text-[14px]">{n.title}</b>{n.restricted_hit && <Badge tone="amber">Nhắc tổ chức trong danh sách hạn chế</Badge>}</div>
                   <div className="text-fgm">{n.summary}</div>
-                  <div className="flex flex-wrap gap-1.5 mt-1 items-center text-fgm"><a className="text-primary hover:underline" href={n.url} target="_blank" rel="noreferrer">{n.feed ?? n.source}</a><span>· công bố {ts(n.published_at)}</span><Badge>{TYPES[n.suggested_type] ?? n.suggested_type}</Badge>{(n.tickers ?? []).map((t: string) => <Badge key={t} tone="primary">{t}</Badge>)}</div>
+                  <div className="flex flex-wrap gap-1.5 mt-1 items-center text-fgm">{n.by_claude && <Badge tone="primary">Claude tìm</Badge>}<a className="text-primary hover:underline" href={n.url} target="_blank" rel="noreferrer">{n.feed ?? n.source}</a><span>· công bố {ts(n.published_at)}</span><Badge>{TYPES[n.suggested_type] ?? n.suggested_type}</Badge>{(n.tickers ?? []).map((t: string) => <Badge key={t} tone="primary">{t}</Badge>)}</div>
                 </div>
               </li>
             ))}
