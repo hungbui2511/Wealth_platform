@@ -64,3 +64,9 @@ Phản biện: `check` thuộc `source_support`, `opposite_direction`, `overconf
 
 **`policy_summary`** (subject = mã văn bản `PD-…`, văn bản phải được Tuân thủ xác nhận nguồn trước):
 `{"summary":{"changes":[{"change_id","article_refs":["Điều 3 khoản 1"],"quote","summary","topics":[…],"affected_parties","effective_from","certainty":"draft|final"}]},"meta":{…}}`
+
+**`prices`** (subject để trống): tạo ảnh chụp giá mới từ ảnh chụp hiện tại, thay giá các mã có nguồn thật.
+`{"price_date":"YYYY-MM-DD","points":[{"key":"MBB","price":"26150","date":"2026-10-09","source":"TCBS (MCP)","source_ref":"getTickerOverview"}],"meta":{…}}`
+Khóa giá: mã công cụ (MBB, VHM12613, VEOF, SJC, BTC, AAPL…) hoặc `FX:USD`, `FX:SGD`, `FX:AUD`. Giá theo đơn vị của công cụ
+(cổ phiếu VND/cổ phiếu, vàng VND/lượng, AAPL và VT USD/chứng chỉ). Mã không có trong lần đẩy giữ giá và nhãn nguồn của ảnh chụp
+trước. Cổ phiếu niêm yết lấy từ kết nối TCBS (MCP) khi đã bật; không lấy giá bằng cách sao chép trang web của sở giao dịch.

@@ -94,3 +94,25 @@ describe('Miền chưa thuộc danh sách nguồn công khai', () => {
     expect(row.status).toBe('READY')
   })
 })
+
+describe('Giá thật do Claude đẩy lên', () => {
+  it('tạo ảnh chụp giá mới, thay giá có nguồn, giữ nguyên mã chưa có giá thật; từ chối mã lạ', async () => {
+    const before = await h.ok('CIO1', 'GET', '/api/families/DEMO-F01')
+    await push('prices', null, { price_date: '2026-10-09', points: [
+      { key: 'MBB', price: '26150', date: '2026-10-09', source: 'TCBS (MCP)', source_ref: 'getTickerOverview' },
+      { key: 'SJC', price: '141800000', date: '2026-10-09', source: 'SJC qua Báo Nhân Dân', source_ref: 'https://nhandan.vn/x' },
+      { key: 'FX:USD', price: '25690', date: '2026-10-09', source: 'Vietcombank' },
+    ] })
+    const r = await h.ok('ADM1', 'POST', '/api/external/import')
+    expect(r.prices.length).toBe(1)
+    const after = await h.ok('CIO1', 'GET', '/api/families/DEMO-F01')
+    const mbb = after.positions.find((p: any) => p.instrument_id === 'MBB')
+    expect(mbb.price).toBe('26150')
+    expect(mbb.price_source).toBe('TCBS (MCP)')
+    expect(after.positions.find((p: any) => p.instrument_id === 'VEOF').price_source).toBe(before.positions.find((p: any) => p.instrument_id === 'VEOF').price_source)
+    expect(after.totals.net_worth).not.toBe(before.totals.net_worth)
+    await push('prices', null, { price_date: '2026-10-09', points: [{ key: 'KHONGCO', price: '1', date: '2026-10-09', source: 'x' }] })
+    const bad = await h.ok('ADM1', 'POST', '/api/external/import')
+    expect(bad.rejected.length).toBe(1)
+  })
+})

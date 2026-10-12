@@ -12,12 +12,17 @@ import { addToInbox, type IncomingItem } from './ingest'
 import { completeWaiting, type JobRec } from './jobs'
 import { analyzePolicy } from './policy'
 import { runCioAgent, type ExternalCio, type ViewRec } from './views'
+import { currentSnapshot, type SnapshotRecord } from './portfolio'
+import { hashOf } from '../../engine/hash'
+import type { PricePoint } from '../../shared/types'
 
 export interface ExternalRec {
-  id: string; kind: 'news' | 'event' | 'cio_view' | 'policy_summary'; subject?: string
+  id: string; kind: 'news' | 'event' | 'cio_view' | 'policy_summary' | 'prices'; subject?: string
   status: 'READY' | 'PROCESSING' | 'IMPORTED' | 'REJECTED'; created_at: string
   data: any; result?: Record<string, unknown>; error?: string; note?: string; rev?: number
 }
+
+export interface ExternalPricePoint { key: string; price: string; date: string; currency?: string; source: string; source_ref?: string; note?: string }
 
 export const CLAUDE_USER: User = { id: 'CLAUDE', name: 'Claude (phiên làm việc)', role: 'ADMIN', families: [] }
 const MAX_WAIT_DAYS = 3
@@ -59,7 +64,7 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
   const n = await env.DB.prepare('SELECT count(*) AS n FROM config_versions').first<{ n: number }>().catch(() => null)
   if (!n?.n) return { skipped: 'Chưa nạp dữ liệu' }
   const rows = await loadRows(ctx, "status = 'READY'")
-  const report = { trigger: opts.trigger ?? 'manual', news: { rows: 0, created: 0, duplicate: 0, rejected: 0, too_old: 0, irrelevant: 0 }, events: [] as string[], views: [] as { view_id: string; status: string }[], policies: [] as string[], rejected: [] as { id: string; reason: string }[], waiting: [] as { id: string; reason: string }[] }
+  const report = { trigger: opts.trigger ?? 'manual', news: { rows: 0, created: 0, duplicate: 0, rejected: 0, too_old: 0, irrelevant: 0 }, events: [] as string[], views: [] as { view_id: string; status: string }[], policies: [] as string[], prices: [] as string[], rejected: [] as { id: string; reason: string }[], waiting: [] as { id: string; reason: string }[] }
   if (!rows.length) return report
 
   // 1. Tin
@@ -127,8 +132,18 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     } catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 1000) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
   }
 
+  // 5. Giá thật: tạo ảnh chụp giá mới từ ảnh chụp hiện tại, thay giá các mã có nguồn thật (ghi nguồn, ngày giá từng mã)
+  for (const r of rows.filter(x => x.kind === 'prices')) {
+    if (!await claim(ctx, r)) continue
+    try {
+      const rec = await importPrices(ctx, r.data)
+      await mark(ctx, r, { status: 'IMPORTED', result: { snapshot_id: rec.id, price_date: rec.price_date, updated: rec.updated } })
+      report.prices.push(rec.id)
+    } catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 1000) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
+  }
+
   // Chỉ ghi nhật ký khi có thay đổi (tránh một bản ghi mỗi 10 phút khi các bản ghi chỉ đang chờ)
-  const changed = report.news.created + report.events.length + report.views.length + report.policies.length + report.rejected.length
+  const changed = report.news.created + report.events.length + report.views.length + report.policies.length + report.prices.length + report.rejected.length
   if (changed || report.trigger !== 'cron') { const u = ctx.uow(); u.audit({ actor: report.trigger === 'cron' ? 'SYSTEM:cron' : 'ADMIN:CLAUDE', action: 'external.imported', object: 'external_outputs', data: report }); await u.commit() }
   return report
 }
@@ -137,4 +152,43 @@ export async function listExternal(ctx: AppCtx, limit = 50) {
   requireRole(ctx, 'CIO', 'ADMIN', 'COMPLIANCE')
   const rows = (await loadRows(ctx)).reverse()
   return rows.slice(0, limit).map(r => ({ id: r.id, kind: r.kind, subject: r.subject ?? null, status: r.status, created_at: r.created_at, result: r.result ?? null, error: r.error ?? null, title: r.data?.title ?? r.data?.view?.summary ?? (Array.isArray(r.data?.items) ? `${r.data.items.length} tin` : null) }))
+}
+
+// Ảnh chụp giá thật: mỗi mã ghi nguồn (ví dụ "TCBS (MCP)", "fmarket.vn"), đường dẫn hoặc công cụ, ngày giá của mã.
+// Mã không có trong lần đẩy giữ nguyên giá của ảnh chụp trước (nhãn nguồn cũ, ví dụ "Mẫu"), để người xem phân biệt được.
+export async function importPrices(ctx: AppCtx, d: { price_date: string; points: ExternalPricePoint[]; meta?: unknown }): Promise<SnapshotRecord & { updated: number }> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d?.price_date ?? '')) throw new HttpError(422, 'price_date phải có dạng YYYY-MM-DD')
+  if (d.price_date > ctx.now().slice(0, 10)) throw new HttpError(422, 'price_date không được ở tương lai')
+  const base = await currentSnapshot(ctx)
+  const known = new Set(base.points.map(p => p.key))
+  const errors: string[] = []
+  const ov = new Map<string, ExternalPricePoint>()
+  for (const p of d.points ?? []) {
+    if (!known.has(p.key)) { errors.push(`${p.key}: mã không có trong ảnh chụp giá`); continue }
+    if (!/^\d+(\.\d+)?$/.test(String(p.price)) || Number(p.price) <= 0) { errors.push(`${p.key}: giá không hợp lệ (${p.price})`); continue }
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(p.date ?? '') || p.date > d.price_date) { errors.push(`${p.key}: ngày giá không hợp lệ (${p.date})`); continue }
+    if (!p.source) { errors.push(`${p.key}: thiếu nguồn`); continue }
+    ov.set(p.key, p)
+  }
+  if (errors.length || !ov.size) throw new HttpError(422, 'Bảng giá không hợp lệ', errors.length ? errors : ['Không có giá nào'])
+  const now = ctx.now()
+  const points: PricePoint[] = base.points.map(bp => {
+    const p = ov.get(bp.key)
+    if (!p) return bp
+    return { key: bp.key, date: p.date, price: String(p.price), currency: bp.currency, source: p.source, source_ref: p.source_ref ?? p.source, fetched_at: now, flag: 'primary' }
+  })
+  const fx = { ...base.fx }
+  for (const [k, p] of ov) if (k.startsWith('FX:')) fx[k.slice(3)] = String(p.price)
+  const missing = base.missing.filter(k => !ov.has(k)), fallbacks = base.fallbacks.filter(k => !ov.has(k))
+  const hash = await hashOf({ price_date: d.price_date, points: points.map(({ fetched_at, ...p }) => p), fx, missing, fallbacks })
+  const seq = await ctx.repo.nextSeq(`PS-${d.price_date}`)
+  const sources = [...new Set([...ov.values()].map(p => p.source))]
+  const rec: SnapshotRecord = { id: `PS-${d.price_date.replace(/-/g, '')}-${seq}`, price_date: d.price_date, points, fx, missing, fallbacks, hash, created_at: now, mode: 'external',
+    status: [{ id: 'EXTERNAL', label: `Giá thật do Claude lấy (${sources.join(', ')})`, requested: ov.size, ok: ov.size, fallback: 0, missing: 0, last_fetch: now }] }
+  const u = ctx.uow()
+  u.put('price_snapshots', rec as never)
+  for (const [k, p] of ov) u.put('price_points', { id: `${k}|${p.date}`, key: k, date: p.date, price: String(p.price), source_ref: p.source_ref ?? p.source } as never)
+  u.audit({ actor: 'ADMIN:CLAUDE', action: 'pricing.snapshot', object: rec.id, data: { price_date: rec.price_date, hash, mode: 'external', base_snapshot: base.id, updated: [...ov.values()].map(p => ({ key: p.key, price: p.price, date: p.date, source: p.source, source_ref: p.source_ref })), kept_from_base: points.filter(p => !ov.has(p.key)).map(p => p.key), meta: d.meta ?? null } })
+  await u.commit()
+  return { ...rec, updated: ov.size }
 }

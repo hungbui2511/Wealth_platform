@@ -67,8 +67,9 @@ export async function createPriceSnapshot(ctx: AppCtx, opts: { adapters?: Record
   return rec
 }
 
+// Ảnh chụp giá mới nhất: giá thật do Claude đẩy lên (ngày giá mới) hoặc giá mẫu ngày PRICE_DATE
 export async function currentSnapshot(ctx: AppCtx): Promise<SnapshotRecord> {
-  const rows = await ctx.repo.list<SnapshotRecord>('price_snapshots', 'price_date = ?', [PRICE_DATE], 'created_at DESC, id DESC')
+  const rows = await ctx.repo.list<SnapshotRecord>('price_snapshots', '', [], 'created_at DESC, id DESC')
   return rows[0] ?? createPriceSnapshot(ctx)
 }
 export async function snapshotById(ctx: AppCtx, id: string): Promise<SnapshotRecord> {
