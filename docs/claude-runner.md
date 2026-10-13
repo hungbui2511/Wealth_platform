@@ -37,7 +37,7 @@ thật cần một tài khoản dịch vụ chỉ được ghi `external_outputs
 
 **`news`** (subject để trống): `{"items":[{"title","url","published_at":"ISO 8601 +07:00","summary","source_name","suggested_type"}]}`
 
-**`event`**: `{"ref":"CL-20261012-01","type":"monetary_policy|fiscal_tax|sector_regulation|corporate|global_macro|commodity|fx|geopolitical","title","news_urls":["…"]}`
+**`event`**: `{"ref":"CL-20261012-01","origin":"global|local (tùy chọn)","type":"monetary_policy|fiscal_tax|sector_regulation|corporate|global_macro|commodity|fx|geopolitical","title","news_urls":["…"]}`
 
 **`cio_view`** (subject = `ref` của sự kiện vừa đẩy, hoặc mã `EV-…` của yêu cầu đang chờ; thêm `"rework": true` khi trả lời yêu cầu Làm lại):
 
