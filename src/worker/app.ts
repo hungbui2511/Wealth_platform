@@ -1,4 +1,6 @@
 // API theo module M1–M10. Phân quyền theo vai trò kiểm tra ở phía máy chủ (NFR-08).
+import { scenarioPreview, type ScenarioSet } from '../engine/scenario'
+import { listResearch, releaseResearch, submitResearch } from './services/research'
 import { Hono, type Context } from 'hono'
 import { ASSET_CLASS_LABELS, EVENT_TYPE_LABELS, POLICY_TOPIC_LABELS, RUN_STATUS_LABELS, SECTOR_LABELS, VIEW_STATUS_LABELS, DISCLAIMER_SHOCK } from '../shared/catalog'
 import { isWhitelistedUrl } from '../compliance/controls'
@@ -9,11 +11,11 @@ import { redactForRm } from './services/redact'
 import { reseed } from './services/admin'
 import { ConflictError } from './db'
 import { authenticate, authMode, verifiedEmail, roleMap } from './auth'
-import { CONFIG_KINDS, decideConfig, loadConfigs, proposeConfig, redactConfig, activeConfig, type ConfigKind, type ConfigVersion } from './services/config'
+import { CONFIG_KINDS, decideConfig, loadConfigs, loadFactorModel, proposeConfig, redactConfig, activeConfig, type ConfigKind, type ConfigVersion } from './services/config'
 import { createEvent, createEventFromNews, loadSampleEvents, allowEvent, getEvent, eventNews, setTimestamp, type EventRec } from './services/events'
 import { dismissNews, ingestNews, newsInbox } from './services/ingest'
 import { createPriceSnapshot, currentSnapshot, familyCashflow, familyGoals, familyOverview, familyPnl, PRICE_DATE } from './services/portfolio'
-import { approvalConditions, createManualView, decide, editView, getView, respondFinding, retryPreChallenge, runCioAgent, runReChallenge, viewChallenges, viewResponses, type ViewRec } from './services/views'
+import { approvalConditions, createManualView, decide, editScenarios, editView, getView, respondFinding, retryPreChallenge, runCioAgent, runReChallenge, viewChallenges, viewResponses, type ViewRec } from './services/views'
 import { confirmRun, createApplication, getRun, recompute, withdrawRun, withdrawView, type RunRec } from './services/apply'
 import { addNote, familyImpacts, familyList, interpretation } from './services/rm'
 import { closeGoal, createGoal, updateGoal } from './services/goals'
@@ -110,6 +112,9 @@ export function createApp(opts: AppOptions = {}) {
   app.get('/api/news/inbox', async c => c.json(await newsInbox(X(c), { all: c.req.query('all') === '1' })))
   app.post('/api/news/ingest', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN'); return c.json(await ingestNews(ctx, { trigger: 'manual' })) })
   app.post('/api/news/dismiss', async c => { const b = await body<{ ids: string[]; dismissed?: boolean }>(c); return c.json(await dismissNews(X(c), b.ids, b.dismissed ?? true)) })
+  app.get('/api/research', async c => c.json(await listResearch(X(c))))
+  app.post('/api/research', async c => c.json(await submitResearch(X(c), await body(c))))
+  app.post('/api/research/:id/release', async c => { const b = await body<{ approve: boolean; note: string }>(c); return c.json(await releaseResearch(X(c), c.req.param('id'), !!b.approve, b.note)) })
   app.post('/api/events/from-news', async c => c.json(await createEventFromNews(X(c), await body(c))))
   app.get('/api/events/:id', async c => { const ctx = X(c); const e = await getEvent(ctx, c.req.param('id')); return c.json(await redactForRm(ctx, { event: e, news: await eventNews(ctx, e), views: ctx.user.role === 'RM' ? [] : await ctx.repo.list('views', 'event_id = ?', [e.id], 'version') })) })
   app.post('/api/events/:id/run-agent', async c => {
@@ -145,8 +150,12 @@ export function createApp(opts: AppOptions = {}) {
     const ctx = X(c); requireRole(ctx, 'CIO', 'COMPLIANCE', 'ADMIN')
     const v = await getView(ctx, c.req.param('id'))
     const e = await getEvent(ctx, v.event_id)
-    return c.json({ view: v, event: e, news: await eventNews(ctx, e), challenges: await viewChallenges(ctx, v.id), responses: await viewResponses(ctx, v.id), conditions: await approvalConditions(ctx, v), runs: await ctx.repo.list('application_runs', 'view_id = ?', [v.id]), decisions: await ctx.repo.list('decisions', 'view_id = ?', [v.id]) })
+    const fm = v.body.scenarios ? await loadFactorModel(ctx) : null
+    let scenario_preview: unknown = null
+    try { scenario_preview = fm ? { ...scenarioPreview(fm.model, v.body.scenarios as ScenarioSet), factors: fm.model.factors.map(f => ({ id: f.id, label: f.label, unit: f.unit, origin: f.origin, library: f.library })), model_id: fm.id } : null } catch (err) { scenario_preview = { error: String((err as Error).message) } }
+    return c.json({ view: v, event: e, scenario_preview, news: await eventNews(ctx, e), challenges: await viewChallenges(ctx, v.id), responses: await viewResponses(ctx, v.id), conditions: await approvalConditions(ctx, v), runs: await ctx.repo.list('application_runs', 'view_id = ?', [v.id]), decisions: await ctx.repo.list('decisions', 'view_id = ?', [v.id]) })
   })
+  app.put('/api/views/:id/scenarios', async c => { const b = await body<{ scenarios: unknown; note: string }>(c); return c.json(await editScenarios(X(c), c.req.param('id'), b.scenarios, b.note)) })
   app.put('/api/views/:id/lines', async c => { const b = await body<{ impacts: never[]; note?: string }>(c); return c.json(await editView(X(c), c.req.param('id'), b.impacts, b.note)) })
   app.post('/api/views/:id/challenge', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN'); const id = c.req.param('id'); return c.json(await runOrQueue(ctx, 'challenge_retry', id, { view_id: id }, () => retryPreChallenge(ctx, id))) })
   app.post('/api/views/:id/rechallenge', async c => { const ctx = X(c); requireRole(ctx, 'CIO'); const id = c.req.param('id'); return c.json(await runOrQueue(ctx, 'rechallenge', id, { view_id: id }, () => runReChallenge(ctx, id))) })

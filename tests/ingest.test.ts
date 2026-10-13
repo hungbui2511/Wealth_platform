@@ -60,7 +60,7 @@ describe('Lấy tin tự động vào hộp tin mới, lập sự kiện, chạy
     expect(r.irrelevant).toBe(1)
     expect(r.too_old).toBe(1)
     expect(r.rejected).toBe(1)
-    expect(r.errors.length).toBe(6)
+    expect(r.errors.length).toBe(7)
     const inbox = await h.ok('CIO1', 'GET', '/api/news/inbox')
     expect(inbox.length).toBe(2)
     const rate = inbox.find((n: any) => n.title.startsWith('NHNN'))

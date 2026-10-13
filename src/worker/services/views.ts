@@ -12,7 +12,8 @@ import { SAMPLE_STORE } from '../../data/seed'
 import { assertViewTransition } from '../../engine/states'
 import { actor, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
 import type { UnitOfWork } from '../db'
-import { activeConfig, activeRestricted, loadConfigs } from './config'
+import { activeConfig, activeRestricted, loadConfigs, loadFactorModel } from './config'
+import { keywordScenarios } from '../../agents/keywordView'
 import { eventNews, getEvent, withTimestamp, type EventRec, type NewsItem } from './events'
 import { currentSnapshot, loadInstruments } from './portfolio'
 import { evNum, nextChallengeNo, nextViewVersion } from '../ids'
@@ -47,8 +48,8 @@ export function transition(ctx: AppCtx, v: ViewRec, to: string, note?: string): 
 }
 
 async function viewContext(ctx: AppCtx, e: EventRec, news: NewsItem[]): Promise<ViewContext> {
-  const [cfg, instruments] = await Promise.all([loadConfigs(ctx), loadInstruments(ctx)])
-  return { newsIds: new Set(news.map(n => n.id)), instruments, restricted: new Set(activeRestricted(cfg, ctx.now()).flatMap(r => r.instruments)) }
+  const [cfg, instruments, fm] = await Promise.all([loadConfigs(ctx), loadInstruments(ctx), loadFactorModel(ctx)])
+  return { newsIds: new Set(news.map(n => n.id)), instruments, restricted: new Set(activeRestricted(cfg, ctx.now()).flatMap(r => r.instruments)), factorIds: fm.model.factors.map(f => f.id) }
 }
 
 // Gói dữ liệu thị trường (FR-311): lấy qua lớp adapter, không chứa dữ liệu danh mục gia đình
@@ -70,7 +71,7 @@ function mockKey(e: EventRec) { return e.policy_doc_id ? `policy-${e.policy_doc_
 // Kết quả do Claude lập trong phiên làm việc (chế độ external): đầu ra từng nút, nhận định cuối, phản biện.
 // source_ids có thể ghi bằng đường dẫn tin (URL) hoặc {{SRCn}}; hệ thống đổi sang mã tin của sự kiện.
 export interface ExternalCio {
-  view: { summary?: string; impacts: unknown[] }
+  view: { summary?: string; impacts: unknown[]; scenarios?: unknown }
   nodes?: Record<string, unknown>
   challenger?: { findings: unknown[]; counter_scenario?: string }
   meta?: { model?: string; session?: string; note?: string; prepared_at?: string }
@@ -95,6 +96,7 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
   const viewId = `VW-${evNum(e.id)}-v${version}`
   const instruments = await loadInstruments(ctx)
   const vctx = await viewContext(ctx, e, news)
+  const fm = await loadFactorModel(ctx)
   const prompts = (await activeConfig<PromptSet>(ctx, 'PROMPT'))
   const models = (await activeConfig<ModelSet>(ctx, 'MODEL'))
   // Rào chắn thông tin (BR-28): chỉ tin đã qua BR-26, gói thị trường qua adapter, danh mục cấu hình
@@ -102,6 +104,8 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
     event: { id: e.id, type: e.type, title: e.title },
     news: news.map(n => ({ id: n.id, title: n.title, summary: n.summary, url: n.url, published_at: n.published_at })),
     catalog: { asset_classes: ASSET_CLASSES, sectors: SECTORS, fx: FX_CURRENCIES, instruments: Object.values(instruments).filter(i => i.price_source !== 'FIXED' && !i.id.includes('-') && !vctx.restricted.has(i.id)).map(i => ({ id: i.id, name: i.name, asset_class: i.asset_class, ...(i.sector ? { sector: i.sector } : {}) })) },
+    // Danh mục yếu tố rủi ro và thư viện cú sốc do CIO duyệt: agent chỉ được chọn trong danh mục này
+    factors: fm.model.factors.map(f => ({ id: f.id, label: f.label, unit: f.unit, origin: f.origin, library: f.library })),
     ...(opts.instructions ? { instructions: opts.instructions } : {}),
   }
   // Đầu ra ghi sẵn chỉ dành cho sự kiện của gói mẫu (tin giả lập); tin thật dùng nhận định mô phỏng theo từ khóa
@@ -114,7 +118,7 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
       if (opts.external) {
         const ext = mapSources(opts.external, news) as ExternalCio
         let output: unknown
-        if (node === 'synthesize') output = { summary: ext.view.summary || e.title, impacts: ext.view.impacts }
+        if (node === 'synthesize') output = { summary: ext.view.summary || e.title, impacts: ext.view.impacts, ...(ext.view.scenarios ? { scenarios: ext.view.scenarios } : {}) }
         else if (ext.nodes?.[node]) output = ext.nodes[node]
         else if (node === 'debate') output = { topics: [] }
         else { const cls = ANALYSTS[node as keyof typeof ANALYSTS]; output = { lines: (ext.view.impacts as ImpactLine[]).filter(l => (l.scope === 'asset_class' && (cls.classes as readonly string[]).includes(l.target)) || (l.scope === 'fx' && cls.fx)), notes: 'Trích từ nhận định cuối do Claude lập' } }
@@ -126,7 +130,8 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
         const kw = mockVer ? null : keywordView(e.title, news)
         if (node === 'synthesize') {
           const v = mockVer ? (fillSources(mockVer.view, news) as ViewBody) : kw!
-          output = { summary: v.summary || e.title, impacts: v.impacts }
+          const sc = mockVer ? undefined : keywordScenarios(news)
+          output = { summary: v.summary || e.title, impacts: v.impacts, ...(sc ? { scenarios: sc } : {}) }
         } else if (mockVer) output = fillSources(mockVer.nodes[node], news)
         else if (node === 'debate') output = { topics: [] }
         else { const cls = ANALYSTS[node as keyof typeof ANALYSTS]; output = { lines: kw!.impacts.filter(l => (l.scope === 'asset_class' && (cls.classes as readonly string[]).includes(l.target)) || (l.scope === 'fx' && cls.fx)), notes: 'Chế độ mô phỏng theo từ khóa (không phải AI)' } }
@@ -290,6 +295,26 @@ export async function editView(ctx: AppCtx, viewId: string, impacts: ImpactLine[
   uow.audit({ actor: actor(ctx), action: 'view.cio_edit', object: v.id, data: { diff, note } })
   await uow.commit()
   return { view: v, rechallenge_required: material.length > 0 }
+}
+
+// CIO duyệt nhánh kịch bản: sửa xác suất, cỡ cú sốc, chế độ (thiết kế v2). Ghi lại bản trước/sau và lý do.
+export async function editScenarios(ctx: AppCtx, viewId: string, scenarios: unknown, noteRaw: unknown): Promise<ViewRec> {
+  requireRole(ctx, 'CIO')
+  const note = minReason(noteRaw, 'Lý do sửa kịch bản')
+  let v = await getView(ctx, viewId)
+  if (!['PENDING_APPROVAL', 'PENDING_CHALLENGE'].includes(v.status)) throw new HttpError(409, `Không sửa được kịch bản ở trạng thái ${v.status}`)
+  const e = await getEvent(ctx, v.event_id)
+  const vctx = await viewContext(ctx, e, await eventNews(ctx, e))
+  const val = validateView({ ...v.body, scenarios }, vctx)
+  if (!val.ok) throw new HttpError(422, 'Kịch bản sau khi sửa không hợp lệ', val.errors)
+  const now = ctx.now()
+  const before = v.body.scenarios
+  v = { ...v, body: val.view!, cio_edits: [...v.cio_edits, { at: now, by: actor(ctx), key: 'scenarios', kind: 'scenarios', before: v.body.scenarios as never, after: val.view!.scenarios as never, note }] }
+  const uow = ctx.uow()
+  uow.update('views', v as never)
+  uow.audit({ actor: actor(ctx), action: 'view.cio_edit_scenarios', object: v.id, data: { before, after: val.view!.scenarios, note } })
+  await uow.commit()
+  return v
 }
 
 // Phản biện lại chỉ các dòng đã đổi (FR-405)

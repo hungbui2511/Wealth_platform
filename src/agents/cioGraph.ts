@@ -22,6 +22,7 @@ export interface GraphInput {
   event: { id: string; type: string; title: string }
   news: { id: string; title: string; summary: string; url: string; published_at: string }[]
   catalog: { asset_classes: readonly string[]; sectors: readonly string[]; fx: readonly string[]; instruments: { id: string; name: string; asset_class: string; sector?: string }[] }
+  factors?: { id: string; label: string; unit: string; origin: string; library: Record<string, number> }[]
   instructions?: string
 }
 
@@ -82,14 +83,14 @@ export function buildCioGraph(exec: NodeExecutor, ctx: { viewContext: ViewContex
   })
   g.addNode('synthesize', async (s: S) => {
     const started = ctx.now()
-    const payload = { analysts: s.analysts, debate: s.debateOut, news: s.input.news, catalog: s.input.catalog, previous_errors: s.result?.errors ?? [], attempt: s.attempts, instructions: s.input.instructions }
+    const payload = { analysts: s.analysts, debate: s.debateOut, news: s.input.news, catalog: s.input.catalog, factors: s.input.factors, previous_errors: s.result?.errors ?? [], attempt: s.attempts, instructions: s.input.instructions }
     const r = await exec.run('synthesize', payload, s.attempts)
     return { draft: r.output, nodeRuns: [record('synthesize', payload, r, started)] }
   })
   g.addNode('validate', async (s: S) => {
     const started = ctx.now()
-    const d = (s.draft ?? {}) as { summary?: string; impacts?: unknown }
-    const raw = { ...ctx.viewMeta, summary: d.summary ?? s.input.event.title, impacts: d.impacts }
+    const d = (s.draft ?? {}) as { summary?: string; impacts?: unknown; scenarios?: unknown }
+    const raw = { ...ctx.viewMeta, summary: d.summary ?? s.input.event.title, impacts: d.impacts, ...(d.scenarios ? { scenarios: d.scenarios } : {}) }
     const v = validateView(raw, ctx.viewContext)
     const result = { ok: v.ok, view: v.view, errors: v.errors, removed_restricted: v.removed_restricted }
     return { result, attempts: s.attempts + 1, nodeRuns: [record('validate', { attempt: s.attempts }, { output: { ok: v.ok, errors: v.errors, removed_restricted: v.removed_restricted.map(lineKey) }, prompt: null, prompt_version: null, model: 'xác định (schema Mục 7.3)' }, started)] }

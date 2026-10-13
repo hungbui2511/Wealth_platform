@@ -45,3 +45,49 @@ export function keywordView(title: string, news: NewsLite[]): { summary: string;
   const impacts = [...ASSET_CLASSES.map(ac => line('asset_class', ac, ASSET_CLASS_LABELS[ac].toLowerCase())), ...['USD', 'SGD', 'AUD'].map(c => line('fx', c, `tỷ giá ${c}/VND`))]
   return { summary: `${title} (nhận định mô phỏng theo từ khóa, chưa có AI)`, impacts }
 }
+
+// Nhánh kịch bản mô phỏng theo từ khóa (không phải AI): mỗi nhóm từ khóa ứng với yếu tố lõi và hướng.
+// Nhánh cơ sở (xác suất 0,7, cỡ vừa) và nhánh mạnh hơn dự kiến (0,3, cỡ lớn, chế độ căng thẳng).
+const FACTOR_RULES: { phrases: string[]; factor: string; direction: 'up' | 'down' }[] = [
+  { phrases: ['tăng lãi suất', 'lãi suất tăng', 'nâng lãi suất', 'lãi suất huy động tăng', 'hút ròng'], factor: 'VN_RATE', direction: 'up' },
+  { phrases: ['giảm lãi suất', 'hạ lãi suất', 'lãi suất giảm', 'bơm ròng', 'nới lỏng tiền tệ'], factor: 'VN_RATE', direction: 'down' },
+  { phrases: ['fed tăng lãi suất', 'fed giữ lãi suất cao', 'lợi suất trái phiếu mỹ tăng'], factor: 'US10Y', direction: 'up' },
+  { phrases: ['fed giảm lãi suất', 'fed hạ lãi suất'], factor: 'US10Y', direction: 'down' },
+  { phrases: ['giá vàng tăng', 'vàng tăng', 'vàng lập đỉnh', 'vàng lên đỉnh', 'vàng tăng mạnh'], factor: 'GOLD_W', direction: 'up' },
+  { phrases: ['giá vàng giảm', 'vàng giảm', 'vàng lao dốc', 'vàng đảo chiều giảm'], factor: 'GOLD_W', direction: 'down' },
+  { phrases: ['tỷ giá tăng', 'usd tăng', 'đồng usd mạnh', 'vnd mất giá', 'tỷ giá lập đỉnh'], factor: 'USDVND', direction: 'up' },
+  { phrases: ['tỷ giá giảm', 'usd giảm', 'usd suy yếu', 'đồng usd yếu', 'tỷ giá hạ nhiệt'], factor: 'USDVND', direction: 'down' },
+  { phrases: ['mua ròng', 'nâng hạng'], factor: 'FOREIGN_FLOW', direction: 'up' },
+  { phrases: ['bán ròng', 'bán tháo'], factor: 'FOREIGN_FLOW', direction: 'down' },
+  { phrases: ['vn-index tăng', 'vnindex tăng', 'tăng điểm mạnh'], factor: 'VN_EQ', direction: 'up' },
+  { phrases: ['vn-index giảm', 'vnindex giảm', 'giảm điểm mạnh', 'suy yếu'], factor: 'VN_EQ', direction: 'down' },
+  { phrases: ['siết tín dụng', 'siết cho vay', 'hạn chế tín dụng bất động sản', 'chậm trả lãi', 'vỡ nợ'], factor: 'CREDIT_RE', direction: 'up' },
+  { phrases: ['giá dầu tăng', 'dầu tăng'], factor: 'OIL', direction: 'up' },
+  { phrases: ['giá dầu giảm', 'dầu giảm'], factor: 'OIL', direction: 'down' },
+  { phrases: ['bitcoin tăng', 'tiền số tăng'], factor: 'CRYPTO', direction: 'up' },
+  { phrases: ['bitcoin giảm', 'tiền số giảm'], factor: 'CRYPTO', direction: 'down' },
+]
+
+export function keywordScenarios(news: NewsLite[]) {
+  const hits = new Map<string, { up: number; down: number; src: Set<string> }>()
+  for (const r of FACTOR_RULES) {
+    const src = news.filter(n => { const t = `${n.title} ${n.summary}`.normalize('NFC').toLowerCase(); return r.phrases.some(p => t.includes(p)) }).map(n => n.id)
+    if (!src.length) continue
+    const h = hits.get(r.factor) ?? { up: 0, down: 0, src: new Set<string>() }
+    h[r.direction] += src.length; src.forEach(s => h.src.add(s)); hits.set(r.factor, h)
+  }
+  const core = [...hits.entries()].filter(([, h]) => h.up !== h.down)
+    .sort((a, b) => (b[1].up + b[1].down) - (a[1].up + a[1].down) || a[0].localeCompare(b[0])).slice(0, 4)
+    .map(([factor, h]) => ({ factor, direction: (h.up > h.down ? 'up' : 'down') as 'up' | 'down', src: [...h.src].sort() }))
+  if (!core.length) return undefined
+  const src = [...new Set(core.flatMap(c => c.src))]
+  const names = core.map(c => `${c.factor} ${c.direction === 'up' ? 'tăng' : 'giảm'}`).join(', ')
+  return {
+    priced_in: 'partial' as const,
+    branches: [
+      { id: 'B1', name: 'Cơ sở: diễn biến như tin mô tả', probability: 0.7, regime: 'calm' as const, core_shocks: core.map(c => ({ factor: c.factor, size: 'M' as const, direction: c.direction })), rationale: `Mô phỏng theo từ khóa (không phải AI): tin nhắc tới ${names}`, source_ids: src },
+      { id: 'B2', name: 'Bất lợi: diễn biến mạnh hơn dự kiến', probability: 0.3, regime: 'stress' as const, core_shocks: core.map(c => ({ factor: c.factor, size: 'L' as const, direction: c.direction })), rationale: `Mô phỏng theo từ khóa (không phải AI): cùng hướng nhưng cỡ lớn, chế độ căng thẳng`, source_ids: src },
+    ],
+    notes: 'Nhánh kịch bản mô phỏng theo từ khóa, chưa có AI; CIO cần xem lại xác suất và cỡ cú sốc',
+  }
+}

@@ -12,7 +12,8 @@ import { callJson } from '../../agents/llm'
 import { wrapData, type ModelSet, type PromptSet } from '../../agents/prompts'
 import { actor, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
 import type { UnitOfWork } from '../db'
-import { activeConfig, loadConfigs, type Configs } from './config'
+import { activeConfig, loadConfigs, loadFactorModel, type Configs } from './config'
+import { familyScenario, scenarioPreview, type FactorModel, type FamilyScenarioResult, type ScenarioSet } from '../../engine/scenario'
 import { getEvent, withTimestamp, type EventRec } from './events'
 import { currentSnapshot, loadGoals, loadInstruments, snapshotById, type SnapshotRecord } from './portfolio'
 import { getView, transition, type ChallengeRec, type ViewRec } from './views'
@@ -23,13 +24,23 @@ export interface RunRec {
   config_version_id: string; config_version_ids: Record<string, string>
   price_date: string; price_snapshot_id: string; price_snapshot_hash: string
   engine_version: string; portfolio_snapshot_id: string; portfolio_snapshot_hash: string
-  view_body: ViewBody; ranking: { family_id: string; impact: string; pct: string | null; alert: string }[]
+  view_body: ViewBody; ranking: { family_id: string; impact: string; pct: string | null; alert: string; scen_bad_3m_pct?: number | null; lane2?: string }[]
+  scenario_summary?: ScenarioSummary
   post_check?: { challenge_id: string; critical: number; medium: number; low: number }
   history: { at: string; from: string; to: string; by: string; note?: string }[]
   effective_at?: string; error?: string; elapsed_ms?: number
 }
 
-export interface PortfolioSnapshot { families: Family[]; instruments: Record<string, Instrument>; goals: Goal[]; configs: Pick<Configs, 'unit' | 'thresholds' | 'assumptions'> }
+export interface PortfolioSnapshot { families: Family[]; instruments: Record<string, Instrument>; goals: Goal[]; configs: Pick<Configs, 'unit' | 'thresholds' | 'assumptions'> & { factor_model?: FactorModel; factor_model_id?: string } }
+
+export interface ScenarioSummary {
+  model_id: string; model_version: string
+  preview: ReturnType<typeof scenarioPreview>
+  families_rm_review: number; families: number
+  worst_bad_3m_pct: number | null
+  // Giám sát tập trung toàn ngân hàng: tổng đóng góp theo yếu tố của mọi gia đình (kỳ hạn 3 tháng, trung bình theo xác suất)
+  book_by_factor: Record<string, number>; book_base_3m: number; book_bad_3m_sum: number
+}
 
 
 function runTransition(ctx: AppCtx, r: RunRec, to: string, note?: string): RunRec {
@@ -43,8 +54,26 @@ export function computeAll(ps: PortfolioSnapshot, snap: SnapshotRecord, view: Vi
   return ps.families.map(f => {
     const pos = buildPositions(f, ps.instruments, book)
     const nw = netWorth(f, pos, book)
-    return { family: f, positions: pos, result: computeFamilyImpact(f.id, pos, nw, view, ps.configs.unit, ps.configs.thresholds.alert) }
+    const result = computeFamilyImpact(f.id, pos, nw, view, ps.configs.unit, ps.configs.thresholds.alert)
+    const scenario: FamilyScenarioResult | undefined = view.scenarios && ps.configs.factor_model
+      ? familyScenario(f, pos, book, ps.instruments, ps.configs.factor_model, view.scenarios as ScenarioSet, nw.toNumber()) : undefined
+    return { family: f, positions: pos, result: scenario ? { ...result, scenario } : result }
   })
+}
+
+export function scenarioSummary(ps: PortfolioSnapshot, view: ViewBody, computed: ReturnType<typeof computeAll>): ScenarioSummary | undefined {
+  if (!view.scenarios || !ps.configs.factor_model) return undefined
+  const sc = computed.map(c => (c.result as { scenario?: FamilyScenarioResult }).scenario).filter((x): x is FamilyScenarioResult => !!x)
+  const book: Record<string, number> = {}
+  for (const r of sc) for (const [k, v] of Object.entries(r.by_factor)) book[k] = (book[k] ?? 0) + v
+  const bads = sc.map(r => r.ranges[1].bad_pct).filter((x): x is number => x !== null)
+  return {
+    model_id: ps.configs.factor_model_id ?? '', model_version: ps.configs.factor_model.version,
+    preview: scenarioPreview(ps.configs.factor_model, view.scenarios as ScenarioSet),
+    families_rm_review: sc.filter(r => r.lane2.route === 'RM_REVIEW').length, families: sc.length,
+    worst_bad_3m_pct: bads.length ? Math.min(...bads) : null,
+    book_by_factor: book, book_base_3m: sc.reduce((a, r) => a + r.ranges[1].base, 0), book_bad_3m_sum: sc.reduce((a, r) => a + r.ranges[1].bad, 0),
+  }
 }
 
 export async function createApplication(ctx: AppCtx, view: ViewRec, uow: UnitOfWork, opts: { snapshot?: SnapshotRecord } = {}): Promise<{ run_id: string; run: RunRec }> {
@@ -52,10 +81,10 @@ export async function createApplication(ctx: AppCtx, view: ViewRec, uow: UnitOfW
   const prior = (await ctx.repo.list<RunRec>('application_runs', 'idem_key = ?', [idem]))[0]
   if (prior) return { run_id: prior.id, run: prior }
   const t0 = Date.now()
-  const [families, instruments, goals, cfg, snap] = await Promise.all([ctx.repo.list<Family>('families', '', [], 'id'), loadInstruments(ctx), loadGoals(ctx), loadConfigs(ctx), opts.snapshot ? Promise.resolve(opts.snapshot) : currentSnapshot(ctx)])
+  const [families, instruments, goals, cfg, snap, fm] = await Promise.all([ctx.repo.list<Family>('families', '', [], 'id'), loadInstruments(ctx), loadGoals(ctx), loadConfigs(ctx), opts.snapshot ? Promise.resolve(opts.snapshot) : currentSnapshot(ctx), view.body.scenarios ? loadFactorModel(ctx) : Promise.resolve(null)])
   const m = await nextRunNo(ctx, view.id)
   const id = `AR-${evNum(view.event_id)}-v${view.version}-${m}`
-  const ps: PortfolioSnapshot = { families, instruments, goals, configs: { unit: cfg.unit, thresholds: cfg.thresholds, assumptions: cfg.assumptions } }
+  const ps: PortfolioSnapshot = { families, instruments, goals, configs: { unit: cfg.unit, thresholds: cfg.thresholds, assumptions: cfg.assumptions, ...(fm ? { factor_model: fm.model, factor_model_id: fm.id } : {}) } }
   const psHash = await hashOf(ps)
   const now = ctx.now()
   let run: RunRec = {
@@ -73,7 +102,9 @@ export async function createApplication(ctx: AppCtx, view: ViewRec, uow: UnitOfW
     return { run_id: id, run }
   }
   const ranked = rankFamilies(computed.map(c => c.result))
-  run = runTransition(ctx, { ...run, ranking: ranked.map(r => ({ family_id: r.family_id, impact: r.impact, pct: r.pct, alert: r.alert })) }, 'POST_CHECKING')
+  const scOf = (r: FamilyImpactResult) => (r as { scenario?: FamilyScenarioResult }).scenario
+  const scenSum = scenarioSummary(ps, view.body, computed)
+  run = runTransition(ctx, { ...run, ranking: ranked.map(r => ({ family_id: r.family_id, impact: r.impact, pct: r.pct, alert: r.alert, ...(scOf(r) ? { scen_bad_3m_pct: scOf(r)!.ranges[1].bad_pct, lane2: scOf(r)!.lane2.route } : {}) })), ...(scenSum ? { scenario_summary: scenSum } : {}) }, 'POST_CHECKING')
   uow.put('run_snapshots', { id: run.portfolio_snapshot_id, hash: psHash, ...ps } as never)
   for (const c of computed) uow.put('family_impacts', { ...c.result, id: familyImpactId(id, c.family.id), run_id: id } as never)
 
@@ -191,7 +222,9 @@ export async function recompute(ctx: AppCtx, id: string) {
   const fresh = computeAll(body, snap, run.view_body)
   const rows = fresh.map(f => {
     const s = stored.find(x => x.family_id === f.family.id)
-    return { family_id: f.family.id, stored: s?.impact ?? null, recomputed: f.result.impact, equal: s?.impact === f.result.impact && s?.pct === f.result.pct }
+    const sOld = (s as { scenario?: FamilyScenarioResult } | undefined)?.scenario, sNew = (f.result as { scenario?: FamilyScenarioResult }).scenario
+    const scenEqual = JSON.stringify(sOld?.ranges ?? null) === JSON.stringify(sNew?.ranges ?? null)
+    return { family_id: f.family.id, stored: s?.impact ?? null, recomputed: f.result.impact, equal: s?.impact === f.result.impact && s?.pct === f.result.pct && scenEqual, ...(sNew ? { scenario_equal: scenEqual } : {}) }
   })
   const res = { run_id: id, portfolio_hash_ok: hashOk, price_snapshot_hash_ok: snap.hash === run.price_snapshot_hash, all_equal: rows.every(r => r.equal), rows }
   const u = ctx.uow(); u.audit({ actor: actor(ctx), action: 'run.recomputed', object: id, data: { all_equal: res.all_equal, portfolio_hash_ok: hashOk } }); await u.commit()

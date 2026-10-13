@@ -1,7 +1,9 @@
 // Schema đầu ra của agent (Mục 7.3), kiểm tra bằng zod (tương đương Pydantic).
 import { z } from 'zod'
 import { ASSET_CLASSES, FX_CURRENCIES, POLICY_TOPICS, SECTORS } from './catalog'
-import type { Finding, ImpactLine, Instrument, PolicyChange, ViewBody } from './types'
+import type { Finding, ImpactLine, Instrument, PolicyChange, ScenarioSetBody, ViewBody } from './types'
+import { DEFAULT_FACTOR_MODEL } from '../data/factorModel'
+export const DEFAULT_FACTOR_IDS: readonly string[] = DEFAULT_FACTOR_MODEL.factors.map(f => f.id)
 
 export const ImpactLineSchema = z.object({
   scope: z.enum(['asset_class', 'sector', 'instrument', 'fx']),
@@ -20,6 +22,7 @@ export const ImpactLineSchema = z.object({
 export const ViewBodySchema = z.object({
   event_id: z.string(), view_id: z.string(), event_type: z.string(), summary: z.string().min(1),
   impacts: z.array(ImpactLineSchema),
+  scenarios: z.unknown().optional(),
 })
 
 export const FindingSchema = z.object({
@@ -50,7 +53,7 @@ export const PolicySummarySchema = z.object({ changes: z.array(PolicyChangeSchem
 
 export const lineKey = (l: Pick<ImpactLine, 'scope' | 'asset_class' | 'target'>) => `${l.scope}:${l.asset_class ?? ''}:${l.target}`
 
-export interface ViewContext { newsIds: Set<string>; instruments: Record<string, Instrument>; restricted: Set<string> }
+export interface ViewContext { newsIds: Set<string>; instruments: Record<string, Instrument>; restricted: Set<string>; factorIds?: readonly string[] }
 
 // Lỗi theo từng dòng (dùng cho cả kiểm tra schema và kiểm tra theo quy tắc của phản biện)
 export function lineErrors(l: ImpactLine, ctx: ViewContext): { check: string; msg: string }[] {
@@ -107,6 +110,12 @@ export function validateView(raw: unknown, ctx: ViewContext): ValidationResult {
   const fxLines = view.impacts.filter(l => l.scope === 'fx').length
   if (acLines !== 11) errors.push(`Phải có đúng 11 dòng loại tài sản, có ${acLines}`)
   if (fxLines !== 3) errors.push(`Phải có đúng 3 dòng tỷ giá, có ${fxLines}`)
+  if (view.scenarios === undefined || view.scenarios === null) delete view.scenarios
+  else {
+    const sc = validateScenarios(view.scenarios, ctx.factorIds ?? DEFAULT_FACTOR_IDS, ctx.newsIds)
+    errors.push(...sc.errors)
+    if (sc.set) view.scenarios = sc.set as ScenarioSetBody
+  }
   return { ok: errors.length === 0, errors, view, removed_restricted: removed }
 }
 
@@ -150,4 +159,34 @@ export function validatePolicySummary(raw: unknown, docText: string, docKind: 'd
     if (c.certainty !== docKind) errors.push(`${c.change_id}: độ chắc chắn ${c.certainty} không khớp loại văn bản ${docKind}`)
   }
   return { ok: errors.length === 0, errors, changes: r.data.changes as PolicyChange[] }
+}
+
+// Nhánh kịch bản do agent đề xuất (thiết kế v2): 2–4 nhánh có xác suất, mỗi nhánh 1–5 yếu tố lõi với cỡ cú sốc trong thư viện CIO
+export const CoreShockSchema = z.object({ factor: z.string().min(1), size: z.enum(['S', 'M', 'L']), direction: z.enum(['up', 'down']) })
+export const BranchSchema = z.object({
+  id: z.string().min(1), name: z.string().min(3), probability: z.number().min(0.05).max(0.95),
+  regime: z.enum(['calm', 'stress']), core_shocks: z.array(CoreShockSchema).min(1).max(5),
+  rationale: z.string().min(20, 'Lập luận tối thiểu 20 ký tự'), source_ids: z.array(z.string()).min(1, 'Mỗi nhánh phải trích ít nhất một tin'),
+})
+export const ScenarioSetSchema = z.object({ priced_in: z.enum(['none', 'partial', 'full']), branches: z.array(BranchSchema).min(2).max(4), notes: z.string().optional() })
+
+export function validateScenarios(raw: unknown, factorIds: readonly string[], newsIds: Set<string>): { ok: boolean; errors: string[]; set?: z.infer<typeof ScenarioSetSchema> } {
+  const r = ScenarioSetSchema.safeParse(raw)
+  if (!r.success) return { ok: false, errors: r.error.issues.map(i => `scenarios.${i.path.join('.')}: ${i.message}`) }
+  const errors: string[] = []
+  const sum = r.data.branches.reduce((a, b) => a + b.probability, 0)
+  if (Math.abs(sum - 1) > 0.011) errors.push(`Tổng xác suất các nhánh phải bằng 1 (đang là ${sum.toFixed(2)})`)
+  const bids = new Set<string>()
+  r.data.branches.forEach((b, i) => {
+    if (bids.has(b.id)) errors.push(`scenarios.branches[${i}]: mã nhánh ${b.id} bị trùng`)
+    bids.add(b.id)
+    const fs = new Set<string>()
+    for (const s of b.core_shocks) {
+      if (!factorIds.includes(s.factor)) errors.push(`scenarios.branches[${i}]: yếu tố ${s.factor} không có trong mô hình yếu tố`)
+      if (fs.has(s.factor)) errors.push(`scenarios.branches[${i}]: yếu tố ${s.factor} lặp lại`)
+      fs.add(s.factor)
+    }
+    for (const sid of b.source_ids) if (!newsIds.has(sid)) errors.push(`scenarios.branches[${i}]: mã nguồn ${sid} không thuộc sự kiện`)
+  })
+  return { ok: errors.length === 0, errors, set: r.data }
 }

@@ -9,7 +9,10 @@ export const DEFAULT_NEWS_SOURCES = [
   { name: 'Vietstock – Cổ phiếu', url: 'https://vietstock.vn/830/chung-khoan/co-phieu.rss' },
   { name: 'Nhân Dân – Chứng khoán', url: 'https://nhandan.vn/rss/chungkhoan-1191.rss' },
   { name: 'VTV – Kinh tế', url: 'https://vtv.vn/rss/kinh-te.rss' },
-]
+  // Tin quốc tế (nguồn công khai): bản tin kinh tế thế giới tiếng Việt và thông cáo gốc của Fed
+  { name: 'VnEconomy – Kinh tế thế giới', url: 'https://vneconomy.vn/kinh-te-the-gioi.rss', origin: 'global' },
+  { name: 'Federal Reserve – Press releases', url: 'https://www.federalreserve.gov/feeds/press_all.xml', origin: 'global' },
+] as { name: string; url: string; origin?: 'global' | 'local' }[]
 
 // Miền công khai thật được thêm vào danh sách nguồn công khai mặc định (bên cạnh các miền giả lập của gói tin mẫu)
 export const PUBLIC_DOMAINS = [
@@ -18,5 +21,5 @@ export const PUBLIC_DOMAINS = [
   { domain: 'chinhphu.vn', name: 'Cổng TTĐT Chính phủ' }, { domain: 'baochinhphu.vn', name: 'Báo Điện tử Chính phủ' },
   { domain: 'sbv.gov.vn', name: 'Ngân hàng Nhà nước Việt Nam' }, { domain: 'mof.gov.vn', name: 'Bộ Tài chính' },
   { domain: 'ssc.gov.vn', name: 'Ủy ban Chứng khoán Nhà nước' }, { domain: 'vbpl.vn', name: 'CSDL quốc gia về văn bản pháp luật' },
-  { domain: 'quochoi.vn', name: 'Quốc hội (cổng dự thảo)' }, { domain: 'hnx.vn', name: 'Sở GDCK Hà Nội' }, { domain: 'hsx.vn', name: 'Sở GDCK TP.HCM' },
+  { domain: 'quochoi.vn', name: 'Quốc hội (cổng dự thảo)' }, { domain: 'federalreserve.gov', name: 'Federal Reserve (Mỹ)' }, { domain: 'hnx.vn', name: 'Sở GDCK Hà Nội' }, { domain: 'hsx.vn', name: 'Sở GDCK TP.HCM' },
 ]

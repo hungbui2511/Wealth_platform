@@ -94,7 +94,9 @@ export interface ImpactLine {
   rationale: string; source_ids: string[]
   cio_judgment?: boolean; cio_note?: string
 }
-export interface ViewBody { event_id: string; view_id: string; event_type: string; summary: string; impacts: ImpactLine[] }
+export interface ScenarioBranch { id: string; name: string; probability: number; regime: 'calm' | 'stress'; core_shocks: { factor: string; size: 'S' | 'M' | 'L'; direction: 'up' | 'down' }[]; rationale: string; source_ids: string[] }
+export interface ScenarioSetBody { priced_in: 'none' | 'partial' | 'full'; branches: ScenarioBranch[]; notes?: string }
+export interface ViewBody { event_id: string; view_id: string; event_type: string; summary: string; impacts: ImpactLine[]; scenarios?: ScenarioSetBody }
 
 export interface Finding {
   finding_id: string; stage: 'pre_approval' | 're_challenge' | 'post_check'; origin: 'rule' | 'llm'

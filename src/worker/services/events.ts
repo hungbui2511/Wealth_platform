@@ -5,8 +5,10 @@ import { checkPublicSource, checkTimestamp, restrictedHits, type TimestampField 
 import { actor, HttpError, requireRole, type AppCtx } from '../ctx'
 import type { UnitOfWork } from '../db'
 import { activeRestricted, loadConfigs, type Configs } from './config'
+import { classifyOrigin, type NewsOrigin } from '../../news/classify'
 
-export interface NewsItem { id: string; event_id: string; title: string; source: string; url: string; published_at: string; ingested_at: string; summary: string; language: string; simulated: boolean; policy_change?: unknown }
+export interface NewsItem { id: string; event_id: string; title: string; source: string; url: string; published_at: string; ingested_at: string; summary: string; language: string; simulated: boolean; policy_change?: unknown; origin?: NewsOrigin; research?: ResearchMeta }
+export interface ResearchMeta { doc_no: string; unit: string; kind: 'research' | 'house_view'; status: 'PENDING_RELEASE' | 'RELEASED' | 'REJECTED'; submitted_by: string; submitted_at: string; released_by?: string; released_at?: string; note?: string; conflict_disclosure?: string }
 export interface EventRec {
   id: string; type: string; title: string; summary: string; news_ids: string[]; created_by: string; created_at: string
   timestamps: Partial<Record<TimestampField, string>>
@@ -37,7 +39,7 @@ export async function createEvent(ctx: AppCtx, input: { type: string; title?: st
   const newsIds = input.newsIds ?? await ctx.repo.nextIds('news_items', 'NW-', 4, input.items.length)
   for (const [i, it] of input.items.entries()) {
     const nid = newsIds[i]
-    news.push({ id: nid, event_id: id, title: it.title, source: it.source ?? new URL(it.url!).hostname, url: it.url!, published_at: it.published_at!, ingested_at: now, summary: it.summary, language: it.language ?? 'vi', simulated: it.simulated ?? false, ...(it.policy_change ? { policy_change: it.policy_change } : {}) })
+    news.push({ id: nid, event_id: id, title: it.title, source: it.source ?? new URL(it.url!).hostname, url: it.url!, published_at: it.published_at!, ingested_at: now, summary: it.summary, language: it.language ?? 'vi', simulated: it.simulated ?? false, origin: classifyOrigin({ title: it.title, summary: it.summary }), ...(it.policy_change ? { policy_change: it.policy_change } : {}) })
   }
   const published = news.map(n => n.published_at).sort((a, b) => Date.parse(a) - Date.parse(b))[0]
   const hits = restrictedHits(news.flatMap(n => [n.title, n.summary]), activeRestricted(cfg, now))
@@ -139,8 +141,8 @@ export async function createEventFromNews(ctx: AppCtx, input: { news_ids: string
   }
   const cfg = await loadConfigs(ctx)
   const now = ctx.now()
-  const problems = news.map(n => ({ id: n.id, errors: checkPublicSource(n, cfg.whitelist, now) })).filter(p => p.errors.length)
-  if (problems.length) throw new HttpError(422, 'Có tin không qua kiểm soát nguồn công khai (BR-26)', problems)
+  const problems = news.map(n => ({ id: n.id, errors: n.origin === 'exclusive' ? researchErrors(n, now) : checkPublicSource(n, cfg.whitelist, now) })).filter(p => p.errors.length)
+  if (problems.length) throw new HttpError(422, 'Có tin không qua kiểm soát nguồn (BR-26) hoặc nghiên cứu chưa được phát hành', problems)
   const id = await newEventId(ctx, now.slice(0, 4))
   const published = news.map(n => n.published_at).sort((a, b) => Date.parse(a) - Date.parse(b))[0]
   const hits = restrictedHits(news.flatMap(n => [n.title, n.summary]), activeRestricted(cfg, now))
@@ -156,4 +158,12 @@ export async function createEventFromNews(ctx: AppCtx, input: { news_ids: string
   u.audit({ actor: actor(ctx), action: 'event.created', object: id, data: { type: ev.type, from_inbox: true, news: news.map(n => ({ id: n.id, url: n.url, published_at: n.published_at })), restricted_hold: ev.hold ?? null } })
   await u.commit()
   return { event: ev, news }
+}
+
+// Nghiên cứu độc quyền: chỉ dùng khi Tuân thủ đã cho phát hành và đã tới giờ công bố (không đọc trước khách khác)
+export function researchErrors(n: NewsItem, now: string): string[] {
+  const e: string[] = []
+  if (n.research?.status !== 'RELEASED') e.push('Báo cáo nghiên cứu chưa được Tuân thủ cho phát hành')
+  if (Date.parse(n.published_at) > Date.parse(now)) e.push('Chưa tới giờ phát hành chính thức của báo cáo')
+  return e
 }

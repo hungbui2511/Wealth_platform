@@ -1,0 +1,309 @@
+{
+  "source": "TCBS tcinvest getLongTermCandleChart, weekly closes (adjusted)",
+  "as_of": "2026-10-09",
+  "window": {
+    "start": "2022-01-21",
+    "end": "2026-10-09",
+    "n_weekly_returns": 243
+  },
+  "stress_window": {
+    "start": "2022-04-01",
+    "end": "2022-12-31",
+    "n_weekly_returns": 39
+  },
+  "method": {
+    "returns": "weekly log returns on common dates; bar dates are week-start, closes are week-end",
+    "beta_ewma_half_life_weeks": 52,
+    "vol_units": "weekly std (ddof=1); vol_annual = weekly*sqrt(52)",
+    "sector_proxy": "equal-weight mean of constituent weekly log returns"
+  },
+  "index": {
+    "ticker": "VNINDEX",
+    "vol_weekly_full": 0.0265,
+    "vol_weekly_stress": 0.0381,
+    "vol_annual_full": 0.1911,
+    "max_drawdown": -0.3705,
+    "max_drawdown_peak_week_end": "2022-04-01",
+    "max_drawdown_trough_week_end": "2022-11-11",
+    "max_drawdown_peak_level": 1516.44,
+    "max_drawdown_trough_level": 954.53,
+    "stress_total_return": {
+      "start": "2022-04-01",
+      "end": "2022-11-15",
+      "value": -0.3705,
+      "start_close_week_end": "2022-04-01",
+      "end_close_week_end": "2022-11-11",
+      "note": "weekly closes on or before each date; intraweek trough (Nov 15-16) not captured"
+    },
+    "tariff_shock_return": {
+      "start": "2025-03-28",
+      "end": "2025-04-11",
+      "value": -0.0721,
+      "start_close_week_end": "2025-03-28",
+      "end_close_week_end": "2025-04-11"
+    },
+    "n_obs": 243
+  },
+  "stocks": {
+    "MBB": {
+      "beta_full": 1.1948,
+      "beta_ewma": 0.9892,
+      "beta_stress": 1.5218,
+      "vol_weekly_full": 0.0428,
+      "vol_weekly_stress": 0.0673,
+      "vol_annual_full": 0.3086,
+      "r2_full": 0.5476,
+      "idio_vol_weekly_full": 0.0288,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "VPB": {
+      "beta_full": 1.1445,
+      "beta_ewma": 1.0959,
+      "beta_stress": 1.209,
+      "vol_weekly_full": 0.0423,
+      "vol_weekly_stress": 0.0556,
+      "vol_annual_full": 0.3051,
+      "r2_full": 0.514,
+      "idio_vol_weekly_full": 0.0296,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "SHB": {
+      "beta_full": 1.1821,
+      "beta_ewma": 0.8401,
+      "beta_stress": 1.7916,
+      "vol_weekly_full": 0.0466,
+      "vol_weekly_stress": 0.0785,
+      "vol_annual_full": 0.3362,
+      "r2_full": 0.4516,
+      "idio_vol_weekly_full": 0.0346,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "NLG": {
+      "beta_full": 1.2755,
+      "beta_ewma": 0.986,
+      "beta_stress": 1.6759,
+      "vol_weekly_full": 0.0562,
+      "vol_weekly_stress": 0.0816,
+      "vol_annual_full": 0.4051,
+      "r2_full": 0.3621,
+      "idio_vol_weekly_full": 0.045,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "DXG": {
+      "beta_full": 1.7069,
+      "beta_ewma": 1.2415,
+      "beta_stress": 2.2304,
+      "vol_weekly_full": 0.0688,
+      "vol_weekly_stress": 0.108,
+      "vol_annual_full": 0.4964,
+      "r2_full": 0.432,
+      "idio_vol_weekly_full": 0.052,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "KDH": {
+      "beta_full": 1.223,
+      "beta_ewma": 0.9577,
+      "beta_stress": 1.5065,
+      "vol_weekly_full": 0.0475,
+      "vol_weekly_stress": 0.0687,
+      "vol_annual_full": 0.3423,
+      "r2_full": 0.4664,
+      "idio_vol_weekly_full": 0.0347,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "SSI": {
+      "beta_full": 1.4662,
+      "beta_ewma": 1.272,
+      "beta_stress": 1.7091,
+      "vol_weekly_full": 0.0534,
+      "vol_weekly_stress": 0.0877,
+      "vol_annual_full": 0.3849,
+      "r2_full": 0.5299,
+      "idio_vol_weekly_full": 0.0367,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "HPG": {
+      "beta_full": 1.2547,
+      "beta_ewma": 0.9392,
+      "beta_stress": 1.7229,
+      "vol_weekly_full": 0.0471,
+      "vol_weekly_stress": 0.0869,
+      "vol_annual_full": 0.3394,
+      "r2_full": 0.4993,
+      "idio_vol_weekly_full": 0.0334,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "MWG": {
+      "beta_full": 1.291,
+      "beta_ewma": 1.0804,
+      "beta_stress": 1.5484,
+      "vol_weekly_full": 0.0511,
+      "vol_weekly_stress": 0.0777,
+      "vol_annual_full": 0.3686,
+      "r2_full": 0.4482,
+      "idio_vol_weekly_full": 0.038,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "FPT": {
+      "beta_full": 0.7203,
+      "beta_ewma": 0.6644,
+      "beta_stress": 0.7064,
+      "vol_weekly_full": 0.0379,
+      "vol_weekly_stress": 0.0411,
+      "vol_annual_full": 0.2732,
+      "r2_full": 0.2539,
+      "idio_vol_weekly_full": 0.0328,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "PLX": {
+      "beta_full": 0.9355,
+      "beta_ewma": 0.7502,
+      "beta_stress": 1.1972,
+      "vol_weekly_full": 0.049,
+      "vol_weekly_stress": 0.0609,
+      "vol_annual_full": 0.3534,
+      "r2_full": 0.2559,
+      "idio_vol_weekly_full": 0.0424,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "VNM": {
+      "beta_full": 0.4735,
+      "beta_ewma": 0.4424,
+      "beta_stress": 0.4512,
+      "vol_weekly_full": 0.0286,
+      "vol_weekly_stress": 0.0356,
+      "vol_annual_full": 0.2066,
+      "r2_full": 0.1919,
+      "idio_vol_weekly_full": 0.0258,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "GMD": {
+      "beta_full": 0.7066,
+      "beta_ewma": 0.7258,
+      "beta_stress": 0.4507,
+      "vol_weekly_full": 0.0419,
+      "vol_weekly_stress": 0.0455,
+      "vol_annual_full": 0.3023,
+      "r2_full": 0.1995,
+      "idio_vol_weekly_full": 0.0376,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    },
+    "NT2": {
+      "beta_full": 0.6064,
+      "beta_ewma": 0.3795,
+      "beta_stress": 0.8431,
+      "vol_weekly_full": 0.038,
+      "vol_weekly_stress": 0.0613,
+      "vol_annual_full": 0.2744,
+      "r2_full": 0.1784,
+      "idio_vol_weekly_full": 0.0346,
+      "n_obs": 243,
+      "n_obs_stress": 39
+    }
+  },
+  "sector_corr": {
+    "names": [
+      "VNINDEX",
+      "Banks",
+      "RealEstate",
+      "Securities"
+    ],
+    "constituents": {
+      "Banks": [
+        "MBB",
+        "VPB",
+        "SHB"
+      ],
+      "RealEstate": [
+        "NLG",
+        "DXG",
+        "KDH"
+      ],
+      "Securities": [
+        "SSI"
+      ]
+    },
+    "full": [
+      [
+        1.0,
+        0.8092,
+        0.7262,
+        0.728
+      ],
+      [
+        0.8092,
+        1.0,
+        0.6385,
+        0.6948
+      ],
+      [
+        0.7262,
+        0.6385,
+        1.0,
+        0.6559
+      ],
+      [
+        0.728,
+        0.6948,
+        0.6559,
+        1.0
+      ]
+    ],
+    "stress": [
+      [
+        1.0,
+        0.8971,
+        0.8649,
+        0.743
+      ],
+      [
+        0.8971,
+        1.0,
+        0.7968,
+        0.7571
+      ],
+      [
+        0.8649,
+        0.7968,
+        1.0,
+        0.761
+      ],
+      [
+        0.743,
+        0.7571,
+        0.761,
+        1.0
+      ]
+    ]
+  },
+  "data_notes": [
+    "VNINDEX 2025-01-02 holiday-split bar merged into 2024-12-30 week to match stock bars",
+    "VPB: dropped non-common dates ['2022-01-10']",
+    "SHB: dropped non-common dates ['2022-01-10']",
+    "NLG: dropped non-common dates ['2022-01-10']",
+    "DXG: dropped non-common dates ['2022-01-10']",
+    "KDH: dropped non-common dates ['2022-01-10']",
+    "SSI: dropped non-common dates ['2022-01-10']",
+    "HPG: dropped non-common dates ['2022-01-10']",
+    "MWG: dropped non-common dates ['2022-01-10']",
+    "FPT: dropped non-common dates ['2022-01-10']",
+    "PLX: dropped non-common dates ['2022-01-10']",
+    "VNM: dropped non-common dates ['2022-01-10']",
+    "GMD: dropped non-common dates ['2022-01-10']",
+    "NT2: dropped non-common dates ['2022-01-10']",
+    "Fetched countBack=246 (16 more than requested 230) so the window covers the 2022-04-01 stress start; partial week 2026-10-12 excluded (as_of 2026-10-09)"
+  ]
+}

@@ -10,7 +10,7 @@ export const TYPE_KEYWORDS: Partial<Record<EventType, string[]>> = {
   commodity: ['giá vàng', 'vàng miếng', 'vàng sjc', 'giá dầu', 'dầu thô', 'giá thép', 'giá cà phê', 'hàng hóa'],
   fiscal_tax: ['thuế', 'ngân sách', 'đầu tư công', 'giải ngân', 'bộ tài chính'],
   sector_regulation: ['dự thảo', 'nghị định', 'thông tư', 'luật', 'quy định mới', 'ủy ban chứng khoán', 'ubcknn', 'siết'],
-  global_macro: ['fed', 'cục dự trữ liên bang', 'kinh tế mỹ', 'trung quốc', 'nâng hạng', 'ftse', 'msci', 'thuế quan', 'lạm phát mỹ', 'ecb'],
+  global_macro: ['fed', 'cục dự trữ liên bang', 'kinh tế mỹ', 'trung quốc', 'nâng hạng', 'ftse', 'msci', 'thuế quan', 'lạm phát mỹ', 'ecb', 'federal open market committee', 'fomc', 'monetary policy', 'federal funds', 'interest rate', 'opec', 'kinh tế thế giới'],
   corporate: ['phát hành', 'cổ tức', 'lợi nhuận', 'kết quả kinh doanh', 'trái phiếu doanh nghiệp', 'sáp nhập', 'mua lại', 'đại hội cổ đông', 'chào bán'],
   geopolitical: ['xung đột', 'chiến tranh', 'căng thẳng địa chính trị', 'lệnh trừng phạt'],
 }
@@ -33,4 +33,15 @@ export function classifyNews(item: { title: string; summary: string }, tickers: 
   const market = MARKET.filter(k => text.includes(k))
   const found = tickers.filter(t => new RegExp(`(^|[^A-Z0-9])${t}([^A-Z0-9]|$)`).test(raw))
   return { relevance: best.n + market.length + found.length, suggested_type: best.n ? best.type : found.length ? 'corporate' : 'global_macro', keywords: [...new Set([...hits, ...market])].slice(0, 8), tickers: found }
+}
+
+// Loại nguồn tin theo thiết kế ba nguồn: quốc tế, trong nước (độc quyền do Khối Nghiên cứu nạp riêng, không qua đây)
+export type NewsOrigin = 'global' | 'local' | 'exclusive'
+const GLOBAL_HINTS = ['fed', 'mỹ', 'trung quốc', 'châu âu', 'nhật bản', 'thế giới', 'toàn cầu', 'quốc tế', 'ecb', 'opec', 'brent', 'dxy', 'phố wall', 'federal', 'fomc', 'ấn độ', 'eu ', ' nga ', 'trump']
+const LOCAL_HINTS = ['việt nam', 'nhnn', 'ngân hàng nhà nước', 'vn-index', 'vnindex', 'hose', 'hnx', 'tp.hcm', 'hà nội', 'trong nước', 'chính phủ', 'bộ tài chính', 'sjc']
+export function classifyOrigin(item: { title: string; summary: string }, feedOrigin?: NewsOrigin): NewsOrigin {
+  if (feedOrigin === 'global' || feedOrigin === 'exclusive') return feedOrigin
+  const t = norm(item.title), all = norm(`${item.title} ${item.summary}`)
+  if (LOCAL_HINTS.some(k => all.includes(k))) return 'local'
+  return GLOBAL_HINTS.some(k => t.includes(k)) ? 'global' : 'local'
 }

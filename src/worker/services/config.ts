@@ -3,6 +3,8 @@ import { DEFAULT_ASSUMPTIONS, DEFAULT_BANNED_PHRASES, DEFAULT_THRESHOLDS, DEFAUL
 import { SEED } from '../../data/seed'
 import { DEFAULT_MODELS, DEFAULT_PROMPTS } from '../../agents/prompts'
 import { DEFAULT_NEWS_SOURCES } from '../../news/sources'
+import { DEFAULT_FACTOR_MODEL } from '../../data/factorModel'
+import type { FactorModel } from '../../engine/scenario'
 import { actor, HttpError, minReason, requireRole, type AppCtx, type Role } from '../ctx'
 import type { UnitOfWork } from '../db'
 
@@ -19,6 +21,7 @@ export const CONFIG_KINDS = {
   ONEMOUNT_CONFIRM: { label: 'Tuân thủ xác nhận căn cứ chia sẻ dữ liệu với One Mount (BR-22)', owner: 'COMPLIANCE', twoPerson: false },
   SYMBOL_MAP: { label: 'Bảng ánh xạ mã công cụ sang mã thị trường', owner: 'ADMIN', twoPerson: false },
   NEWS_SOURCES: { label: 'Nguồn tin cấu hình', owner: 'ADMIN', twoPerson: false },
+  FACTOR_MODEL: { label: 'Mô hình yếu tố rủi ro: thư viện cú sốc, tương quan, độ nhạy', owner: 'CIO', twoPerson: false },
 } as const satisfies Record<string, { label: string; owner: Role; twoPerson: boolean }>
 export type ConfigKind = keyof typeof CONFIG_KINDS
 
@@ -37,6 +40,7 @@ export function initialConfigs(now: string): ConfigVersion[] {
     base('PRICE_SOURCE', { agreements: { TCBS_STOCK: null, TCBS_BOND: null, ONEMOUNT: null } }),
     base('ONEMOUNT_CONFIRM', { confirmed: false }),
     base('SYMBOL_MAP', {}), base('NEWS_SOURCES', DEFAULT_NEWS_SOURCES),
+    { ...base('FACTOR_MODEL', DEFAULT_FACTOR_MODEL), reason: 'Mô hình yếu tố mặc định: beta cổ phiếu ước lượng từ giá tuần TCBS 2022–2026; các yếu tố khác là giả định minh họa chờ CIO hiệu chỉnh' },
   ]
 }
 
@@ -75,6 +79,13 @@ export async function loadConfigs(ctx: AppCtx): Promise<Configs> {
   }
 }
 
+// Mô hình yếu tố đang hiệu lực; cơ sở dữ liệu cũ chưa có thì dùng bản mặc định (ghi rõ id)
+export async function loadFactorModel(ctx: AppCtx): Promise<{ id: string; model: FactorModel }> {
+  const rows = await ctx.repo.list<ConfigVersion>('config_versions', "kind = 'FACTOR_MODEL' AND status = 'ACTIVE'", [], 'seq DESC')
+  if (rows.length) return { id: rows[0].id, model: rows[0].content as FactorModel }
+  return { id: 'DEFAULT-FACTOR_MODEL', model: DEFAULT_FACTOR_MODEL as unknown as FactorModel }
+}
+
 export function activeRestricted(cfg: Configs, date: string) {
   const d = date.slice(0, 10)
   return cfg.restricted.filter(r => r.valid_from <= d && d <= r.valid_to)
@@ -87,6 +98,13 @@ function validateContent(kind: ConfigKind, content: unknown) {
     const c = content as Configs['unit']
     if (!c?.u || !c?.u_fx) bad('cần u và u_fx')
     for (const [k, v] of [...Object.entries(c.u), ...Object.entries(c.u_fx)]) if (!isNum(v) || Number(v) < 0) bad(`${k} phải là số thập phân không âm (ví dụ "0.025")`)
+  }
+  if (kind === 'FACTOR_MODEL') {
+    const c = content as FactorModel
+    if (!Array.isArray(c?.factors) || !c.corr?.calm || !c.corr?.stress) bad('cần factors, corr.calm, corr.stress')
+    const n = c.factors.length
+    for (const r of ['calm', 'stress'] as const) if (c.corr[r].length !== n || c.corr[r].some(row => row.length !== n)) bad(`ma trận tương quan ${r} phải ${n}×${n}`)
+    for (const f of c.factors) if (!f.library || !['S', 'M', 'L'].every(k => typeof f.library[k as 'S'] === 'number')) bad(`yếu tố ${f.id} thiếu thư viện cú sốc S/M/L`)
   }
   if (kind === 'BANNED' && !(Array.isArray(content) && content.every(x => typeof x === 'string'))) bad('cần danh sách chuỗi')
   if (kind === 'WHITELIST' && !(Array.isArray(content) && content.every(x => typeof (x as { domain?: unknown }).domain === 'string'))) bad('mỗi mục cần domain')
