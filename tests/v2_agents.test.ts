@@ -88,3 +88,17 @@ describe('Nhánh kịch bản trong nhận định → dải tác động cho 20
     expect((await h.call('CIO1', 'POST', '/api/manual-apply', { event_id: 'EV-2026-0002', view: { ...view, scenarios: bad } })).status).toBe(422)
   })
 })
+
+describe('Đề xuất cấu hình từ bản mặc định mới (chủ sở hữu tự lưu kèm lý do)', () => {
+  const h = harness()
+  beforeAll(async () => { const r = await h.call(null, 'POST', '/api/bootstrap'); if (r.status >= 400) throw new Error(JSON.stringify(r.data)) })
+  it('Quản trị lấy đề xuất nguồn tin có nguồn quốc tế; RM không được', async () => {
+    const d = await h.ok('ADM1', 'GET', '/api/config/defaults/NEWS_SOURCES')
+    expect(d.some((x: any) => x.url.includes('federalreserve.gov') && x.origin === 'global')).toBe(true)
+    expect((await h.call('RM1', 'GET', '/api/config/defaults/NEWS_SOURCES')).status).toBe(403)
+    const w = await h.ok('CMP1', 'GET', '/api/config/defaults/WHITELIST')
+    expect(w.some((x: any) => x.domain === 'federalreserve.gov')).toBe(true)
+    const fm = await h.ok('CIO1', 'GET', '/api/config/defaults/FACTOR_MODEL')
+    expect(fm.factors.length).toBe(15)
+  })
+})

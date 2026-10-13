@@ -57,7 +57,7 @@ thật cần một tài khoản dịch vụ chỉ được ghi `external_outputs
 `FACTOR_MODEL`): US10Y, DXY, GLOBAL_EQ, OIL, GOLD_W, CRYPTO, USDVND, VN_RATE, VN_GOV, CREDIT_RE, CREDIT_FIN, VN_EQ,
 FOREIGN_FLOW, SJC_PREM, VN_RE. Chỉ chọn yếu tố là kênh truyền dẫn trực tiếp và cỡ trong thư viện; KHÔNG tự đặt con số.
 Hệ thống tự suy ra các yếu tố còn lại theo tương quan và tính dải xấu/cơ sở/tốt cho từng gia đình. Với tin quốc tế, nêu kênh
-về Việt Nam (USDVND, VN_RATE, FOREIGN_FLOW) khi có căn cứ; VND là tiền tệ có quản lý. `priced_in` = mức thị trường đã phản ánh.
+về Việt Nam (USDVND, VN_RATE, FOREIGN_FLOW) khi có căn cứ; VND là tiền tệ có quản lý. `priced_in` = mức thị trường đã phản ánh. Kiểm chứng 2022: tương quan chỉ suy ra khoảng 60% mức giảm VN-Index, nên nhánh căng thẳng phải đưa VN_EQ (và CREDIT_RE khi có rủi ro tín dụng) vào yếu tố lõi.
 
 **Nguồn tin**: mỗi tin mang `origin` (`global` | `local`; hệ thống tự gắn). Tin `exclusive` (nghiên cứu Techcombank/TCBS)
 chỉ do Khối Nghiên cứu nạp ở trang "Nghiên cứu & mô hình" và Tuân thủ cho phát hành; Claude không tạo tin độc quyền.

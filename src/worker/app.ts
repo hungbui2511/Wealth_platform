@@ -11,7 +11,7 @@ import { redactForRm } from './services/redact'
 import { reseed } from './services/admin'
 import { ConflictError } from './db'
 import { authenticate, authMode, verifiedEmail, roleMap } from './auth'
-import { CONFIG_KINDS, decideConfig, loadConfigs, loadFactorModel, proposeConfig, redactConfig, activeConfig, type ConfigKind, type ConfigVersion } from './services/config'
+import { CONFIG_KINDS, decideConfig, defaultProposal, loadConfigs, loadFactorModel, proposeConfig, redactConfig, activeConfig, type ConfigKind, type ConfigVersion } from './services/config'
 import { createEvent, createEventFromNews, loadSampleEvents, allowEvent, getEvent, eventNews, setTimestamp, type EventRec } from './services/events'
 import { dismissNews, ingestNews, newsInbox } from './services/ingest'
 import { createPriceSnapshot, currentSnapshot, familyCashflow, familyGoals, familyOverview, familyPnl, PRICE_DATE } from './services/portfolio'
@@ -193,6 +193,7 @@ export function createApp(opts: AppOptions = {}) {
     const all = await ctx.repo.list<ConfigVersion>('config_versions', '', [], 'kind, seq DESC')
     return c.json({ kinds: CONFIG_KINDS, versions: all.map(v => redactConfig(ctx, v)) })
   })
+  app.get('/api/config/defaults/:kind', async c => c.json(await defaultProposal(X(c), c.req.param('kind') as ConfigKind)))
   app.post('/api/config/:kind', async c => { const b = await body<{ content: unknown; reason: string }>(c); return c.json(redactConfig(X(c), await proposeConfig(X(c), c.req.param('kind') as ConfigKind, b.content, b.reason))) })
   app.post('/api/config/versions/:id/decision', async c => { const b = await body<{ approve: boolean; reason: string }>(c); return c.json(await decideConfig(X(c), c.req.param('id'), !!b.approve, b.reason)) })
   app.get('/api/audit', async c => c.json(await auditList(X(c), { object: c.req.query('object'), action: c.req.query('action'), limit: Number(c.req.query('limit') ?? 200) })))

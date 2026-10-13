@@ -26,7 +26,7 @@ export default function Config() {
       <Note>Mọi thay đổi tạo phiên bản mới, không sửa đè, lý do tối thiểu 20 ký tự và được ghi nhật ký. CIO sở hữu bảng u, ngưỡng và giả định dài hạn; Tuân thủ sở hữu cụm từ cấm, nguồn công khai, danh sách hạn chế; Quản trị đề xuất prompt và mô hình, chỉ có hiệu lực sau khi Tuân thủ xác nhận.</Note>
       <ErrorBox error={err} />
       <div className="flex flex-wrap gap-1">{Object.entries(data.kinds).map(([k, m]: any) => <button key={k} onClick={() => { setKind(k); setDraft(null) }} className={`px-2.5 py-1 rounded-md text-[13px] border ${kind === k ? 'border-primary text-fg' : 'border-border text-fgm'}`}>{m.label}</button>)}</div>
-      <Card title={meta.label} actions={<><Badge>Chủ sở hữu: {ROLE_LABEL[meta.owner]}</Badge>{meta.twoPerson && <Badge tone="amber">Quy trình hai người</Badge>}{canEdit && draft === null && <Btn small onClick={() => setDraft(JSON.stringify(active?.content ?? null, null, 2))}>Đề xuất phiên bản mới</Btn>}</>}>
+      <Card title={meta.label} actions={<><Badge>Chủ sở hữu: {ROLE_LABEL[meta.owner]}</Badge>{meta.twoPerson && <Badge tone="amber">Quy trình hai người</Badge>}{canEdit && draft === null && ['NEWS_SOURCES', 'WHITELIST', 'FACTOR_MODEL'].includes(kind) && <Btn small kind="secondary" onClick={act(async () => { const d = await api(`/api/config/defaults/${kind}`); setTimeout(() => setDraft(JSON.stringify(d, null, 2)), 0) })}>Nạp đề xuất từ bản mặc định mới</Btn>}{canEdit && draft === null && <Btn small onClick={() => setDraft(JSON.stringify(active?.content ?? null, null, 2))}>Đề xuất phiên bản mới</Btn>}</>}>
         {kind === 'UNIT' && active && draft === null && <UnitTable c={active.content} />}
         {draft !== null ? (
           <div className="space-y-2">

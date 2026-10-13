@@ -2,7 +2,7 @@
 import { DEFAULT_ASSUMPTIONS, DEFAULT_BANNED_PHRASES, DEFAULT_THRESHOLDS, DEFAULT_UNIT_TABLE } from '../../shared/catalog'
 import { SEED } from '../../data/seed'
 import { DEFAULT_MODELS, DEFAULT_PROMPTS } from '../../agents/prompts'
-import { DEFAULT_NEWS_SOURCES } from '../../news/sources'
+import { DEFAULT_NEWS_SOURCES, PUBLIC_DOMAINS } from '../../news/sources'
 import { DEFAULT_FACTOR_MODEL } from '../../data/factorModel'
 import type { FactorModel } from '../../engine/scenario'
 import { actor, HttpError, minReason, requireRole, type AppCtx, type Role } from '../ctx'
@@ -31,11 +31,17 @@ export interface ConfigVersion {
   reason: string; effective_at?: string
 }
 
+function mergedWhitelist(): { domain: string; name: string }[] {
+  const list = [...(SEED.whitelist as { domain: string; name: string }[])]
+  for (const d of PUBLIC_DOMAINS) if (!list.some(x => x.domain === d.domain)) list.push(d)
+  return list
+}
+
 export function initialConfigs(now: string): ConfigVersion[] {
   const base = (kind: ConfigKind, content: unknown): ConfigVersion => ({ id: `CFG-${kind}-1`, kind, seq: 1, status: 'ACTIVE', created_at: now, effective_at: now, content, proposed_by: 'SYSTEM:seed', reason: 'Giá trị khởi tạo minh họa từ BRD Mục 7.1' })
   return [
     base('UNIT', DEFAULT_UNIT_TABLE), base('THRESHOLD', DEFAULT_THRESHOLDS), base('ASSUMPTION', DEFAULT_ASSUMPTIONS),
-    base('BANNED', DEFAULT_BANNED_PHRASES), base('WHITELIST', SEED.whitelist), base('RESTRICTED', SEED.restricted),
+    base('BANNED', DEFAULT_BANNED_PHRASES), base('WHITELIST', mergedWhitelist()), base('RESTRICTED', SEED.restricted),
     base('PROMPT', DEFAULT_PROMPTS), base('MODEL', DEFAULT_MODELS),
     base('PRICE_SOURCE', { agreements: { TCBS_STOCK: null, TCBS_BOND: null, ONEMOUNT: null } }),
     base('ONEMOUNT_CONFIRM', { confirmed: false }),
@@ -155,4 +161,24 @@ export function redactConfig(ctx: AppCtx, v: ConfigVersion): ConfigVersion {
   if (v.kind === 'RESTRICTED' && ctx.user.role === 'RM') return { ...v, content: [] }
   if (v.kind === 'RESTRICTED' && ctx.user.role !== 'COMPLIANCE') return { ...v, content: (v.content as Configs['restricted']).map(({ reason, ...r }) => r) }
   return v
+}
+
+// Bản đề xuất từ mặc định mới nhất (để chủ sở hữu xem rồi tự lưu kèm lý do): gộp phần mới vào cấu hình đang hiệu lực
+export async function defaultProposal(ctx: AppCtx, kind: ConfigKind): Promise<unknown> {
+  const meta = CONFIG_KINDS[kind]
+  if (!meta) throw new HttpError(404, `Loại cấu hình không tồn tại: ${kind}`)
+  requireRole(ctx, meta.owner)
+  const cur = (await ctx.repo.list<ConfigVersion>('config_versions', "kind = ? AND status = 'ACTIVE'", [kind], 'seq DESC'))[0]?.content
+  if (kind === 'NEWS_SOURCES') {
+    const list = [...((cur as { name: string; url: string; origin?: string }[]) ?? [])]
+    for (const d of DEFAULT_NEWS_SOURCES) { const i = list.findIndex(x => x.url === d.url); if (i < 0) list.push(d); else if (d.origin && !list[i].origin) list[i] = { ...list[i], origin: d.origin } }
+    return list
+  }
+  if (kind === 'WHITELIST') {
+    const list = [...((cur as { domain: string; name: string }[]) ?? [])]
+    for (const d of mergedWhitelist()) if (!list.some(x => x.domain === d.domain)) list.push(d)
+    return list
+  }
+  if (kind === 'FACTOR_MODEL') return DEFAULT_FACTOR_MODEL
+  throw new HttpError(422, `Không có bản mặc định đề xuất cho ${kind}`)
 }

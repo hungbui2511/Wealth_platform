@@ -71,7 +71,7 @@ export function ScenarioPanel({ viewId, scenarios, preview, editable, newsIds, o
         <div className="flex flex-wrap gap-2 items-center mb-2 text-[13px]"><span className="text-fgm">Cú sốc lan truyền theo tương quan (máy tính, không phải AI):</span>
           {[{ id: 'expected', label: 'Kỳ vọng theo xác suất' }, ...preview.branches.map((b: any) => ({ id: b.id, label: `${b.id} – ${b.name}` }))].map(o => <button key={o.id} onClick={() => setSel(o.id)} className={`border rounded px-2 py-0.5 ${sel === o.id ? 'border-primary text-fg' : 'border-border text-fgm'}`}>{o.label}</button>)}</div>
         {shown && <ShockBars shocks={shown.shocks} core={shown.core} />}
-        <p className="text-fgm text-xs mt-2">Yếu tố lõi do agent chọn, cỡ cú sốc lấy từ thư viện CIO duyệt. Các yếu tố còn lại suy ra bằng kỳ vọng có điều kiện trên ma trận tương quan {preview.model_id} (beta cổ phiếu ước lượng từ giá tuần TCBS 2022–2026; các tương quan khác là giả định chờ hiệu chỉnh). Độ dài thanh tính theo độ lệch chuẩn tuần của từng yếu tố.</p>
+        <p className="text-fgm text-xs mt-2">Yếu tố lõi do agent chọn, cỡ cú sốc lấy từ thư viện CIO duyệt. Các yếu tố còn lại suy ra bằng kỳ vọng có điều kiện trên ma trận tương quan {preview.model_id} (ước lượng từ dữ liệu tháng 2022–2026 cho lợi suất Mỹ, USD, cổ phiếu, dầu, vàng, tỷ giá, lãi suất NHNN, VN-Index, chênh lệch SJC; beta cổ phiếu từ giá tuần TCBS; phần còn lại là giả định). Độ dài thanh tính theo độ lệch chuẩn tháng của từng yếu tố.</p>
       </div>}
       {preview?.error && <ErrorBox error={{ message: preview.error }} />}
     </Card>
