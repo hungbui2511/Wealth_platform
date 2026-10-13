@@ -126,7 +126,7 @@ export async function setTimestamp(ctx: AppCtx, id: string, field: TimestampFiel
 
 // Lập sự kiện từ tin trong hộp tin mới (tin lấy tự động): CIO hoặc Quản trị chọn tin, loại sự kiện và tiêu đề.
 // Tin giữ nguyên mã, chỉ gắn vào sự kiện; kiểm soát nguồn công khai (BR-26) và danh sách hạn chế (BR-27) chạy lại.
-export async function createEventFromNews(ctx: AppCtx, input: { news_ids: string[]; type: string; title?: string }) {
+export async function createEventFromNews(ctx: AppCtx, input: { news_ids: string[]; type: string; title?: string; origin?: NewsOrigin }) {
   requireRole(ctx, 'CIO', 'ADMIN')
   if (!EVENT_TYPES.includes(input.type as never)) throw new HttpError(422, `Loại sự kiện không hợp lệ: ${input.type}`)
   const ids = [...new Set(input.news_ids ?? [])]
@@ -153,7 +153,8 @@ export async function createEventFromNews(ctx: AppCtx, input: { news_ids: string
     ...(hits.length ? { hold: { status: 'PENDING' as const, entries: hits.map(h => ({ id: h.id, issuer: h.issuer })) } } : {}),
   }
   const u = ctx.uow()
-  for (const n of news) u.update('news_items', { ...n, event_id: id } as never)
+  // Tin cũ chưa có nhãn nguồn: gắn theo chỉ định (nếu có) hoặc theo phân loại từ khóa
+  for (const n of news) u.update('news_items', { ...n, event_id: id, origin: n.origin ?? (input.origin && input.origin !== 'exclusive' ? input.origin : classifyOrigin(n)) } as never)
   u.insert('events', ev as never)
   u.audit({ actor: actor(ctx), action: 'event.created', object: id, data: { type: ev.type, from_inbox: true, news: news.map(n => ({ id: n.id, url: n.url, published_at: n.published_at })), restricted_hold: ev.hold ?? null } })
   await u.commit()

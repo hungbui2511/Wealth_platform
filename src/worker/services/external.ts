@@ -93,7 +93,7 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     }
     if (!await claim(ctx, r)) continue
     try {
-      const { event } = await createEventFromNews(ctx, { news_ids: free.map(f => f.id), type: r.data.type, title: r.data.title })
+      const { event } = await createEventFromNews(ctx, { news_ids: free.map(f => f.id), type: r.data.type, title: r.data.title, ...(r.data.origin === 'global' || r.data.origin === 'local' ? { origin: r.data.origin } : {}) })
       await mark(ctx, r, { status: 'IMPORTED', result: { event_id: event.id, news_ids: free.map(f => f.id), missing_urls: urls.filter(u => !found.some(f => f.u === u)) } })
       report.events.push(event.id)
     } catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e) }) }
