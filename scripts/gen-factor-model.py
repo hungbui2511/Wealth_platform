@@ -14,14 +14,14 @@ F = [
  ('GOLD_W', 'Giá vàng thế giới (USD)',        '%', 'global', 1.8, 2.6, [2, 5, 10], [0.8, 1, 1]),
  ('CRYPTO', 'Bitcoin (USD)',                  '%', 'global', 8.0, 12.0, [8, 20, 40], [0.9, 1, 1]),
  ('USDVND', 'Tỷ giá USD/VND',                 '%', 'local', 0.3, 0.6, [0.5, 1.5, 3], [0.4, 0.9, 1]),
- ('VN_RATE','Lãi suất VND (điều hành, liên ngân hàng)', 'bp', 'local', 8, 25, [25, 50, 100], [0.3, 0.8, 1]),
- ('VN_GOV', 'Lợi suất trái phiếu Chính phủ VN', 'bp', 'local', 5, 12, [15, 30, 60], [0.3, 0.8, 1]),
- ('CREDIT_RE','Chênh lệch tín dụng DN bất động sản', 'bp', 'local', 15, 60, [50, 150, 300], [0.2, 0.7, 1]),
- ('CREDIT_FIN','Chênh lệch tín dụng DN tài chính, ngân hàng', 'bp', 'local', 6, 20, [20, 50, 100], [0.2, 0.7, 1]),
+ ('VN_RATE','Lãi suất VND (điều hành, liên ngân hàng)', 'bp', 'local', 15, 40, [25, 50, 100], [0.3, 0.8, 1]),
+ ('VN_GOV', 'Lợi suất trái phiếu Chính phủ VN', 'bp', 'local', 10, 20, [15, 30, 60], [0.3, 0.8, 1]),
+ ('CREDIT_RE','Chênh lệch tín dụng DN bất động sản', 'bp', 'local', 40, 100, [50, 150, 300], [0.2, 0.7, 1]),
+ ('CREDIT_FIN','Chênh lệch tín dụng DN tài chính, ngân hàng', 'bp', 'local', 15, 40, [20, 50, 100], [0.2, 0.7, 1]),
  ('VN_EQ',  'Thị trường cổ phiếu VN (VN-Index)', '%', 'local', est['index']['vol_weekly_full']*100, est['index']['vol_weekly_stress']*100, [3, 7, 15], [0.7, 1, 1]),
  ('FOREIGN_FLOW','Dòng vốn ngoại trên HOSE', 'σ', 'local', 1.0, 1.5, [1, 2, 3], [0.7, 1, 1]),
  ('SJC_PREM','Chênh lệch giá vàng SJC so với thế giới', 'điểm %', 'local', 1.0, 2.0, [2, 4, 8], [0.6, 1, 1]),
- ('VN_RE',  'Giá bất động sản nhà ở VN',      '%', 'local', 0.4, 0.8, [1, 3, 6], [0.0, 0.3, 1]),
+ ('VN_RE',  'Giá bất động sản nhà ở VN',      '%', 'local', 1.0, 2.0, [1, 3, 6], [0.0, 0.3, 1]),
 ]
 ids = [f[0] for f in F]; n = len(F); ix = {k: i for i, k in enumerate(ids)}
 C = np.eye(n)
@@ -32,7 +32,7 @@ pairs = {  # tương quan chế độ bình thường (giả định có lý do;
  ('VN_EQ','VN_RATE'): -.25, ('VN_EQ','GLOBAL_EQ'): .35, ('VN_EQ','CREDIT_RE'): -.30, ('VN_EQ','CREDIT_FIN'): -.20,
  ('CRYPTO','GLOBAL_EQ'): .40, ('OIL','GLOBAL_EQ'): .20, ('SJC_PREM','USDVND'): .20, ('VN_RE','VN_RATE'): -.20,
  ('VN_RE','CREDIT_RE'): -.30, ('VN_RE','VN_EQ'): .20, ('FOREIGN_FLOW','USDVND'): -.40, ('FOREIGN_FLOW','DXY'): -.30,
- ('FOREIGN_FLOW','GLOBAL_EQ'): .25, ('US10Y','VN_GOV'): .20, ('VN_EQ','US10Y'): -.15, ('OIL','US10Y'): .15,
+ ('FOREIGN_FLOW','GLOBAL_EQ'): .25, ('US10Y','VN_GOV'): .20, ('VN_EQ','US10Y'): -.15, ('OIL','US10Y'): .15, ('GLOBAL_EQ','CREDIT_RE'): -.10, ('GLOBAL_EQ','CREDIT_FIN'): -.10,
 }
 def build(scale, override):
     M = np.eye(n)
@@ -82,7 +82,8 @@ model = {
   {'id': 'VN-2025-04', 'label': 'Cú sốc thuế quan Mỹ (28/3–11/4/2025)', 'moves': {'VN_EQ': -7.21}, 'sources': {'VN_EQ': 'TCBS giá tuần VNINDEX'}},
  ],
  'sources': ['Cổ phiếu VN: hồi quy giá tuần TCBS (tcinvest getLongTermCandleChart) 01/2022–10/2026; beta bình thường = trọng số mũ nửa đời 52 tuần, beta căng thẳng = 4–12/2022',
-             'Các yếu tố còn lại: độ biến động và tương quan là giả định minh họa có lý do, chờ ước lượng từ dữ liệu NHNN, lợi suất, tỷ giá, vàng'],
+             'Các yếu tố còn lại: độ biến động và tương quan là giả định minh họa có lý do, chờ ước lượng từ dữ liệu NHNN, lợi suất, tỷ giá, vàng',
+             'Yếu tố biến động chậm (lãi suất VND, lợi suất TPCP, chênh lệch tín dụng, giá BĐS) dùng biến động quy về khung khoảng 1 tháng để cùng thang với thư viện cú sốc'],
 }
 out = root / 'src/data/factorModel.ts'
 out.write_text('// Sinh bởi scripts/gen-factor-model.py. Mô hình yếu tố rủi ro mặc định; CIO duyệt và hiệu chỉnh qua cấu hình FACTOR_MODEL.\n'
