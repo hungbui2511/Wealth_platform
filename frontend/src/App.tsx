@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
-import { BookOpen, Bot, ClipboardCheck, Database, FileText, Gauge, Landmark, LogOut, Newspaper, Radar, ScrollText, Settings, Users } from 'lucide-react'
+import { BookOpen, Bot, ClipboardCheck, Database, FileText, Gauge, Landmark, LibraryBig, LogOut, Newspaper, Radar, ScrollText, Settings, Users } from 'lucide-react'
 import { api, getUserId, setUserId, stepLabel } from './api'
 import { Badge, Btn, Card, ErrorBox, Loading } from './ui'
 import Home from './pages/Home'
@@ -18,6 +18,7 @@ import Audit from './pages/Audit'
 import Trace from './pages/Trace'
 import Agents from './pages/Agents'
 import Prices from './pages/Prices'
+import Research from './pages/Research'
 
 export interface User { id: string; name: string; role: 'CIO' | 'RM' | 'COMPLIANCE' | 'ADMIN'; families: string[] }
 const Ctx = createContext<{ user: User; logout: () => void }>(null as never)
@@ -29,6 +30,7 @@ const NAV: { to: string; label: string; icon: typeof Gauge; roles: string[] }[] 
   { to: '/families', label: 'Gia đình', icon: Users, roles: ['CIO', 'RM', 'COMPLIANCE', 'ADMIN'] },
   { to: '/events', label: 'Sự kiện', icon: Newspaper, roles: ['CIO', 'COMPLIANCE', 'ADMIN'] },
   { to: '/desk', label: 'Bàn duyệt CIO', icon: ClipboardCheck, roles: ['CIO', 'COMPLIANCE'] },
+  { to: '/research', label: 'Nghiên cứu & mô hình', icon: LibraryBig, roles: ['CIO', 'COMPLIANCE', 'ADMIN'] },
   { to: '/runs', label: 'Lần áp dụng', icon: Landmark, roles: ['CIO', 'COMPLIANCE', 'ADMIN'] },
   { to: '/radar', label: 'Radar chính sách', icon: Radar, roles: ['CIO', 'RM', 'COMPLIANCE', 'ADMIN'] },
   { to: '/releases', label: 'Bản tin CIO', icon: FileText, roles: ['CIO', 'COMPLIANCE'] },
@@ -144,6 +146,7 @@ export default function App() {
                 <Route path="/trace/:runId/:familyId" element={<Trace />} />
                 <Route path="/agents" element={<Agents />} />
                 <Route path="/prices" element={<Prices />} />
+                <Route path="/research" element={<Research />} />
                 <Route path="*" element={<Navigate to="/" />} />
               </Routes>
             </main>

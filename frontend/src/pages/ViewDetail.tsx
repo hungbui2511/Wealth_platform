@@ -5,6 +5,7 @@ import { ASSET_CLASSES, ASSET_CLASS_LABELS, SECTORS } from '../../../src/shared/
 import { api, apiJob } from '../api'
 import { useUser } from '../App'
 import { Badge, Btn, Card, ErrorBox, Loading, Note, SevBadge, StatusBadge, ts, useApi } from '../ui'
+import { OriginBadge, ScenarioPanel } from '../scenario'
 
 const key = (l: any) => `${l.scope}:${l.asset_class ?? ''}:${l.target}`
 const dirOf = (lv: number, cur?: string) => lv > 0 ? 'positive' : lv < 0 ? 'negative' : cur === 'insufficient_evidence' ? 'insufficient_evidence' : 'neutral'
@@ -122,8 +123,9 @@ export default function ViewDetail() {
           {data.decisions.length > 0 && <Card title="Quyết định">{data.decisions.map((d: any) => <div key={d.id} className="text-[13px] py-1 border-b border-[#1e2537]"><b>{d.action}</b> · {d.by} · {ts(d.at)}<div className="text-fgm">{d.reason}</div></div>)}</Card>}
         </div>
       </div>
+      <ScenarioPanel viewId={v.id} scenarios={v.body.scenarios} preview={data.scenario_preview} editable={isCio && ['PENDING_APPROVAL', 'PENDING_CHALLENGE'].includes(v.status)} newsIds={newsIds} onSaved={reload} />
       <Card title="Tin nguồn của sự kiện">
-        <ul className="space-y-2">{data.news.map((n: any) => <li key={n.id} className="text-[13px]"><span className="mono text-fgm">{n.id}</span> <b>{n.title}</b> · <a className="text-primary hover:underline" href={n.url} target="_blank" rel="noreferrer">{n.source}</a> · {ts(n.published_at)}<div className="text-fgm">{n.summary}</div></li>)}</ul>
+        <ul className="space-y-2">{data.news.map((n: any) => <li key={n.id} className="text-[13px]"><span className="mono text-fgm">{n.id}</span> <OriginBadge o={n.origin} /> <b>{n.title}</b> · <a className="text-primary hover:underline" href={n.url} target="_blank" rel="noreferrer">{n.source}</a> · {ts(n.published_at)}<div className="text-fgm">{n.summary}</div></li>)}</ul>
       </Card>
       <Card title="Lịch sử trạng thái"><ul className="text-[13px] space-y-0.5">{v.history.map((h: any, i: number) => <li key={i}>{ts(h.at)} · {h.from || '∅'} → <b>{h.to}</b> · {h.by}{h.note ? ` · ${h.note}` : ''}</li>)}</ul></Card>
     </>

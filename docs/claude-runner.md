@@ -51,6 +51,17 @@ thật cần một tài khoản dịch vụ chỉ được ghi `external_outputs
 }
 ```
 
+**Nhánh kịch bản (thiết kế v2, nên có trong mọi `cio_view`)**: thêm `"scenarios"` vào `view`:
+`{"priced_in":"none|partial|full","branches":[{"id":"B1","name":"…","probability":0.6,"regime":"calm|stress","core_shocks":[{"factor":"US10Y","size":"S|M|L","direction":"up|down"}],"rationale":"≥ 20 ký tự","source_ids":["đường dẫn tin"]}],"notes":"…"}`.
+2–4 nhánh, tổng xác suất = 1, mỗi nhánh 1–5 yếu tố lõi lấy trong mô hình yếu tố (`src/data/factorModel.ts` hoặc cấu hình
+`FACTOR_MODEL`): US10Y, DXY, GLOBAL_EQ, OIL, GOLD_W, CRYPTO, USDVND, VN_RATE, VN_GOV, CREDIT_RE, CREDIT_FIN, VN_EQ,
+FOREIGN_FLOW, SJC_PREM, VN_RE. Chỉ chọn yếu tố là kênh truyền dẫn trực tiếp và cỡ trong thư viện; KHÔNG tự đặt con số.
+Hệ thống tự suy ra các yếu tố còn lại theo tương quan và tính dải xấu/cơ sở/tốt cho từng gia đình. Với tin quốc tế, nêu kênh
+về Việt Nam (USDVND, VN_RATE, FOREIGN_FLOW) khi có căn cứ; VND là tiền tệ có quản lý. `priced_in` = mức thị trường đã phản ánh.
+
+**Nguồn tin**: mỗi tin mang `origin` (`global` | `local`; hệ thống tự gắn). Tin `exclusive` (nghiên cứu Techcombank/TCBS)
+chỉ do Khối Nghiên cứu nạp ở trang "Nghiên cứu & mô hình" và Tuân thủ cho phát hành; Claude không tạo tin độc quyền.
+
 ImpactLine: `scope` (`asset_class` | `sector` | `instrument` | `fx`), `asset_class`, `target`, `level` (số nguyên −3..+3),
 `direction` (`positive` | `negative` | `neutral` | `insufficient_evidence`, khớp dấu của mức), `horizon`
 (`<1 tháng` | `1-3 tháng` | `3-6 tháng` | `>6 tháng`, bắt buộc khi mức ≠ 0), `confidence` (`low` | `medium` | `high`, bắt

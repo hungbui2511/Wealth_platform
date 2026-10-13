@@ -5,6 +5,7 @@ import { useUser } from '../App'
 import { HowCalcModal } from '../HowCalc'
 import { AlertBadge, Badge, Btn, Card, DISCLAIMER, ErrorBox, fmtPct, Kv, Loading, Money, Note, SevBadge, StatusBadge, ts, useApi } from '../ui'
 import { GoalImpactTable } from './FamilyDetail'
+import { RunScenarioSummary } from '../scenario'
 
 export default function Runs() {
   const { data, error } = useApi<any[]>('/api/runs')
@@ -56,10 +57,11 @@ export function RunDetail() {
           {(user.role === 'COMPLIANCE' || user.role === 'ADMIN') && <div className="mt-3"><Btn kind="secondary" onClick={act(async () => setRc(await api(`/api/runs/${r.id}/recompute`, { method: 'POST' })))}>Tính lại từ ảnh chụp</Btn>{rc && <span className="ml-2 text-[13px]">{rc.all_equal && rc.portfolio_hash_ok ? <Badge tone="green">Trùng từng đồng với kết quả đã lưu ({rc.rows.length} gia đình), mã băm khớp</Badge> : <Badge tone="red">Có chênh lệch</Badge>}</span>}</div>}
         </Card>
       </div>
+      <RunScenarioSummary s={r.scenario_summary} />
       <Card title="Xếp hạng gia đình theo độ lớn tác động">
-        <div className="overflow-x-auto"><table className="t"><thead><tr><th>#</th><th>Gia đình</th><th className="num">Tác động</th><th className="num">% tài sản ròng</th><th>Mức</th><th className="num">Kém thanh khoản (ước tính trên giấy)</th><th className="num">Tài sản ròng</th><th /></tr></thead>
+        <div className="overflow-x-auto"><table className="t"><thead><tr><th>#</th><th>Gia đình</th><th className="num">Tác động</th><th className="num">% tài sản ròng</th><th>Mức</th><th className="num">Kém thanh khoản (ước tính trên giấy)</th><th className="num">Tài sản ròng</th>{r.scenario_summary && <th className="num">Xấu 3 tháng (kịch bản)</th>}<th /></tr></thead>
           <tbody>{r.ranking.map((x: any, i: number) => { const fi: any = byFam.get(x.family_id); return (
-            <tr key={x.family_id}><td className="text-fgm">{i + 1}</td><td><Link to={`/families/${x.family_id}`} className="text-primary hover:underline mono">{x.family_id}</Link><div className="text-fgm text-xs">{fi?.family_name}</div></td><td><Money v={x.impact} /></td><td className="num">{fmtPct(x.pct, 3)}</td><td><AlertBadge level={x.alert} /></td><td><Money v={fi?.illiquid_impact} short /></td><td><Money v={fi?.net_worth} short /></td>
+            <tr key={x.family_id}><td className="text-fgm">{i + 1}</td><td><Link to={`/families/${x.family_id}`} className="text-primary hover:underline mono">{x.family_id}</Link><div className="text-fgm text-xs">{fi?.family_name}</div></td><td><Money v={x.impact} /></td><td className="num">{fmtPct(x.pct, 3)}</td><td><AlertBadge level={x.alert} /></td><td><Money v={fi?.illiquid_impact} short /></td><td><Money v={fi?.net_worth} short /></td>{r.scenario_summary && <td className="num">{fmtPct(x.scen_bad_3m_pct, 2)}{x.lane2 === 'RM_REVIEW' && <div><Badge tone="red">chuyển RM</Badge></div>}</td>}
               <td><div className="flex gap-1"><Btn small kind="secondary" onClick={async () => setHow((await api(`/api/runs/${r.id}/families/${x.family_id}`)).result)}>Cách tính</Btn><Link to={`/trace/${r.id}/${x.family_id}`}><Btn small kind="ghost">Truy vết</Btn></Link></div></td></tr>
           ) })}</tbody></table></div>
       </Card>

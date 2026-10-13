@@ -1,3 +1,4 @@
+import { FamilyScenarioCard } from '../scenario'
 import { useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { Bar, CartesianGrid, ComposedChart, Legend, Line, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
@@ -114,6 +115,7 @@ function Impacts({ familyId }: { familyId: string }) {
         <Card title="Theo yếu tố tỷ giá">{Object.entries(r.by_fx).map(([k, v]) => <Kv key={k} k={`${k}/VND`} v={<Money v={v as string} short />} />)}{Object.keys(r.by_fx).length === 0 && <span className="text-fgm">Không có tài sản ngoại tệ</span>}</Card>
         <Card title="Năm mã đóng góp lớn nhất">{r.top_instruments.map((t: any) => <Kv key={t.instrument_id} k={<span><span className="mono">{t.instrument_id}</span> <span className="text-fgm text-xs">{t.name}</span></span>} v={<Money v={t.impact} short />} />)}</Card>
       </div>
+      <FamilyScenarioCard s={r.scenario} />
       {goals.length > 0 && <Card title="Tác động lên mục tiêu"><GoalImpactTable rows={goals} /></Card>}
       <div className="flex flex-wrap gap-2">
         <Btn kind="secondary" onClick={() => setHow(true)}>Cách tính</Btn>
