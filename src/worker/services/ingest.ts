@@ -94,7 +94,7 @@ export async function newsInbox(ctx: AppCtx, opts: { all?: boolean } = {}) {
   const rows = await ctx.repo.list<InboxItem>('news_items', 'event_id IS NULL', [], 'id DESC')
   const now = Date.parse(ctx.now())
   // Nghiên cứu độc quyền chỉ hiện khi đã được phát hành và đã tới giờ công bố
-  return rows.filter(r => r.origin !== 'exclusive' || (r.research?.status === 'RELEASED' && Date.parse(r.published_at) <= now))
+  return rows.filter(r => r.origin !== 'exclusive' || (r.research?.status === 'RELEASED' && r.research.kind !== 'regulatory_note' && Date.parse(r.published_at) <= now))
     .filter(r => opts.all || !r.dismissed).slice(0, 150)
 }
 

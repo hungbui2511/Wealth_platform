@@ -6,9 +6,10 @@ import { actor, HttpError, requireRole, type AppCtx } from '../ctx'
 import type { UnitOfWork } from '../db'
 import { activeRestricted, loadConfigs, type Configs } from './config'
 import { classifyOrigin, type NewsOrigin } from '../../news/classify'
+import type { ProceduralNote } from '../../shared/types'
 
 export interface NewsItem { id: string; event_id: string; title: string; source: string; url: string; published_at: string; ingested_at: string; summary: string; language: string; simulated: boolean; policy_change?: unknown; origin?: NewsOrigin; research?: ResearchMeta }
-export interface ResearchMeta { doc_no: string; unit: string; kind: 'research' | 'house_view'; status: 'PENDING_RELEASE' | 'RELEASED' | 'REJECTED'; submitted_by: string; submitted_at: string; released_by?: string; released_at?: string; note?: string; conflict_disclosure?: string }
+export interface ResearchMeta { doc_no: string; unit: string; kind: 'research' | 'house_view' | 'regulatory_note'; procedural?: ProceduralNote; status: 'PENDING_RELEASE' | 'RELEASED' | 'REJECTED'; submitted_by: string; submitted_at: string; released_by?: string; released_at?: string; note?: string; conflict_disclosure?: string }
 export interface EventRec {
   id: string; type: string; title: string; summary: string; news_ids: string[]; created_by: string; created_at: string
   timestamps: Partial<Record<TimestampField, string>>
@@ -166,5 +167,6 @@ export function researchErrors(n: NewsItem, now: string): string[] {
   const e: string[] = []
   if (n.research?.status !== 'RELEASED') e.push('Báo cáo nghiên cứu chưa được Tuân thủ cho phát hành')
   if (Date.parse(n.published_at) > Date.parse(now)) e.push('Chưa tới giờ phát hành chính thức của báo cáo')
+  if (n.research?.kind === 'regulatory_note') e.push('Ghi chú quy định đi theo nhánh tác động lên mục tiêu, không vào sự kiện giá')
   return e
 }

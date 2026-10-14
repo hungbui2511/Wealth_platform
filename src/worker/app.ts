@@ -1,6 +1,7 @@
 // API theo module M1–M10. Phân quyền theo vai trò kiểm tra ở phía máy chủ (NFR-08).
 import { scenarioPreview, type ScenarioSet } from '../engine/scenario'
 import { listResearch, releaseResearch, submitResearch } from './services/research'
+import { bookProcedural, familyProcedural } from './services/procedural'
 import { Hono, type Context } from 'hono'
 import { ASSET_CLASS_LABELS, EVENT_TYPE_LABELS, POLICY_TOPIC_LABELS, RUN_STATUS_LABELS, SECTOR_LABELS, VIEW_STATUS_LABELS, DISCLAIMER_SHOCK } from '../shared/catalog'
 import { isWhitelistedUrl } from '../compliance/controls'
@@ -113,6 +114,8 @@ export function createApp(opts: AppOptions = {}) {
   app.post('/api/news/ingest', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN'); return c.json(await ingestNews(ctx, { trigger: 'manual' })) })
   app.post('/api/news/dismiss', async c => { const b = await body<{ ids: string[]; dismissed?: boolean }>(c); return c.json(await dismissNews(X(c), b.ids, b.dismissed ?? true)) })
   app.get('/api/research', async c => c.json(await listResearch(X(c))))
+  app.get('/api/procedural', async c => c.json(await bookProcedural(X(c))))
+  app.get('/api/families/:id/procedural', async c => c.json(await familyProcedural(X(c), c.req.param('id'))))
   app.post('/api/research', async c => c.json(await submitResearch(X(c), await body(c))))
   app.post('/api/research/:id/release', async c => { const b = await body<{ approve: boolean; note: string }>(c); return c.json(await releaseResearch(X(c), c.req.param('id'), !!b.approve, b.note)) })
   app.post('/api/events/from-news', async c => c.json(await createEventFromNews(X(c), await body(c))))

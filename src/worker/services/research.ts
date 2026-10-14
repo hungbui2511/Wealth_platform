@@ -5,8 +5,10 @@ import { restrictedHits } from '../../compliance/controls'
 import { actor, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
 import { activeRestricted, loadConfigs } from './config'
 import type { NewsItem } from './events'
+import { proceduralErrors } from '../../engine/procedural'
+import type { ProceduralNote } from '../../shared/types'
 
-export interface ResearchInput { doc_no: string; title: string; summary: string; unit?: string; kind?: 'research' | 'house_view'; published_at: string; conflict_disclosure?: string }
+export interface ResearchInput { doc_no: string; title: string; summary: string; unit?: string; kind?: 'research' | 'house_view' | 'regulatory_note'; published_at: string; conflict_disclosure?: string; procedural?: ProceduralNote }
 
 export async function listResearch(ctx: AppCtx) {
   requireRole(ctx, 'CIO', 'ADMIN', 'COMPLIANCE')
@@ -20,6 +22,14 @@ export async function submitResearch(ctx: AppCtx, b: ResearchInput) {
   if (!b.title || b.title.trim().length < 10) throw new HttpError(422, 'Tiêu đề tối thiểu 10 ký tự')
   if (!b.summary || b.summary.trim().length < 40) throw new HttpError(422, 'Tóm tắt luận điểm tối thiểu 40 ký tự')
   if (Number.isNaN(Date.parse(b.published_at))) throw new HttpError(422, 'Thiếu giờ phát hành chính thức')
+  const kind = b.kind === 'house_view' ? 'house_view' : b.kind === 'regulatory_note' ? 'regulatory_note' : 'research'
+  let procedural: ProceduralNote | undefined
+  if (kind === 'regulatory_note') {
+    const errs = proceduralErrors(b.procedural)
+    if (errs.length) throw new HttpError(422, errs.join('; '))
+    const p = b.procedural!
+    procedural = { regulation: p.regulation.trim().slice(0, 300), status: p.status, ...(p.effective_date ? { effective_date: p.effective_date } : {}), applies_to: [...new Set(p.applies_to)], lead_time_weeks: p.lead_time_weeks, documents: p.documents.map(d => String(d).trim()).filter(Boolean).slice(0, 10), client_message: p.client_message.trim().slice(0, 1000), rm_talking_points: p.rm_talking_points.trim().slice(0, 1500) }
+  }
   const url = `tcb-research:${doc}`
   if ((await ctx.repo.list<NewsItem>('news_items', "json_extract(data, '$.url') = ?", [url])).length) throw new HttpError(409, `Báo cáo ${doc} đã được nạp`)
   const now = ctx.now()
@@ -27,8 +37,8 @@ export async function submitResearch(ctx: AppCtx, b: ResearchInput) {
   const n: NewsItem & { auto: true; relevance: number; suggested_type: string; keywords: string[]; tickers: string[]; feed: string } = {
     id, event_id: null as never, title: b.title.trim().slice(0, 300), source: b.unit?.trim() || 'Khối Nghiên cứu Techcombank', url,
     published_at: new Date(b.published_at).toISOString(), ingested_at: now, summary: b.summary.trim().slice(0, 3000), language: 'vi', simulated: false,
-    origin: 'exclusive', auto: true, relevance: 99, suggested_type: 'global_macro', keywords: [], tickers: [], feed: 'Nghiên cứu nội bộ',
-    research: { doc_no: doc, unit: b.unit?.trim() || 'Khối Nghiên cứu Techcombank', kind: b.kind === 'house_view' ? 'house_view' : 'research', status: 'PENDING_RELEASE', submitted_by: actor(ctx), submitted_at: now, ...(b.conflict_disclosure ? { conflict_disclosure: b.conflict_disclosure.slice(0, 500) } : {}) },
+    origin: 'exclusive', auto: true, relevance: 99, suggested_type: kind === 'regulatory_note' ? 'policy' : 'global_macro', keywords: [], tickers: [], feed: 'Nghiên cứu nội bộ',
+    research: { doc_no: doc, unit: b.unit?.trim() || 'Khối Nghiên cứu Techcombank', kind, ...(procedural ? { procedural } : {}), status: 'PENDING_RELEASE', submitted_by: actor(ctx), submitted_at: now, ...(b.conflict_disclosure ? { conflict_disclosure: b.conflict_disclosure.slice(0, 500) } : {}) },
   }
   const u = ctx.uow(); u.insert('news_items', n as never); u.audit({ actor: actor(ctx), action: 'research.submitted', object: id, data: { doc_no: doc, published_at: n.published_at, kind: n.research!.kind } }); await u.commit()
   return n
@@ -43,7 +53,7 @@ export async function releaseResearch(ctx: AppCtx, id: string, approve: boolean,
   if (n.research.status !== 'PENDING_RELEASE') throw new HttpError(409, 'Báo cáo không ở trạng thái chờ phát hành')
   if (n.research.submitted_by.endsWith(`:${ctx.user.id}`)) throw new HttpError(409, 'Người cho phát hành phải khác người nạp báo cáo')
   if (approve) {
-    const hits = restrictedHits([n.title, n.summary], activeRestricted(await loadConfigs(ctx), ctx.now()))
+    const hits = restrictedHits([n.title, n.summary, n.research.procedural?.client_message ?? '', n.research.procedural?.rm_talking_points ?? ''], activeRestricted(await loadConfigs(ctx), ctx.now()))
     if (hits.length) throw new HttpError(409, 'Báo cáo nhắc tổ chức trong danh sách hạn chế: không cho phát hành vào hệ thống (BR-27)')
   }
   const nn: NewsItem = { ...n, research: { ...n.research, status: approve ? 'RELEASED' : 'REJECTED', released_by: actor(ctx), released_at: ctx.now(), note } }

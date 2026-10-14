@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useUser } from '../App'
-import { Btn, Card, ErrorBox, Note, StatusBadge, useApi } from '../ui'
+import { Badge, Btn, Card, ErrorBox, Note, StatusBadge, useApi } from '../ui'
+import { PURPOSE_LABEL, TIER_LABEL } from '../../../src/engine/procedural'
 
 const SCRIPT = [
   ['Quản trị', 'Nạp dữ liệu mẫu và gói sự kiện mẫu (nút bên dưới).'],
@@ -19,12 +20,14 @@ const SCRIPT = [
   ['Quản trị / Tuân thủ', 'Radar chính sách: nạp văn bản, xác nhận nguồn, Agent Chính sách, gia đình bị chạm, thời gian phản ứng.'],
   ['CIO / Tuân thủ', 'EV-2026-0006 nhắc Công ty Demo X: bị chặn chờ Tuân thủ; sau khi cho phép, dòng DMXYZ bị loại. Dán tin không có đường dẫn công khai: bị từ chối.'],
   ['CIO / Tuân thủ', 'Bản tin CIO từ VW-0002: mốc Private sớm hơn đại chúng; Tuân thủ duyệt; xem trước, không gửi.'],
+  ['Quản trị → Tuân thủ → RM', 'Nghiên cứu & mô hình: nạp "Ghi chú quy định" (ví dụ dự thảo thông tư phòng, chống rửa tiền), Tuân thủ phát hành; RM1 mở DEMO-F01 → Mục tiêu: lưu ý thủ tục cho mục tiêu du học.'],
 ]
 
 export default function Home() {
   const user = useUser()
   const health = useApi('/api/health')
   const events = useApi<any[]>(user.role === 'RM' ? null : '/api/events')
+  const proc = useApi<any>(user.role === 'RM' ? '/api/procedural' : null)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<unknown>(null)
   const run = (path: string, label: string) => async () => { setErr(null); try { const r = await api(path, { method: 'POST' }); setMsg(`${label}: ${JSON.stringify(r).slice(0, 240)}`); events.reload() } catch (e) { setErr(e) } }
@@ -45,6 +48,9 @@ export default function Home() {
           <p className="text-fgm text-[13px] mt-2">Nạp lại từ đầu xóa toàn bộ dữ liệu demo và tạo lại bảng nhật ký; bản ghi đầu tiên của chuỗi mới lưu đầu chuỗi cũ.</p>
         </Card>
       )}
+      {user.role === 'RM' && proc.data?.alerts?.length > 0 && <Card title="Lưu ý thủ tục cho mục tiêu của khách">
+        <ul className="text-[13px] divide-y divide-border">{proc.data.alerts.map((a: any) => <li key={a.note_id + a.goal_id} className="py-1.5 flex flex-wrap gap-1.5 items-center"><Badge tone={a.tier === 'contact' ? 'red' : a.tier === 'remind' ? 'amber' : undefined}>{TIER_LABEL[a.tier as keyof typeof TIER_LABEL]}</Badge><Link className="text-primary hover:underline mono" to={`/families/${a.family_id}`}>{a.family_id}</Link><span>{a.goal_name}</span><span className="text-fgm">· {PURPOSE_LABEL[a.purpose as keyof typeof PURPOSE_LABEL]} · cần tiền {a.goal_month} · chuẩn bị trước {a.prepare_by}</span></li>)}</ul>
+      </Card>}
       {user.role === 'RM' && <Card title="Gia đình phụ trách"><p className="text-fgm mb-2">{user.families.join(', ')}</p><Link className="text-primary hover:underline" to="/families">Mở danh sách gia đình</Link></Card>}
       {(user.role === 'CIO' || user.role === 'COMPLIANCE') && (
         <Card title={`Nhận định chờ xử lý (${pending.length})`}>

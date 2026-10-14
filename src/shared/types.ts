@@ -82,6 +82,15 @@ export interface Goal {
   priority: 'essential' | 'important' | 'aspirational'
   annual_contribution: Dec; source_note: string; status: 'active' | 'closed'
   earmarks: { holding_id: string; pct: Dec }[]
+  // Mục tiêu có dòng tiền ra nước ngoài (du học, định cư, đầu tư nước ngoài…): dùng cho nhánh tác động thủ tục, không dùng dữ liệu chống rửa tiền
+  cross_border?: { purpose: CrossBorderPurpose; country?: string }
+}
+export type CrossBorderPurpose = 'study' | 'emigration' | 'overseas_invest' | 'overseas_property' | 'family_support' | 'other'
+// Ghi chú quy định (nhánh tác động lên mục tiêu): Pháp chế/Nghiên cứu soạn, Tuân thủ cho phát hành; máy chỉ khớp theo mục tiêu của gia đình
+export interface ProceduralNote {
+  regulation: string; status: 'draft' | 'issued' | 'effective'; effective_date?: string
+  applies_to: CrossBorderPurpose[]; lead_time_weeks: number; documents: string[]
+  client_message: string; rm_talking_points: string
 }
 
 // Nhận định (Mục 7.3)

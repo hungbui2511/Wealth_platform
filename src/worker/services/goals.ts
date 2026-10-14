@@ -3,6 +3,7 @@ import type { Goal } from '../../shared/types'
 import { D, sum } from '../../engine/dec'
 import { actor, assertFamily, HttpError, requireRole, type AppCtx } from '../ctx'
 import { loadFamily, loadGoals } from './portfolio'
+import { PURPOSES } from '../../engine/procedural'
 
 const TYPES = ['education', 'retirement', 'purchase', 'succession', 'charity', 'other']
 const PRIORITIES = ['essential', 'important', 'aspirational']
@@ -17,6 +18,10 @@ function validate(g: Goal, holdingIds: Set<string>, others: Goal[]) {
   if (!['nominal', 'today'].includes(g.basis)) err('Cơ sở số tiền không hợp lệ')
   if (!g.source_note || g.source_note.length < 5) err('Cần ghi nguồn thông tin (ví dụ "theo trao đổi với khách ngày …")')
   if (g.spend.kind === 'multi' && !(g.spend.years >= 2 && g.spend.years <= 40)) err('Số năm chi đều từ 2 đến 40')
+  if (g.cross_border) {
+    if (!PURPOSES.includes(g.cross_border.purpose)) err('Mục đích chuyển tiền ra nước ngoài không hợp lệ')
+    if (g.cross_border.country && g.cross_border.country.length > 40) err('Tên nước tối đa 40 ký tự')
+  }
   for (const e of g.earmarks) {
     if (!holdingIds.has(e.holding_id)) err(`Vị thế ${e.holding_id} không thuộc gia đình`)
     const pct = D(e.pct)
@@ -36,7 +41,15 @@ function normalize(input: Partial<Goal>, familyId: string, id: string, prev?: Go
     priority: (input.priority ?? prev?.priority ?? 'important') as Goal['priority'], annual_contribution: String(input.annual_contribution ?? prev?.annual_contribution ?? '0'),
     source_note: String(input.source_note ?? prev?.source_note ?? ''), status: prev?.status ?? 'active',
     earmarks: (input.earmarks ?? prev?.earmarks ?? []).map(e => ({ holding_id: e.holding_id, pct: String(e.pct) })),
+    ...crossBorder(input, prev),
   }
+}
+
+// null = RM bỏ khai báo; undefined = giữ như cũ
+function crossBorder(input: Partial<Goal> & { cross_border?: Goal['cross_border'] | null }, prev?: Goal): Pick<Goal, 'cross_border'> {
+  const v = 'cross_border' in input ? input.cross_border : prev?.cross_border
+  if (!v || !v.purpose) return {}
+  return { cross_border: { purpose: v.purpose, ...(v.country?.trim() ? { country: v.country.trim() } : {}) } }
 }
 
 export async function createGoal(ctx: AppCtx, familyId: string, input: Partial<Goal>) {

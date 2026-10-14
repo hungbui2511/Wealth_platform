@@ -6,6 +6,7 @@ import { ASSET_CLASS_LABELS } from '../../../src/shared/catalog'
 import { api } from '../api'
 import { useUser } from '../App'
 import { HowCalcModal } from '../HowCalc'
+import { crossBorderOf, PURPOSE_LABEL, TIER_LABEL } from '../../../src/engine/procedural'
 import { AlertBadge, Badge, Btn, Card, DISCLAIMER, ErrorBox, fmtPct, fmtVnd, fmtVndShort, GOAL_DISCLAIMER, GoalBadge, Kv, Loading, Money, Note, StatusBadge, Tabs, ts, useApi } from '../ui'
 
 const ACL = ASSET_CLASS_LABELS as Record<string, string>
@@ -242,6 +243,7 @@ function Goals({ familyId }: { familyId: string }) {
   const user = useUser()
   const { data, error, reload } = useApi(`/api/families/${familyId}/goals`)
   const imp = useApi(`/api/families/${familyId}/impacts`)
+  const proc = useApi<any[]>(`/api/families/${familyId}/procedural`)
   const [edit, setEdit] = useState<any>(null)
   const [ferr, setFerr] = useState<unknown>(null)
   if (error) return <ErrorBox error={error} />
@@ -250,7 +252,8 @@ function Goals({ familyId }: { familyId: string }) {
   const save = async () => {
     setFerr(null)
     try {
-      const body = { ...edit, earmarks: edit.earmarks.filter((e: any) => e.holding_id).map((e: any) => ({ holding_id: e.holding_id, pct: String(Number(e.pct) / 100) })), spend: edit.multi ? { kind: 'multi', years: Number(edit.years) } : { kind: 'once' } }
+      const { cb_purpose, cb_country, ...rest } = edit
+      const body = { ...rest, cross_border: cb_purpose ? { purpose: cb_purpose, country: cb_country } : null, earmarks: edit.earmarks.filter((e: any) => e.holding_id).map((e: any) => ({ holding_id: e.holding_id, pct: String(Number(e.pct) / 100) })), spend: edit.multi ? { kind: 'multi', years: Number(edit.years) } : { kind: 'once' } }
       if (edit.id) await api(`/api/goals/${edit.id}`, { method: 'PUT', body }); else await api(`/api/families/${familyId}/goals`, { method: 'POST', body })
       setEdit(null); reload()
     } catch (e) { setFerr(e) }
@@ -259,19 +262,30 @@ function Goals({ familyId }: { familyId: string }) {
   return (
     <div className="space-y-4">
       <Note tone="warn">{GOAL_DISCLAIMER}. Lợi suất giả định cố định theo loại tài sản ({data.assumption_version}), không mô phỏng xác suất. Ngưỡng: Đạt ≥ {fmtPct(data.thresholds.on_track, 0)}, Theo dõi ≥ {fmtPct(data.thresholds.watch, 0)}.</Note>
+      {(proc.data ?? []).length > 0 && <Card title="Lưu ý thủ tục cho mục tiêu (từ ghi chú quy định của TCB)">
+        <p className="text-[13px] text-fgm mb-2">Quy định mới không đổi giá tài sản nhưng có thể làm chậm mục tiêu có dòng tiền ra nước ngoài. Khớp theo mục tiêu của gia đình, không theo hồ sơ rủi ro của khách.</p>
+        <div className="space-y-2">{proc.data!.map((a: any) => <div key={a.note_id + a.goal_id} className="border border-border rounded p-2 text-[13px]">
+          <div className="flex flex-wrap gap-1.5 items-center"><Badge tone={a.tier === 'contact' ? 'red' : a.tier === 'remind' ? 'amber' : undefined}>{TIER_LABEL[a.tier as keyof typeof TIER_LABEL]}</Badge><b>{a.goal_name}</b><span className="mono text-fgm">{a.goal_id}</span><span className="text-fgm">· {PURPOSE_LABEL[a.purpose as keyof typeof PURPOSE_LABEL]}{a.country ? ` · ${a.country}` : ''} · cần tiền {a.goal_month}</span>{a.inferred && <Badge>suy từ tên, RM xác nhận</Badge>}</div>
+          <div className="mt-1">Nên chuẩn bị hồ sơ trước <b>{a.prepare_by}</b>: {a.documents.join('; ')}.</div>
+          <div className="text-fgm text-xs">{a.reason}</div>
+          <div className="mt-1 p-2 rounded bg-muted text-xs"><b>Khách thấy trên thẻ mục tiêu:</b> "{a.client_message}"</div>
+          {user.role === 'RM' && <div className="text-xs mt-1"><b>Gợi ý trao đổi:</b> {a.rm_talking_points}</div>}
+          <div className="text-fgm text-xs mt-1">Nguồn: {a.doc_no} – {a.regulation} ({a.status === 'draft' ? 'dự thảo' : a.status === 'issued' ? 'đã ban hành' : 'đã có hiệu lực'}{a.effective_date ? `, hiệu lực ${a.effective_date}` : ''})</div>
+        </div>)}</div>
+      </Card>}
       <Card title="Dòng thời gian mục tiêu" actions={user.role === 'RM' && <Btn small onClick={() => setEdit({ name: '', type: 'education', year: 2030, month: 9, amount: '', basis: 'nominal', cost_growth: '0', priority: 'important', annual_contribution: '0', source_note: 'Theo trao đổi với khách ngày ', earmarks: [], multi: false, years: 10 })}>Thêm mục tiêu</Btn>}>
         <div className="overflow-x-auto"><table className="t">
           <thead><tr><th>Thời điểm</th><th>Mục tiêu</th><th>Loại / ưu tiên</th><th className="num">Đích</th><th className="num">Dự phóng</th><th className="num">Tỷ lệ đáp ứng</th><th>Tài sản dành riêng</th><th /></tr></thead>
           <tbody>{[...data.goals].sort((a: any, b: any) => a.goal.year * 12 + a.goal.month - b.goal.year * 12 - b.goal.month).map(({ goal: g, coverage: c }: any) => (
             <tr key={g.id} className={g.status === 'closed' ? 'opacity-50' : ''}>
               <td>{String(g.month).padStart(2, '0')}/{g.year}{g.spend.kind === 'multi' && <div className="text-fgm text-xs">chi đều {g.spend.years} năm</div>}</td>
-              <td>{g.name} <span className="mono text-fgm">{g.id}</span><div className="text-fgm text-xs">{g.source_note}</div></td>
+              <td>{g.name} <span className="mono text-fgm">{g.id}</span>{(() => { const cb = crossBorderOf(g); return cb && <div><Badge tone="primary">Ra nước ngoài: {PURPOSE_LABEL[cb.purpose]}{cb.country ? ` · ${cb.country}` : ''}{cb.inferred ? ' (suy từ tên)' : ''}</Badge></div> })()}<div className="text-fgm text-xs">{g.source_note}</div></td>
               <td className="text-xs">{GTYPE[g.type]}<div className="text-fgm">{PRIO[g.priority]}</div></td>
               <td><Money v={c?.target ?? g.amount} short /><div className="text-fgm text-xs">{g.basis === 'today' ? `giá trị hôm nay, tăng ${fmtPct(g.cost_growth, 1)}/năm` : 'giá trị năm mục tiêu'}</div></td>
               <td><Money v={c?.projected} short /></td>
               <td className="num">{c ? <><span>{fmtPct(c.ratio, 2)}</span> <GoalBadge level={c.level} /></> : 'đã đóng'}</td>
               <td className="text-xs">{g.earmarks.length ? g.earmarks.map((e: any) => <div key={e.holding_id}>{fmtPct(e.pct, 0)} {hname(e.holding_id)}</div>) : <Badge tone="amber">chưa có tài sản dành riêng</Badge>}</td>
-              <td>{user.role === 'RM' && g.status === 'active' && <div className="flex gap-1"><Btn small kind="secondary" onClick={() => setEdit({ ...g, earmarks: g.earmarks.map((e: any) => ({ ...e, pct: Number(e.pct) * 100 })), multi: g.spend.kind === 'multi', years: g.spend.years ?? 10 })}>Sửa</Btn><Btn small kind="danger" onClick={async () => { await api(`/api/goals/${g.id}/close`, { method: 'POST', body: { note: 'RM đóng mục tiêu' } }); reload() }}>Đóng</Btn></div>}</td>
+              <td>{user.role === 'RM' && g.status === 'active' && <div className="flex gap-1"><Btn small kind="secondary" onClick={() => { const cb = crossBorderOf(g); setEdit({ ...g, earmarks: g.earmarks.map((e: any) => ({ ...e, pct: Number(e.pct) * 100 })), multi: g.spend.kind === 'multi', years: g.spend.years ?? 10, cb_purpose: cb?.purpose ?? '', cb_country: cb?.country ?? '' }) }}>Sửa</Btn><Btn small kind="danger" onClick={async () => { await api(`/api/goals/${g.id}/close`, { method: 'POST', body: { note: 'RM đóng mục tiêu' } }); reload() }}>Đóng</Btn></div>}</td>
             </tr>
           ))}</tbody>
         </table></div>
@@ -295,6 +309,8 @@ function Goals({ familyId }: { familyId: string }) {
             <label className="flex flex-col gap-1">Đóng góp hàng năm (VND)<input value={edit.annual_contribution} onChange={e => setEdit({ ...edit, annual_contribution: e.target.value.replace(/\D/g, '') })} /></label>
             <label className="flex items-center gap-2"><input type="checkbox" checked={edit.multi} onChange={e => setEdit({ ...edit, multi: e.target.checked })} />Chi đều nhiều năm</label>
             {edit.multi && <label className="flex flex-col gap-1">Số năm<input type="number" value={edit.years} onChange={e => setEdit({ ...edit, years: e.target.value })} /></label>}
+            <label className="flex flex-col gap-1">Dòng tiền ra nước ngoài<select value={edit.cb_purpose ?? ''} onChange={e => setEdit({ ...edit, cb_purpose: e.target.value })}><option value="">Không</option>{Object.entries(PURPOSE_LABEL).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select></label>
+            {edit.cb_purpose && <label className="flex flex-col gap-1">Nước đến<input value={edit.cb_country ?? ''} onChange={e => setEdit({ ...edit, cb_country: e.target.value })} /></label>}
             <label className="flex flex-col gap-1 md:col-span-3">Nguồn thông tin<input value={edit.source_note} onChange={e => setEdit({ ...edit, source_note: e.target.value })} /></label>
           </div>
           <div className="mt-3 text-sm">Tài sản dành riêng (% của vị thế; tổng mỗi vị thế ≤ 100%)
