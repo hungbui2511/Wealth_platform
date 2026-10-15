@@ -1,0 +1,136 @@
+{
+ "design": "Ngoài mẫu, cửa sổ mở rộng (ước lượng chỉ từ dữ liệu trước tháng dự báo), tối thiểu 24 tháng huấn luyện, tương quan co 20% về 0, chế độ bình thường, khung tháng",
+ "data_months": {
+  "n": 55,
+  "from": "2022-02",
+  "to": "2026-08"
+ },
+ "global_only": {
+  "USDVND": {
+   "months": 31,
+   "from": "2024-02",
+   "to": "2026-08",
+   "coverage_80": 0.806,
+   "coverage_90": 0.839,
+   "direction_hit": 0.467,
+   "skill_vs_no_change": -0.186,
+   "actual_nonzero_months": 30,
+   "mean_abs_z": 0.728
+  },
+  "VN_RATE": {
+   "months": 31,
+   "from": "2024-02",
+   "to": "2026-08",
+   "coverage_80": 1.0,
+   "coverage_90": 1.0,
+   "direction_hit": null,
+   "skill_vs_no_change": null,
+   "actual_nonzero_months": 0,
+   "mean_abs_z": 0.284
+  },
+  "VN_EQ": {
+   "months": 31,
+   "from": "2024-02",
+   "to": "2026-08",
+   "coverage_80": 0.871,
+   "coverage_90": 0.935,
+   "direction_hit": 0.774,
+   "skill_vs_no_change": 0.274,
+   "actual_nonzero_months": 31,
+   "mean_abs_z": 0.778
+  },
+  "SJC_PREM": {
+   "months": 31,
+   "from": "2024-02",
+   "to": "2026-08",
+   "coverage_80": 0.677,
+   "coverage_90": 0.774,
+   "direction_hit": 0.548,
+   "skill_vs_no_change": 0.017,
+   "actual_nonzero_months": 31,
+   "mean_abs_z": 1.174
+  }
+ },
+ "global_plus_rate": {
+  "USDVND": {
+   "months": 31,
+   "from": "2024-02",
+   "to": "2026-08",
+   "coverage_80": 0.806,
+   "coverage_90": 0.839,
+   "direction_hit": 0.467,
+   "skill_vs_no_change": -0.203,
+   "actual_nonzero_months": 30,
+   "mean_abs_z": 0.757
+  },
+  "VN_EQ": {
+   "months": 31,
+   "from": "2024-02",
+   "to": "2026-08",
+   "coverage_80": 0.839,
+   "coverage_90": 0.903,
+   "direction_hit": 0.774,
+   "skill_vs_no_change": 0.259,
+   "actual_nonzero_months": 31,
+   "mean_abs_z": 0.797
+  },
+  "SJC_PREM": {
+   "months": 31,
+   "from": "2024-02",
+   "to": "2026-08",
+   "coverage_80": 0.677,
+   "coverage_90": 0.774,
+   "direction_hit": 0.581,
+   "skill_vs_no_change": 0.024,
+   "actual_nonzero_months": 31,
+   "mean_abs_z": 1.179
+  }
+ },
+ "event_2025_04": {
+  "trained_through": "2025-03",
+  "conditioned_on": {
+   "US10Y": 0.0,
+   "DXY": -3.4,
+   "GLOBAL_EQ": -5.53,
+   "OIL": -6.32,
+   "GOLD_W": 7.88
+  },
+  "predicted": {
+   "USDVND": {
+    "mean": -0.87,
+    "band80": [
+     -2.39,
+     0.64
+    ]
+   },
+   "VN_RATE": {
+    "mean": 11.43,
+    "band80": [
+     -20.16,
+     43.01
+    ]
+   },
+   "VN_EQ": {
+    "mean": -3.21,
+    "band80": [
+     -8.93,
+     2.51
+    ]
+   },
+   "SJC_PREM": {
+    "mean": 0.21,
+    "band80": [
+     -4.54,
+     4.95
+    ]
+   }
+  },
+  "actual": {
+   "USDVND": 1.68,
+   "VN_RATE": 0.0,
+   "VN_EQ": 1.29,
+   "SJC_PREM": 9.55
+  }
+ },
+ "note_2022_in_sample": "Phép kiểm tra 2022 trong FACTOR_MODEL dùng tương quan ước lượng 2022–2026, tức có nhìn trước; chỉ là minh họa, không phải bằng chứng kiểm định. Dữ liệu bắt đầu 2022 nên không kiểm định ngoài mẫu được cho 2022."
+}

@@ -4,7 +4,7 @@ Cách làm: với mỗi tháng t (từ tháng thứ 25 trở đi), ước lượ
 yếu tố trong nước (USD/VND, lãi suất NHNN, VN-Index, chênh lệch SJC) kèm khoảng tin cậy, rồi so với thực tế tháng t.
 Đo: tỷ lệ thực tế rơi vào khoảng 80% (mục tiêu ≈ 80%), đúng chiều, và mức giảm sai số so với dự báo "không đổi".
 Thêm phép thử sự kiện 04/2025 (thuế quan Mỹ) với mô hình ước lượng đến 03/2025.
-Chạy: python3 scripts/backtest-oos.py → reports/backtest_oos.json"""
+Chạy: python3 scripts/backtest-oos.py → docs/backtest_oos.json"""
 import json, numpy as np, pathlib
 root = pathlib.Path(__file__).resolve().parent.parent
 import csv
@@ -116,6 +116,6 @@ if '2025-04' in common:
     }
 # Ghi chú trung thực về kiểm tra 2022 trong mô hình: dùng tương quan ước lượng trên chính giai đoạn có 2022 → TRONG mẫu
 res['note_2022_in_sample'] = 'Phép kiểm tra 2022 trong FACTOR_MODEL dùng tương quan ước lượng 2022–2026, tức có nhìn trước; chỉ là minh họa, không phải bằng chứng kiểm định. Dữ liệu bắt đầu 2022 nên không kiểm định ngoài mẫu được cho 2022.'
-pathlib.Path(root / 'reports').mkdir(exist_ok=True)
-json.dump(res, open(root / 'reports/backtest_oos.json', 'w'), ensure_ascii=False, indent=1)
+pass
+json.dump(res, open(root / 'docs/backtest_oos.json', 'w'), ensure_ascii=False, indent=1)
 print(json.dumps(res, ensure_ascii=False, indent=1))
