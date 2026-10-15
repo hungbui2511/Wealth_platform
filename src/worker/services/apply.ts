@@ -1,7 +1,7 @@
 // Bộ máy áp dụng (M6), hậu kiểm (BR-17), tác động lên mục tiêu (BR-25), tính lại từ ảnh chụp (FR-606), thu hồi (BR-04).
 import { ENGINE_VERSION } from '../../shared/catalog'
 import type { Family, Finding, Goal, Instrument, ViewBody } from '../../shared/types'
-import { computeFamilyImpact, rankFamilies, type FamilyImpactResult } from '../../engine/apply'
+import { computeFamilyImpact, fromScenario, rankFamilies, type EngineResult, type FamilyImpactResult } from '../../engine/apply'
 import { runPostcheck, postcheckSummaryTemplate } from '../../engine/postcheck'
 import { goalImpact } from '../../engine/goals'
 import { buildPositions, netWorth } from '../../engine/positions'
@@ -54,10 +54,12 @@ export function computeAll(ps: PortfolioSnapshot, snap: SnapshotRecord, view: Vi
   return ps.families.map(f => {
     const pos = buildPositions(f, ps.instruments, book)
     const nw = netWorth(f, pos, book)
-    const result = computeFamilyImpact(f.id, pos, nw, view, ps.configs.unit, ps.configs.thresholds.alert)
+    const unit = computeFamilyImpact(f.id, pos, nw, view, ps.configs.unit, ps.configs.thresholds.alert)
     const scenario: FamilyScenarioResult | undefined = view.scenarios && ps.configs.factor_model
       ? familyScenario(f, pos, book, ps.instruments, ps.configs.factor_model, view.scenarios as ScenarioSet, nw.toNumber()) : undefined
-    return { family: f, positions: pos, result: scenario ? { ...result, scenario } : result }
+    // Một bộ máy: có kịch bản thì mọi con số lấy từ lớp kịch bản; không có (chỉ còn ở áp dụng nhập tay khi kiểm thử) thì ghi rõ bộ máy cũ
+    const result: EngineResult = scenario ? { ...fromScenario(unit, scenario, nw, ps.configs.thresholds.alert), scenario } as EngineResult : { ...unit, engine: 'unit_legacy' }
+    return { family: f, positions: pos, result }
   })
 }
 
@@ -113,7 +115,8 @@ export async function createApplication(ctx: AppCtx, view: ViewRec, uow: UnitOfW
   const findings: Finding[] = runPostcheck(chId, { price_date: snap.price_date, families: computed.map(c => ({ family_id: c.family.id, positions: c.positions, result: c.result })) }, cfg.thresholds.postcheck)
   const pkg = { findings: findings.map(f => ({ id: f.finding_id, family: f.target, check: f.check, severity: f.severity, value: f.value, threshold: f.threshold })) }
   let summary = postcheckSummaryTemplate(findings), model = 'mẫu cố định (mock)'
-  if (ctx.agentMode === 'live' && findings.length) {
+  // Phát hiện hậu kiểm có mã gia đình và con số của gia đình: chỉ gửi LLM khi mô hình chạy trong hạ tầng ngân hàng
+  if (ctx.agentMode === 'live' && ctx.env.INTERPRETATION_LLM === 'internal' && findings.length) {
     const models = await activeConfig<ModelSet>(ctx, 'MODEL'); const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
     try { const r = await callJson(ctx.env, models.content.challenger, prompts.content.challenger.post_summary, wrapData('phát hiện hậu kiểm', pkg), ctx.fetchFn); summary = String((r.json as { summary?: string }).summary ?? summary); model = r.model }
     catch { model = 'mẫu cố định (LLM lỗi)' }

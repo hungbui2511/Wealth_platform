@@ -22,11 +22,11 @@ export async function callJson(env: { ANTHROPIC_API_KEY?: string }, cfg: ModelCf
     max_tokens: cfg.max_tokens,
     thinking: { type: 'adaptive' },
     output_config: { effort: cfg.effort as 'low' | 'medium' | 'high' },
-    betas: ['server-side-fallback-2026-07-01'],
-    fallbacks: 'default',
     system,
     messages: [{ role: 'user', content: user }],
   } as never) as unknown as { content: { type: string; text?: string }[]; stop_reason: string; model: string; usage: unknown }
+  // Không dùng mô hình dự phòng phía máy chủ: mô hình trả lời phải đúng mô hình đã được hai người duyệt trong cấu hình MODEL
+  if (!String(res.model ?? '').startsWith(cfg.model)) throw new LlmError(`Mô hình trả lời (${res.model}) khác mô hình đã duyệt (${cfg.model})`)
   if (res.stop_reason === 'refusal') throw new LlmError('Mô hình từ chối yêu cầu')
   if (res.stop_reason === 'max_tokens') throw new LlmError('Đầu ra của mô hình bị cắt vì vượt giới hạn token (max_tokens); tăng max_tokens trong cấu hình MODEL')
   const raw = res.content.filter(b => b.type === 'text').map(b => b.text).join('')

@@ -49,7 +49,7 @@ export default function Home() {
         </Card>
       )}
       {user.role === 'RM' && proc.data?.alerts?.length > 0 && <Card title="Lưu ý thủ tục cho mục tiêu của khách">
-        <ul className="text-[13px] divide-y divide-border">{proc.data.alerts.map((a: any) => <li key={a.note_id + a.goal_id} className="py-1.5 flex flex-wrap gap-1.5 items-center"><Badge tone={a.tier === 'contact' ? 'red' : a.tier === 'remind' ? 'amber' : undefined}>{TIER_LABEL[a.tier as keyof typeof TIER_LABEL]}</Badge><Link className="text-primary hover:underline mono" to={`/families/${a.family_id}`}>{a.family_id}</Link><span>{a.goal_name}</span><span className="text-fgm">· {PURPOSE_LABEL[a.purpose as keyof typeof PURPOSE_LABEL]} · cần tiền {a.goal_month} · chuẩn bị trước {a.prepare_by}</span></li>)}</ul>
+        <ul className="text-[13px] divide-y divide-border">{proc.data.alerts.map((a: any) => <li key={a.note_id + a.goal_id} className="py-1.5 flex flex-wrap gap-1.5 items-center"><Badge tone={a.tier === 'contact' ? 'red' : a.tier === 'remind' ? 'amber' : a.tier === 'confirm' ? 'primary' : undefined}>{TIER_LABEL[a.tier as keyof typeof TIER_LABEL]}</Badge><Link className="text-primary hover:underline mono" to={`/families/${a.family_id}`}>{a.family_id}</Link><span>{a.goal_name}</span><span className="text-fgm">· {PURPOSE_LABEL[a.purpose as keyof typeof PURPOSE_LABEL]} · cần tiền {a.goal_month} · chuẩn bị trước {a.prepare_by}</span></li>)}</ul>
       </Card>}
       {user.role === 'RM' && <Card title="Gia đình phụ trách"><p className="text-fgm mb-2">{user.families.join(', ')}</p><Link className="text-primary hover:underline" to="/families">Mở danh sách gia đình</Link></Card>}
       {(user.role === 'CIO' || user.role === 'COMPLIANCE') && (

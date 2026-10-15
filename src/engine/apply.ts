@@ -110,3 +110,41 @@ export function computeFamilyImpact(familyId: string, positions: Position[], net
 export function rankFamilies(results: FamilyImpactResult[]): FamilyImpactResult[] {
   return [...results].sort((a, b) => D(b.impact).abs().comparedTo(D(a.impact).abs()) || a.family_id.localeCompare(b.family_id))
 }
+
+// Một bộ máy duy nhất (thiết kế v2): khi nhận định có nhánh kịch bản, mọi con số dùng cho xếp hạng, cảnh báo, mục tiêu
+// và diễn giải lấy từ lớp kịch bản: tác động kỳ vọng (trung bình theo xác suất các nhánh) kỳ hạn 3 tháng, để tổng theo
+// vị thế, loại tài sản, yếu tố cộng đúng bằng con số chính. Dải P5/P10/P50/P90 hiển thị kèm. Kết quả theo đơn vị cũ (u × mức) chỉ giữ lại để đối chiếu,
+// không dùng cho quyết định nào.
+export interface ScenarioLike {
+  ranges: { horizon: string; bad: number; base: number; good: number; bad_pct: number | null; base_pct: number | null }[]
+  branches: { probability: number; mean: number[] }[]
+  by_factor: Record<string, number>; by_asset_class: Record<string, number>
+  positions: { holding_id: string; part: string | null; instrument_id: string; name: string; asset_class: string; mean_3m: number }[]
+}
+export type EngineResult = FamilyImpactResult & { engine: 'scenario' | 'unit_legacy'; unit_check?: { impact: string; pct: string | null; alert: AlertLevel } }
+
+export function fromScenario(unit: FamilyImpactResult, sc: ScenarioLike, netWorth: Decimal, thresholds: AlertThresholds): EngineResult {
+  // Tổng theo vị thế (đã làm tròn từng dòng) để con số chính khớp tuyệt đối với phần phân rã
+  const total = sum(sc.positions.map(p => D(p.mean_3m))).plus(D(sc.by_asset_class.LIABILITY ?? 0))
+  const pct = netWorth.gt(0) ? total.div(netWorth) : null
+  const posMean = new Map(sc.positions.map(p => [`${p.holding_id}|${p.part ?? ''}`, p.mean_3m]))
+  const positions = unit.positions.map(p => {
+    const m = D(posMean.get(`${p.holding_id}|${p.part ?? ''}`) ?? 0)
+    return { ...p, line_used: null, rule: 'none' as const, u: '0', asset_shock: '0', fx_line: null, u_fx: '0', fx_shock: '0', asset_impact: vnd(m), fx_impact: '0', impact: vnd(m) }
+  })
+  const byInst: Record<string, Decimal> = {}
+  const names: Record<string, string> = {}
+  for (const p of sc.positions) { byInst[p.instrument_id] = (byInst[p.instrument_id] ?? ZERO).plus(p.mean_3m); names[p.instrument_id] = p.name }
+  const top = Object.entries(byInst).filter(([, v]) => !v.isZero())
+    .sort((a, b) => b[1].abs().comparedTo(a[1].abs()) || a[0].localeCompare(b[0])).slice(0, 5)
+    .map(([id, v]) => ({ instrument_id: id, name: names[id], impact: vnd(v) }))
+  const illiquid = sum(sc.positions.filter(p => ILLIQUID.has(p.asset_class as never)).map(p => D(p.mean_3m)))
+  const num = (m: Record<string, number>) => Object.fromEntries(Object.entries(m).map(([k, v]) => [k, vnd(D(v))]))
+  return {
+    family_id: unit.family_id, impact: vnd(total), net_worth: vnd(netWorth), pct: pct ? s(pct, 12) : null,
+    alert: alertLevel(D(vnd(total)), pct, thresholds), illiquid_impact: vnd(illiquid),
+    by_asset_class: num(sc.by_asset_class), by_fx: sc.by_factor.USDVND ? { USD: vnd(D(sc.by_factor.USDVND)) } : {},
+    by_instrument: Object.fromEntries(Object.entries(byInst).map(([k, v]) => [k, vnd(v)])), top_instruments: top, positions,
+    engine: 'scenario', unit_check: { impact: unit.impact, pct: unit.pct, alert: unit.alert },
+  }
+}

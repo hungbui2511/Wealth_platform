@@ -28,18 +28,17 @@ export function citationChecks(changes: { change_id: string; article_refs: strin
   return out
 }
 
-// Chuẩn hóa phát hiện của agent: đúng schema, nguồn thuộc sự kiện, tối đa 3 phát hiện Nghiêm trọng (FR-403)
+// Chuẩn hóa phát hiện của agent: đúng schema, nguồn thuộc sự kiện. Không tự hạ mức phát hiện Nghiêm trọng:
+// mọi phát hiện Nghiêm trọng đều phải được CIO phản hồi trước khi duyệt (trước đây hạ từ cái thứ tư, đã bỏ theo phản biện độc lập).
 export function normalizeLlmFindings(raw: unknown[], newsIds: Set<string>): { findings: RawFinding[]; dropped: string[] } {
   const dropped: string[] = []
-  let critical = 0
   const out: RawFinding[] = []
   for (const r of raw as Record<string, unknown>[]) {
     const candidate = { finding_id: 'x', stage: 'pre_approval', origin: 'llm', ...r, source_ids: ((r.source_ids as string[]) ?? []).filter(s => { const ok = newsIds.has(s); if (!ok) dropped.push(`nguồn ${s} không thuộc sự kiện`); return ok }) }
     const v = validateFindings([candidate])
     if (!v.ok) { dropped.push(...v.errors); continue }
     const f = v.findings[0]
-    let severity = f.severity
-    if (severity === 'critical' && ++critical > 3) { severity = 'medium'; dropped.push('Hạ mức phát hiện Nghiêm trọng thứ tư trở đi (tối đa 3)') }
+    const severity = f.severity
     out.push({ check: f.check, severity, target: f.target, issue: f.issue, suggestion: f.suggestion, ...(f.source_ids?.length ? { source_ids: f.source_ids } : {}) })
   }
   return { findings: out, dropped }

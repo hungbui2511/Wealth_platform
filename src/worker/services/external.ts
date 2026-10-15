@@ -13,11 +13,12 @@ import { completeWaiting, type JobRec } from './jobs'
 import { analyzePolicy } from './policy'
 import { runCioAgent, type ExternalCio, type ViewRec } from './views'
 import { currentSnapshot, type SnapshotRecord } from './portfolio'
-import { hashOf } from '../../engine/hash'
+import { canonical, hashOf } from '../../engine/hash'
+import { runPreChallenge, runReChallenge, getView, viewChallenges } from './views'
 import type { PricePoint } from '../../shared/types'
 
 export interface ExternalRec {
-  id: string; kind: 'news' | 'event' | 'cio_view' | 'policy_summary' | 'prices'; subject?: string
+  id: string; kind: 'news' | 'event' | 'cio_view' | 'challenge' | 'policy_summary' | 'prices'; subject?: string
   status: 'READY' | 'PROCESSING' | 'IMPORTED' | 'REJECTED'; created_at: string
   data: any; result?: Record<string, unknown>; error?: string; note?: string; rev?: number
 }
@@ -50,6 +51,34 @@ async function claim(ctx: AppCtx, r: ExternalRec): Promise<boolean> {
   catch (e) { if (e instanceof ConflictError) return false; throw e }
 }
 
+// Chữ ký của vùng AI (F01): EXTERNAL_HMAC_KEY đặt trên Worker và trong máy chạy agent. Có khóa thì mọi bản ghi phải mang
+// data._sig = HMAC-SHA-256(khóa, JSON chuẩn hóa của data bỏ _sig); sai hoặc thiếu chữ ký thì từ chối. Không có khóa (bản demo
+// hiện tại) thì nhận nhưng ghi rõ "chưa ký".
+async function hmacHex(key: string, text: string) {
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  return [...new Uint8Array(await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(text)))].map(b => b.toString(16).padStart(2, '0')).join('')
+}
+export async function signExternal(key: string, data: Record<string, unknown>) { const { _sig, ...rest } = data; return hmacHex(key, canonical(rest)) }
+export async function signatureOk(env: Env, data: unknown): Promise<{ ok: boolean; signed: boolean; reason?: string }> {
+  const key = typeof env.EXTERNAL_HMAC_KEY === 'string' ? env.EXTERNAL_HMAC_KEY : ''
+  if (!key) return { ok: true, signed: false }
+  const d = (data ?? {}) as Record<string, unknown>
+  if (typeof d._sig !== 'string') return { ok: false, signed: false, reason: 'Thiếu chữ ký _sig (EXTERNAL_HMAC_KEY đang bật)' }
+  return (await signExternal(key, d)) === d._sig ? { ok: true, signed: true } : { ok: false, signed: false, reason: 'Chữ ký _sig không khớp nội dung' }
+}
+
+// Vùng AI gửi kết quả qua API có chữ ký thay cho quyền ghi thẳng cơ sở dữ liệu (đích kiến trúc: vùng AI không có quyền D1)
+export async function submitExternal(env: Env, body: unknown, now: string) {
+  if (typeof env.EXTERNAL_HMAC_KEY !== 'string' || !env.EXTERNAL_HMAC_KEY) throw new HttpError(503, 'Chưa bật EXTERNAL_HMAC_KEY: kênh gửi có chữ ký đang tắt')
+  const b = (body ?? {}) as { id?: string; kind?: string; subject?: string; data?: Record<string, unknown> }
+  if (!b.id || !/^[A-Za-z0-9._:-]{3,80}$/.test(b.id)) throw new HttpError(422, 'id không hợp lệ')
+  if (!['news', 'event', 'cio_view', 'challenge', 'policy_summary', 'prices'].includes(String(b.kind))) throw new HttpError(422, 'kind không hợp lệ')
+  const sig = await signatureOk(env, b.data)
+  if (!sig.ok) throw new HttpError(401, sig.reason ?? 'Chữ ký không hợp lệ')
+  await env.DB.prepare('INSERT INTO external_outputs (id, kind, subject, status, created_at, data) VALUES (?, ?, ?, ?, ?, ?)').bind(b.id, b.kind, b.subject ?? null, 'READY', now, JSON.stringify(b.data)).run()
+  return { id: b.id, status: 'READY' }
+}
+
 function tooOld(ctx: AppCtx, r: ExternalRec) { return Date.parse(ctx.now()) - Date.parse(r.created_at) > MAX_WAIT_DAYS * 864e5 }
 
 async function resolveEvent(ctx: AppCtx, ref: string | undefined): Promise<EventRec | null> {
@@ -63,8 +92,16 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
   const ctx = makeCtx(env, CLAUDE_USER, opts)
   const n = await env.DB.prepare('SELECT count(*) AS n FROM config_versions').first<{ n: number }>().catch(() => null)
   if (!n?.n) return { skipped: 'Chưa nạp dữ liệu' }
-  const rows = await loadRows(ctx, "status = 'READY'")
-  const report = { trigger: opts.trigger ?? 'manual', news: { rows: 0, created: 0, duplicate: 0, rejected: 0, too_old: 0, irrelevant: 0 }, events: [] as string[], views: [] as { view_id: string; status: string }[], policies: [] as string[], prices: [] as string[], rejected: [] as { id: string; reason: string }[], waiting: [] as { id: string; reason: string }[] }
+  const all = await loadRows(ctx, "status = 'READY'")
+  const rows: ExternalRec[] = []
+  const unsigned: string[] = []
+  for (const r of all) {
+    const sig = await signatureOk(env, r.data)
+    if (!sig.ok) { await mark(ctx, r, { status: 'REJECTED', error: sig.reason }); continue }
+    if (!sig.signed) unsigned.push(r.id)
+    rows.push(r)
+  }
+  const report = { trigger: opts.trigger ?? 'manual', news: { rows: 0, created: 0, duplicate: 0, rejected: 0, too_old: 0, irrelevant: 0 }, events: [] as string[], views: [] as { view_id: string; status: string }[], policies: [] as string[], prices: [] as string[], challenges: [] as { view_id: string; challenge: string }[], unsigned, rejected: [] as { id: string; reason: string }[], waiting: [] as { id: string; reason: string }[] }
   if (!rows.length) return report
 
   // 1. Tin
@@ -118,6 +155,33 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     } catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 1000) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
   }
 
+  // 3b. Phản biện độc lập (F11): bản ghi riêng, từ phiên làm việc khác với phiên soạn nhận định và mô hình khác.
+  //     data = { view_id, findings, counter_scenario?, meta: { model, session } }
+  for (const r of rows.filter(x => x.kind === 'challenge')) {
+    const viewId = r.subject ?? r.data?.view_id
+    let v: ViewRec | null = null
+    try { v = viewId ? await getView(ctx, viewId) : null } catch { v = null }
+    if (!v) { if (tooOld(ctx, r)) { await mark(ctx, r, { status: 'REJECTED', error: 'Không tìm thấy nhận định' }); report.rejected.push({ id: r.id, reason: 'không tìm thấy nhận định' }) } else report.waiting.push({ id: r.id, reason: 'chờ nhận định' }); continue }
+    if (!['PENDING_APPROVAL', 'PENDING_CHALLENGE'].includes(v.status)) { await mark(ctx, r, { status: 'REJECTED', error: `Nhận định ở trạng thái ${v.status}` }); report.rejected.push({ id: r.id, reason: 'nhận định không còn ở bàn duyệt' }); continue }
+    if (!await claim(ctx, r)) continue
+    try {
+      const agentRun = v.agent_run_id ? await ctx.repo.get<{ external_meta?: { model?: string; session?: string }; model?: { model?: string } }>('agent_runs', v.agent_run_id) : null
+      const cioModel = agentRun?.external_meta?.model ?? agentRun?.model?.model ?? ''
+      const meta = (r.data?.meta ?? {}) as { model?: string; session?: string }
+      if (!meta.session || !meta.model) throw new HttpError(422, 'Phản biện độc lập phải ghi meta.model và meta.session')
+      const sep = { session: String(meta.session), cio_session: agentRun?.external_meta?.session, cio_model: cioModel }
+      const label = `Claude – phiên phản biện riêng (${meta.model})`
+      const before = (await viewChallenges(ctx, v.id)).length
+      const nv = v.status === 'PENDING_CHALLENGE' && v.unchallenged.length
+        ? await runReChallenge(ctx, v.id, { findings: r.data.findings ?? [], model: label, session: sep.session, cio_session: sep.cio_session, cio_model: sep.cio_model })
+        : await runPreChallenge(ctx, v.id, { findings: r.data.findings ?? [], counter_scenario: r.data.counter_scenario, model: label, separate: sep })
+      const chs = await viewChallenges(ctx, v.id)
+      const ch = chs[chs.length - 1]
+      await mark(ctx, r, { status: 'IMPORTED', result: { view_id: v.id, challenge_id: ch?.id, independence: ch?.independence, view_status: nv.status, added: chs.length - before } })
+      report.challenges.push({ view_id: v.id, challenge: ch?.id ?? '' })
+    } catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 1000) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
+  }
+
   // 4. Tóm tắt văn bản chính sách
   for (const r of rows.filter(x => x.kind === 'policy_summary')) {
     const docId = r.subject ?? r.data?.doc_id
@@ -148,7 +212,7 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
   }
 
   // Chỉ ghi nhật ký khi có thay đổi (tránh một bản ghi mỗi 10 phút khi các bản ghi chỉ đang chờ)
-  const changed = report.news.created + report.events.length + report.views.length + report.policies.length + report.prices.length + report.rejected.length
+  const changed = report.news.created + report.events.length + report.views.length + report.challenges.length + report.policies.length + report.prices.length + report.rejected.length
   if (changed || report.trigger !== 'cron') { const u = ctx.uow(); u.audit({ actor: report.trigger === 'cron' ? 'SYSTEM:cron' : 'ADMIN:CLAUDE', action: 'external.imported', object: 'external_outputs', data: report }); await u.commit() }
   return report
 }
@@ -180,7 +244,7 @@ export async function importPrices(ctx: AppCtx, d: { price_date: string; points:
   const points: PricePoint[] = base.points.map(bp => {
     const p = ov.get(bp.key)
     if (!p) return bp
-    return { key: bp.key, date: p.date, price: String(p.price), currency: bp.currency, source: p.source, source_ref: p.source_ref ?? p.source, fetched_at: now, flag: 'primary' }
+    return { key: bp.key, date: p.date, price: String(p.price), currency: bp.currency, source: p.source, source_ref: p.source_ref ?? p.source, fetched_at: now, flag: 'external_ai' }
   })
   const fx = { ...base.fx }
   for (const [k, p] of ov) if (k.startsWith('FX:')) fx[k.slice(3)] = String(p.price)

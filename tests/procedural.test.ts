@@ -23,18 +23,28 @@ describe('Khớp mục tiêu có dòng tiền ra nước ngoài', () => {
   it('mức khẩn theo khoảng cách tới khoản chi; dự thảo không yêu cầu liên hệ ngay', () => {
     const notes = [{ id: 'NW-1', doc_no: 'D1', title: 't', published_at: '2026-10-01T00:00:00Z', procedural: NOTE }]
     const goals = [goal({ id: 'G1', name: 'Du học Úc', type: 'education', year: 2027, month: 3 }), goal({ id: 'G2', name: 'Định cư Canada', year: 2028, month: 6 }), goal({ id: 'G3', name: 'Nghỉ hưu ở nước ngoài', type: 'retirement', year: 2033, month: 1 }), goal({ id: 'G4', name: 'Mua nhà', type: 'purchase' })]
-    const a = matchProcedural(notes, goals, '2026-10-10T00:00:00Z')
+    // Mục tiêu chỉ suy từ tên: RM xác nhận trước, chưa có thông điệp cho khách (tránh nhầm tên người)
+    const inferred = matchProcedural(notes, goals, '2026-10-10T00:00:00Z')
+    expect(inferred.map(x => [x.goal_id, x.tier])).toEqual([['G1', 'confirm'], ['G2', 'confirm'], ['G3', 'note']])
+    expect(inferred.every(x => x.client_message === '')).toBe(true)
+    // RM đã khai báo: mức khẩn theo khoảng cách tới khoản chi
+    const declared = goals.map(g => g.id === 'G1' ? { ...g, cross_border: { purpose: 'study' as const, country: 'Úc' } } : g.id === 'G2' ? { ...g, cross_border: { purpose: 'emigration' as const } } : g.id === 'G3' ? { ...g, cross_border: { purpose: 'emigration' as const } } : g)
+    const a = matchProcedural(notes, declared, '2026-10-10T00:00:00Z')
     expect(a.map(x => [x.goal_id, x.tier])).toEqual([['G1', 'remind'], ['G2', 'remind'], ['G3', 'note']])
     expect(a[0].reason).toContain('dự thảo')
-    const issued = matchProcedural([{ ...notes[0], procedural: { ...NOTE, status: 'issued' } }], goals, '2026-10-10T00:00:00Z')
+    expect(a[0].client_message).toBe(NOTE.client_message)
+    const issued = matchProcedural([{ ...notes[0], procedural: { ...NOTE, status: 'issued' } }], declared, '2026-10-10T00:00:00Z')
     expect(issued[0]).toMatchObject({ goal_id: 'G1', tier: 'contact', prepare_by: '2026-12-07' })
     // khoản chi trước ngày hiệu lực → chỉ ghi chú
-    expect(matchProcedural([{ ...notes[0], procedural: { ...NOTE, status: 'issued', effective_date: '2027-07-01' } }], goals, '2026-10-10T00:00:00Z').find(x => x.goal_id === 'G1')).toMatchObject({ tier: 'note' })
+    expect(matchProcedural([{ ...notes[0], procedural: { ...NOTE, status: 'issued', effective_date: '2027-07-01' } }], declared, '2026-10-10T00:00:00Z').find(x => x.goal_id === 'G1')).toMatchObject({ tier: 'note' })
   })
   it('thông điệp cho khách không được nhắc tới hồ sơ rủi ro rửa tiền', () => {
     expect(proceduralErrors(NOTE)).toEqual([])
     expect(proceduralErrors({ ...NOTE, client_message: 'Anh/chị thuộc nhóm khách hàng PEP nên giao dịch chuyển tiền sẽ bị giám sát tăng cường.' }).join()).toContain('không được nhắc PEP')
     expect(proceduralErrors({ ...NOTE, applies_to: [] }).length).toBe(1)
+    // Gợi ý cho RM cũng bị kiểm (RM có thể đọc lại cho khách); cụm từ cấm của Tuân thủ áp cho cả hai
+    expect(proceduralErrors({ ...NOTE, rm_talking_points: 'Khách thuộc danh sách theo dõi, cần nói khéo khi hẹn gặp.' }).join()).toContain('Gợi ý cho RM')
+    expect(proceduralErrors({ ...NOTE, client_message: NOTE.client_message + ' Lợi nhuận chắc chắn.' }, ['chắc chắn']).join()).toContain('cụm từ cấm')
   })
 })
 
@@ -57,7 +67,7 @@ describe('Ghi chú quy định qua cổng phát hành tới thẻ mục tiêu', 
     const a = await h.ok('RM1', 'GET', '/api/families/DEMO-F01/procedural')
     expect(a.map((x: any) => x.goal_name)).toEqual(['Du học Úc cho con', 'Du học cho Minh Châu'])
     expect(a[0]).toMatchObject({ tier: 'remind', inferred: false, country: 'Úc' })
-    expect(a[1]).toMatchObject({ inferred: true })
+    expect(a[1]).toMatchObject({ inferred: true, client_message: '' })
     expect((await h.call('RM1', 'GET', '/api/families/DEMO-F17/procedural')).status).toBe(403)
     const book = await h.ok('RM1', 'GET', '/api/procedural')
     expect(new Set(book.alerts.map((x: any) => x.family_id))).toEqual(new Set(['DEMO-F01']))

@@ -13,7 +13,7 @@ import { assertViewTransition } from '../../engine/states'
 import { actor, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
 import type { UnitOfWork } from '../db'
 import { activeConfig, activeRestricted, loadConfigs, loadFactorModel } from './config'
-import { keywordScenarios } from '../../agents/keywordView'
+import { keywordScenarios, scenariosFromImpacts } from '../../agents/keywordView'
 import { eventNews, getEvent, withTimestamp, type EventRec, type NewsItem } from './events'
 import { currentSnapshot, loadInstruments } from './portfolio'
 import { evNum, nextChallengeNo, nextViewVersion } from '../ids'
@@ -31,6 +31,22 @@ export interface ChallengeRec {
   id: string; view_id: string; stage: 'pre_approval' | 're_challenge' | 'post_check'; created_at: string
   findings: Finding[]; counter_scenario?: string; summary?: string; lines?: string[]; run_id?: string
   input_package: unknown; model: string; prompt_version: string | null; dropped?: string[]
+  // Phản biện có độc lập với bên soạn nhận định không: khác mô hình VÀ khác phiên/lượt gọi. Thiếu trường này (bản ghi cũ) coi như chưa độc lập.
+  independence?: { independent: boolean; reason: string }
+}
+
+// Đánh giá độc lập của phản biện
+export function independenceOf(mode: 'mock' | 'live' | 'external' | 'external_challenge' | 'external_same', cioModel: string, challengerModel: string, sessions?: { cio?: string; challenger?: string }): { independent: boolean; reason: string } {
+  if (mode === 'external_same') return { independent: false, reason: 'Phản biện nằm trong cùng bản ghi với nhận định (cùng phiên Claude vừa soạn vừa phản biện): cần bản ghi phản biện riêng từ phiên khác, mô hình khác' }
+  if (mode === 'external') return { independent: false, reason: 'Chế độ hộp chờ: chưa có phản biện từ phiên độc lập' }
+  if (mode === 'mock') return { independent: true, reason: 'Chế độ mô phỏng (demo, kiểm thử): coi như độc lập' }
+  const sameModel = cioModel.trim().toLowerCase() === challengerModel.trim().toLowerCase()
+  if (sameModel) return { independent: false, reason: `Agent Phản biện dùng cùng mô hình với Agent CIO (${cioModel})` }
+  if (mode === 'external_challenge') {
+    if (!sessions?.challenger || !sessions.cio || sessions.challenger === sessions.cio) return { independent: false, reason: 'Bản ghi phản biện không ghi phiên làm việc, hoặc trùng phiên với bên soạn nhận định' }
+    return { independent: true, reason: `Phiên phản biện ${sessions.challenger} khác phiên soạn ${sessions.cio}; mô hình ${challengerModel} khác ${cioModel}` }
+  }
+  return { independent: true, reason: `Lượt gọi riêng, mô hình ${challengerModel} khác ${cioModel}; chỉ nhận đầu ra cuối (BR-05)` }
 }
 
 export interface FindingResponse { id: string; view_id: string; finding_id: string; response: 'accepted_fixed' | 'disagree' | 'out_of_scope'; fixed_line?: string; comment: string; by: string; at: string }
@@ -130,7 +146,7 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
         const kw = mockVer ? null : keywordView(e.title, news)
         if (node === 'synthesize') {
           const v = mockVer ? (fillSources(mockVer.view, news) as ViewBody) : kw!
-          const sc = mockVer ? undefined : keywordScenarios(news)
+          const sc = mockVer ? scenariosFromImpacts(v.impacts, news.map(n => n.id)) : keywordScenarios(news) ?? scenariosFromImpacts(v.impacts, news.map(n => n.id))
           output = { summary: v.summary || e.title, impacts: v.impacts, ...(sc ? { scenarios: sc } : {}) }
         } else if (mockVer) output = fillSources(mockVer.nodes[node], news)
         else if (node === 'debate') output = { topics: [] }
@@ -221,9 +237,10 @@ async function policyCitationFindings(ctx: AppCtx, e: EventRec, news: NewsItem[]
 }
 
 // Phản biện trước duyệt (FR-401 đến FR-404)
-export async function runPreChallenge(ctx: AppCtx, viewId: string, external?: { findings: unknown[]; counter_scenario?: string; model: string }): Promise<ViewRec> {
+export async function runPreChallenge(ctx: AppCtx, viewId: string, external?: { findings: unknown[]; counter_scenario?: string; model: string; separate?: { session: string; cio_session?: string; cio_model: string } }): Promise<ViewRec> {
   let v = await getView(ctx, viewId)
-  if (v.status !== 'PENDING_CHALLENGE') throw new HttpError(409, 'Nhận định không ở trạng thái chờ phản biện')
+  // Phản biện độc lập bổ sung (bản ghi riêng từ phiên khác) được nhận cả khi nhận định đã ở bàn duyệt
+  if (v.status !== 'PENDING_CHALLENGE' && !(external?.separate && v.status === 'PENDING_APPROVAL')) throw new HttpError(409, 'Nhận định không ở trạng thái chờ phản biện')
   const e = await getEvent(ctx, v.event_id)
   const news = await eventNews(ctx, e)
   const vctx = await viewContext(ctx, e, news)
@@ -236,8 +253,11 @@ export async function runPreChallenge(ctx: AppCtx, viewId: string, external?: { 
   const models = await activeConfig<ModelSet>(ctx, 'MODEL')
   const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
   let llmRaw: unknown[] = [], counter = '', model = `mock (${models.content.challenger.model})`
-  if (external) { llmRaw = external.findings ?? []; counter = external.counter_scenario ?? ''; model = external.model }
-  else if (ctx.agentMode !== 'live') {
+  let independence = independenceOf(ctx.agentMode, models.content.cio.model, models.content.challenger.model)
+  if (external) {
+    llmRaw = external.findings ?? []; counter = external.counter_scenario ?? ''; model = external.model
+    independence = external.separate ? independenceOf('external_challenge', external.separate.cio_model, model, { cio: external.separate.cio_session, challenger: external.separate.session }) : independenceOf('external_same', '', '')
+  } else if (ctx.agentMode !== 'live') {
     const m = news.every(n => n.simulated) ? MOCK.challenger[mockKey(e)] : undefined
     const part = v.version >= 2 && m?.pre_v2 ? m.pre_v2 : m?.pre
     llmRaw = part?.findings ?? []; counter = part?.counter_scenario ?? ''
@@ -250,9 +270,9 @@ export async function runPreChallenge(ctx: AppCtx, viewId: string, external?: { 
   const norm = normalizeLlmFindings(llmRaw, vctx.newsIds)
   const n = await nextChallengeNo(ctx, v.id, 'pre_approval')
   const id = `CH-${evNum(v.event_id)}-v${v.version}-pre-${n}`
-  const ch: ChallengeRec = { id, view_id: v.id, stage: 'pre_approval', created_at: ctx.now(), findings: numberFindings(id, 'pre_approval', rule, norm.findings), counter_scenario: counter, input_package: pkg, model, prompt_version: prompts.version.id, dropped: norm.dropped }
-  v = transition(ctx, v, 'PENDING_APPROVAL', 'Có báo cáo phản biện')
-  v.view_ready_at = ctx.now()
+  const ch: ChallengeRec = { id, view_id: v.id, stage: 'pre_approval', created_at: ctx.now(), findings: numberFindings(id, 'pre_approval', rule, norm.findings), counter_scenario: counter, input_package: pkg, model, prompt_version: prompts.version.id, dropped: norm.dropped, independence }
+  if (v.status === 'PENDING_CHALLENGE') v = transition(ctx, v, 'PENDING_APPROVAL', 'Có báo cáo phản biện')
+  v.view_ready_at = v.view_ready_at ?? ctx.now()
   const uow = ctx.uow()
   uow.insert('challenges', ch as never).update('views', v as never)
   if (!e.timestamps.view_ready_at) uow.update('events', withTimestamp(e, 'view_ready_at', v.view_ready_at) as never)
@@ -310,6 +330,11 @@ export async function editScenarios(ctx: AppCtx, viewId: string, scenarios: unkn
   const now = ctx.now()
   const before = v.body.scenarios
   v = { ...v, body: val.view!, cio_edits: [...v.cio_edits, { at: now, by: actor(ctx), key: 'scenarios', kind: 'scenarios', before: v.body.scenarios as never, after: val.view!.scenarios as never, note }] }
+  // Sửa kịch bản là sửa trọng yếu (đổi con số tới khách): phải phản biện lại như sửa dòng (FR-405)
+  if (JSON.stringify(before ?? null) !== JSON.stringify(val.view!.scenarios ?? null)) {
+    v.unchallenged = [...new Set([...v.unchallenged, 'scenarios'])]
+    if (v.status === 'PENDING_APPROVAL') v = transition(ctx, v, 'PENDING_CHALLENGE', 'CIO sửa nhánh kịch bản')
+  }
   const uow = ctx.uow()
   uow.update('views', v as never)
   uow.audit({ actor: actor(ctx), action: 'view.cio_edit_scenarios', object: v.id, data: { before, after: val.view!.scenarios, note } })
@@ -318,8 +343,8 @@ export async function editScenarios(ctx: AppCtx, viewId: string, scenarios: unkn
 }
 
 // Phản biện lại chỉ các dòng đã đổi (FR-405)
-export async function runReChallenge(ctx: AppCtx, viewId: string): Promise<ViewRec> {
-  requireRole(ctx, 'CIO')
+export async function runReChallenge(ctx: AppCtx, viewId: string, external?: { findings: unknown[]; model: string; session: string; cio_session?: string; cio_model: string }): Promise<ViewRec> {
+  if (!external) requireRole(ctx, 'CIO')
   let v = await getView(ctx, viewId)
   if (v.status !== 'PENDING_CHALLENGE' || !v.unchallenged.length) throw new HttpError(409, 'Không có dòng nào chờ phản biện lại')
   const e = await getEvent(ctx, v.event_id)
@@ -333,12 +358,14 @@ export async function runReChallenge(ctx: AppCtx, viewId: string): Promise<ViewR
   const models = await activeConfig<ModelSet>(ctx, 'MODEL')
   const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
   let llmRaw: unknown[] = [], model = `mock (${models.content.challenger.model})`
-  if (ctx.agentMode !== 'live') llmRaw = news.every(n => n.simulated) ? [...keys].flatMap(k => MOCK.challenger[mockKey(e)]?.re_challenge?.[k] ?? []) : []
+  let independence = independenceOf(ctx.agentMode, models.content.cio.model, models.content.challenger.model)
+  if (external) { llmRaw = external.findings ?? []; model = external.model; independence = independenceOf('external_challenge', external.cio_model, model, { cio: external.cio_session, challenger: external.session }) }
+  else if (ctx.agentMode !== 'live') llmRaw = news.every(n => n.simulated) ? [...keys].flatMap(k => MOCK.challenger[mockKey(e)]?.re_challenge?.[k] ?? []) : []
   else { await ctx.progress?.('challenger_re'); const r = await callChallenger(ctx, v.id, 're_challenge', () => callJson(ctx.env, models.content.challenger, prompts.content.challenger.re_challenge, wrapData('gói phản biện lại', pkg), ctx.fetchFn)); llmRaw = (r.json as { findings?: unknown[] }).findings ?? []; model = r.model }
   const norm = normalizeLlmFindings(llmRaw.map(f => ({ ...(f as object), stage: 're_challenge' })), vctx.newsIds)
   const n = await nextChallengeNo(ctx, v.id, 're_challenge')
   const id = `CH-${evNum(v.event_id)}-v${v.version}-re-${n}`
-  const ch: ChallengeRec = { id, view_id: v.id, stage: 're_challenge', created_at: ctx.now(), findings: numberFindings(id, 're_challenge', rule, norm.findings), lines: [...keys], input_package: pkg, model, prompt_version: prompts.version.id, dropped: norm.dropped }
+  const ch: ChallengeRec = { id, view_id: v.id, stage: 're_challenge', created_at: ctx.now(), findings: numberFindings(id, 're_challenge', rule, norm.findings), lines: [...keys], input_package: pkg, model, prompt_version: prompts.version.id, dropped: norm.dropped, independence }
   v = transition(ctx, { ...v, unchallenged: [] }, 'PENDING_APPROVAL', 'Đã phản biện lại các dòng CIO sửa')
   const uow = ctx.uow()
   uow.insert('challenges', ch as never).update('views', v as never)
@@ -387,6 +414,16 @@ export async function approvalConditions(ctx: AppCtx, v: ViewRec, reason?: strin
   const unresolved = crit.filter(f => !resp.some(r => r.finding_id === f.finding_id))
   if (unresolved.length) missing.push(`(c) Phát hiện Nghiêm trọng chưa được phản hồi: ${unresolved.map(f => f.finding_id).join(', ')}`)
   if (reason !== undefined && reason.trim().length < 20) missing.push('(d) Lý do duyệt tối thiểu 20 ký tự')
+  // (e) Một bộ máy tính: không có nhánh kịch bản thì không duyệt (con số tới khách chỉ đến từ lớp kịch bản)
+  const sc = v.body.scenarios as { branches?: unknown[] } | undefined
+  if (!sc?.branches || sc.branches.length < 2) missing.push('(e) Chưa có nhánh kịch bản (tối thiểu 2 nhánh): CIO bổ sung kịch bản trước khi duyệt')
+  // (f) Phản biện độc lập: báo cáo phản biện trước duyệt mới nhất và mọi lượt phản biện lại phải độc lập với bên soạn
+  const pre = chs.filter(c => c.stage === 'pre_approval')
+  const lastPre = pre[pre.length - 1]
+  const anyIndependentPre = pre.some(c => c.independence?.independent)
+  const notIndep = chs.filter(c => c.stage === 're_challenge' && !c.independence?.independent)
+  if (lastPre && !anyIndependentPre) missing.push(`(f) Phản biện chưa độc lập: ${lastPre.independence?.reason ?? 'bản ghi không có đánh giá độc lập'}`)
+  if (notIndep.length) missing.push(`(f) Lượt phản biện lại chưa độc lập: ${notIndep.map(c => c.id).join(', ')}`)
   if (v.status !== 'PENDING_APPROVAL' && v.status !== 'PENDING_CHALLENGE') missing.push(`Trạng thái hiện tại ${v.status} không cho phép duyệt`)
   return { ok: missing.length === 0, missing }
 }

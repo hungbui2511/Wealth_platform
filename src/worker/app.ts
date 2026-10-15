@@ -23,7 +23,7 @@ import { closeGoal, createGoal, updateGoal } from './services/goals'
 import { addPolicy, analyzePolicy, confirmSource, loadSamplePolicies, policyDetail, radar } from './services/policy'
 import { createRelease, reviewRelease, submitRelease, updateRelease } from './services/releases'
 import { backgroundEnabled, getJob, listJobs, requestExternal, runOrQueue, startJob } from './services/jobs'
-import { importExternal, listExternal } from './services/external'
+import { importExternal, listExternal, submitExternal } from './services/external'
 import { agentCatalog, agentRunTrace, auditExport, auditList, traceFamily, verifyChain } from './services/trace'
 import type { FamilyImpactResult } from '../engine/apply'
 import type { TimestampField } from '../compliance/controls'
@@ -42,7 +42,16 @@ export function createApp(opts: AppOptions = {}) {
   })
 
   // Không cần đăng nhập: danh sách người dùng demo và danh mục cố định
-  app.get('/api/health', c => c.json({ ok: true, agent_mode: resolveAgentMode(c.env), agent_mode_setting: c.env.AGENT_MODE ?? 'mock', price_mode: c.env.PRICE_MODE ?? 'sample', price_date: PRICE_DATE, background_jobs: !!c.env.AGENT_JOBS, llm_key: !!c.env.ANTHROPIC_API_KEY }))
+  app.get('/api/health', c => c.json({ ok: true, agent_mode: resolveAgentMode(c.env), agent_mode_setting: c.env.AGENT_MODE ?? 'mock', price_mode: c.env.PRICE_MODE ?? 'sample', price_date: PRICE_DATE, background_jobs: !!c.env.AGENT_JOBS, llm_key: !!c.env.ANTHROPIC_API_KEY,
+    // Tư thế kiểm soát: các khóa và cờ bảo vệ đang bật hay chưa (không lộ giá trị)
+    controls: { access_aud: !!c.env.ACCESS_AUD, sod_strict: c.env.SOD_STRICT === 'on', external_signed: !!c.env.EXTERNAL_HMAC_KEY, audit_hmac: !!c.env.AUDIT_HMAC_KEY, manual_apply: c.env.MANUAL_APPLY === 'on', interpretation_llm: c.env.INTERPRETATION_LLM === 'internal' ? 'internal' : 'off', auth_mode: c.env.AUTH_MODE === 'dev' ? 'dev' : 'access' },
+    warnings: [
+      ...(!c.env.ACCESS_AUD && c.env.AUTH_MODE !== 'dev' ? ['ACCESS_AUD chưa đặt: chấp nhận JWT của mọi ứng dụng Access trong team'] : []),
+      ...(c.env.SOD_STRICT !== 'on' ? ['SOD_STRICT tắt: một người vận hành chuyển vai trò demo có thể làm cả hai bước của quy trình hai người'] : []),
+      ...(!c.env.EXTERNAL_HMAC_KEY ? ['EXTERNAL_HMAC_KEY chưa đặt: bản ghi của vùng AI chưa ký'] : []),
+      ...(!c.env.AUDIT_HMAC_KEY ? ['AUDIT_HMAC_KEY chưa đặt: nhật ký dùng SHA-256 thường, người có quyền ghi cơ sở dữ liệu có thể tính lại chuỗi'] : []),
+      ...(c.env.MANUAL_APPLY === 'on' ? ['MANUAL_APPLY bật: có đường áp dụng bỏ qua phản biện (chỉ dùng khi kiểm thử)'] : []),
+    ] }))
   const fetchFn = () => opts.fetchFn ?? fetch
   // Danh sách vai trò được chọn: người vận hành demo thấy tất cả; người được gán cố định chỉ thấy vai trò của mình
   app.get('/api/users', async c => {
@@ -63,6 +72,9 @@ export function createApp(opts: AppOptions = {}) {
     const ctx = makeCtx(c.env, { id: 'SYSTEM', name: 'Khởi tạo', role: 'ADMIN', families: [] }, { ...opts, accessEmail: who.email })
     return c.json(await reseed(ctx, { skipAuth: true }))
   })
+
+  // Vùng AI gửi kết quả có chữ ký (không cần đăng nhập vai trò; chỉ nhận khi chữ ký HMAC đúng). Trước tầng xác thực.
+  app.post('/api/external/submit', async c => c.json(await submitExternal(c.env, await c.req.json().catch(() => null), (opts.now ?? (() => new Date().toISOString()))())))
 
   app.use('/api/*', async (c, next) => {
     const { user, email: accessEmail, operator } = await authenticate(c.req.raw, c.env, fetchFn())

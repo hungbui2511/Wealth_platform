@@ -13,6 +13,7 @@ export interface InboxItem extends NewsItem { auto: true; origin?: NewsOrigin; r
 
 const MAX_NEW_PER_RUN = 40
 const MAX_AGE_DAYS = 3
+const FUTURE_SKEW_MS = 10 * 60_000
 
 export async function ingestNews(ctx: AppCtx, opts: { trigger: 'cron' | 'manual' } = { trigger: 'manual' }) {
   const [cfg, sourcesCfg, instruments] = await Promise.all([loadConfigs(ctx), activeConfig<{ name: string; url: string; origin?: NewsOrigin }[]>(ctx, 'NEWS_SOURCES'), loadInstruments(ctx)])
@@ -53,7 +54,10 @@ export async function addToInbox(ctx: AppCtx, fresh: IncomingItem[], o: { trigge
     if (seen.has(f.item.url)) { report.duplicate++; continue }
     seen.add(f.item.url)
     if (Date.parse(now) - Date.parse(f.item.published_at) > (o.maxAgeDays ?? MAX_AGE_DAYS) * 864e5) { report.too_old++; continue }
-    // BR-26: miền thuộc danh sách nguồn công khai, có thời điểm công bố, không muộn hơn lúc nạp
+    // BR-26: miền thuộc danh sách nguồn công khai, có thời điểm công bố, không muộn hơn lúc nạp.
+    // Giờ công bố ở tương lai bị TỪ CHỐI (trước đây kéo về giờ nạp, làm sai mốc đo tốc độ phản ứng); chỉ chấp nhận lệch đồng hồ ≤ 10 phút.
+    const skew = Date.parse(f.item.published_at) - Date.parse(now)
+    if (Number.isNaN(skew) || skew > FUTURE_SKEW_MS) { report.rejected++; report.rejected_items.push({ url: f.item.url, errors: [Number.isNaN(skew) ? 'Thiếu hoặc sai thời điểm công bố' : `Thời điểm công bố ${f.item.published_at} ở tương lai so với lúc nạp`] }); continue }
     const errs = checkPublicSource({ url: f.item.url, published_at: f.item.published_at < now ? f.item.published_at : now }, cfg.whitelist, now)
     if (errs.length) { report.rejected++; report.rejected_items.push({ url: f.item.url, errors: errs }); continue }
     const cls = classifyNews(f.item, tickers)
@@ -67,7 +71,7 @@ export async function addToInbox(ctx: AppCtx, fresh: IncomingItem[], o: { trigge
     const ids = await ctx.repo.nextIds('news_items', 'NW-', 4, take.length)
     const u = ctx.uow()
     take.forEach((c, i) => {
-      const published = c.item.published_at < now ? c.item.published_at : now
+      const published = c.item.published_at < now ? c.item.published_at : now // chỉ còn trường hợp lệch đồng hồ ≤ 10 phút
       const hit = restrictedHits([c.item.title, c.item.summary], restricted).length > 0
       const n: InboxItem = { id: ids[i], event_id: null as never, title: c.item.title, source: new URL(c.item.url).hostname, url: c.item.url, published_at: published, ingested_at: now, summary: c.item.summary, language: /federalreserve\.gov/.test(c.item.url) ? 'en' : 'vi', simulated: false, auto: true, origin: classifyOrigin(c.item, c.origin), feed: c.feed, relevance: c.cls.relevance, suggested_type: c.suggested_type ?? c.cls.suggested_type, keywords: c.cls.keywords, tickers: c.cls.tickers, ...(hit ? { restricted_hit: true } : {}), ...(o.trigger === 'claude' ? { by_claude: true } : {}) }
       u.insert('news_items', n as never)

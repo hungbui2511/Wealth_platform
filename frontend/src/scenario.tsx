@@ -1,4 +1,4 @@
-// Thiết kế v2: nhánh kịch bản (agent đề xuất, CIO duyệt) và dải tác động xấu/cơ sở/tốt cho từng gia đình
+// Thiết kế v2: nhánh kịch bản (agent đề xuất, CIO duyệt) và dải tác động P5/P10/P50/P90 cho từng gia đình
 import { useEffect, useState } from 'react'
 import { DEFAULT_FACTOR_MODEL } from '../../src/data/factorModel'
 import { ASSET_CLASS_LABELS } from '../../src/shared/catalog'
@@ -86,23 +86,24 @@ export function FamilyScenarioCard({ s }: { s: any }) {
   return (
     <Card title={<span className="flex flex-wrap items-center gap-2">Dải tác động theo kịch bản <Badge tone="primary">thiết kế v2</Badge>{s.lane2.route === 'RM_REVIEW' ? <Badge tone="red">Luồng 2: chuyển RM xem trước</Badge> : <Badge tone="green">Luồng 2: gửi theo mẫu đã duyệt</Badge>}</span>}>
       <div className="overflow-x-auto"><table className="t">
-        <thead><tr><th>Kỳ hạn</th><th className="num">Xấu (phân vị 10%)</th><th className="num">Cơ sở (trung vị)</th><th className="num">Tốt (phân vị 90%)</th></tr></thead>
+        <thead><tr><th>Kỳ hạn</th><th className="num">P5 (rất xấu)</th><th className="num">P10 (xấu)</th><th className="num">P50 (trung vị)</th><th className="num">P90 (tốt)</th></tr></thead>
         <tbody>{s.ranges.map((r: any) => <tr key={r.horizon}><td>{r.horizon}</td>
-          {(['bad', 'base', 'good'] as const).map(k => <td key={k} className="num"><Money v={r[k]} short /><div className="text-fgm text-xs">{fmtPct(r[`${k}_pct`], 2)}</div></td>)}</tr>)}</tbody>
+          {(r.severe !== undefined ? ['severe', 'bad', 'base', 'good'] as const : ['bad', 'base', 'good'] as const).map(k => <td key={k} className="num"><Money v={r[k]} short /><div className="text-fgm text-xs">{fmtPct(r[`${k}_pct`], 2)}</div></td>)}</tr>)}</tbody>
       </table></div>
       <p className="text-fgm text-xs mt-1">{s.lane2.reason}</p>
       <div className="grid md:grid-cols-2 gap-4 mt-3">
-        <div><div className="text-[13px] font-medium mb-1">Đóng góp theo yếu tố (cơ sở, 3 tháng)</div>
+        <div><div className="text-[13px] font-medium mb-1">Đóng góp theo yếu tố (kỳ vọng, 3 tháng)</div>
           {factors.map(([k, v]) => <div key={k} className="grid grid-cols-[minmax(0,12rem)_1fr_5rem] gap-2 items-center text-[12.5px] py-0.5"><span className="truncate" title={FACTOR[k]?.label}>{FACTOR[k]?.label ?? k}</span>
             <div className="h-2.5 bg-muted rounded relative"><div className={`absolute top-0 bottom-0 left-0 rounded ${v < 0 ? 'bg-red/70' : 'bg-green/70'}`} style={{ width: `${Math.abs(v) / maxF * 100}%` }} /></div><span className="num text-right"><Money v={v} short /></span></div>)}
           {!factors.length && <span className="text-fgm text-xs">Không đáng kể</span>}</div>
-        <div><div className="text-[13px] font-medium mb-1">Theo loại tài sản (cơ sở, 3 tháng)</div>
+        <div><div className="text-[13px] font-medium mb-1">Theo loại tài sản (kỳ vọng, 3 tháng)</div>
           {classes.map(([k, v]) => <div key={k} className="flex justify-between text-[12.5px] py-0.5 border-b border-[#1e2537]"><span>{ACL[k] ?? k}</span><Money v={v} short /></div>)}
           {s.loan_cost_annual !== 0 && <div className="flex justify-between text-[12.5px] py-0.5"><span>Chi phí lãi vay VND thả nổi thay đổi/năm</span><Money v={s.loan_cost_annual} short /></div>}
           {s.model_based_share > 0.05 && <div className="mt-2"><Badge tone="amber">{Math.round(s.model_based_share * 100)}% tác động đến từ tài sản định giá theo mô hình (BĐS, CP chưa niêm yết)</Badge></div>}
         </div>
       </div>
-      <p className="text-fgm text-xs mt-3">Dải phản ánh xác suất các nhánh và độ bất định của cách cú sốc lan truyền ({s.model_version}); không gồm biến động thị trường thông thường. Tính tất định, không dùng AI, tính lại được từ ảnh chụp. Nội bộ – không phải dự báo hay khuyến nghị.</p>
+      {s.variance_share_3m && <p className="text-fgm text-xs mt-2">Độ bất định 3 tháng gồm: tương quan còn lại {Math.round(s.variance_share_3m.residual * 100)}% · cỡ cú sốc lõi {Math.round(s.variance_share_3m.core * 100)}% · rủi ro riêng từng mã {Math.round(s.variance_share_3m.idio * 100)}%.</p>}
+      <p className="text-fgm text-xs mt-1">Dải phản ánh xác suất các nhánh, độ bất định của cỡ cú sốc, cách cú sốc lan truyền theo độ dài kỳ hạn và rủi ro riêng từng mã ({s.model_version}). Trong mỗi nhánh giả định phân phối chuẩn nên đuôi có thể mỏng hơn thực tế: P5 là mốc tham khảo, không phải tổn thất tối đa. Tính tất định, không dùng AI, tính lại được từ ảnh chụp. Nội bộ – không phải dự báo hay khuyến nghị.</p>
     </Card>
   )
 }
@@ -113,9 +114,9 @@ export function RunScenarioSummary({ s }: { s: any }) {
   return (
     <Card title={<span className="flex items-center gap-2">Kịch bản trên toàn bộ khách Private <Badge tone="primary">thiết kế v2</Badge></span>}>
       <div className="grid md:grid-cols-4 gap-3 mb-3">
-        <div><div className="text-fgm text-[13px]">Cơ sở 3 tháng (tổng)</div><div className="text-lg font-semibold"><Money v={s.book_base_3m} short /></div></div>
-        <div><div className="text-fgm text-[13px]">Xấu 3 tháng (cộng các gia đình)</div><div className="text-lg font-semibold"><Money v={s.book_bad_3m_sum} short /></div></div>
-        <div><div className="text-fgm text-[13px]">Gia đình xấu nhất (3 tháng)</div><div className="text-lg font-semibold num text-left">{fmtPct(s.worst_bad_3m_pct, 2)}</div></div>
+        <div><div className="text-fgm text-[13px]">P50 3 tháng (tổng)</div><div className="text-lg font-semibold"><Money v={s.book_base_3m} short /></div></div>
+        <div><div className="text-fgm text-[13px]">P10 3 tháng (cộng các gia đình)</div><div className="text-lg font-semibold"><Money v={s.book_bad_3m_sum} short /></div></div>
+        <div><div className="text-fgm text-[13px]">Gia đình có P10 thấp nhất (3 tháng)</div><div className="text-lg font-semibold num text-left">{fmtPct(s.worst_bad_3m_pct, 2)}</div></div>
         <div><div className="text-fgm text-[13px]">Luồng 2 chuyển RM xem trước</div><div className="text-lg font-semibold">{s.families_rm_review}/{s.families}</div></div>
       </div>
       <div className="text-[13px] font-medium mb-1">Giám sát tập trung: yếu tố chi phối toàn bộ sổ khách (cơ sở, 3 tháng)</div>

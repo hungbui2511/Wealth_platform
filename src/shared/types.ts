@@ -65,7 +65,8 @@ export interface Instrument {
   issuer?: string
 }
 
-export type PriceFlag = 'primary' | 'fallback' | 'sample' | 'manual'
+// external_ai: giá do Claude tự lấy từ nguồn công khai, chưa phải nguồn chính thức có thỏa thuận dữ liệu
+export type PriceFlag = 'primary' | 'fallback' | 'sample' | 'manual' | 'external_ai'
 export interface PricePoint {
   key: string; date: string; price: Dec; currency: Currency
   source: string; source_ref?: string; fetched_at: string; flag: PriceFlag

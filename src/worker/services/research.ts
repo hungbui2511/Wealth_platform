@@ -2,7 +2,7 @@
 // Khối Nghiên cứu (vai trò CIO hoặc Quản trị trong demo) nạp báo cáo → Tuân thủ cho phát hành → tin vào hộp tin với nhãn "độc quyền".
 // Rào chắn: bản nháp và báo cáo chưa tới giờ phát hành không vào hộp tin và không được gắn vào sự kiện; agent không đọc được.
 import { restrictedHits } from '../../compliance/controls'
-import { actor, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
+import { actor, HttpError, minReason, requireRole, samePerson, type AppCtx } from '../ctx'
 import { activeRestricted, loadConfigs } from './config'
 import type { NewsItem } from './events'
 import { proceduralErrors } from '../../engine/procedural'
@@ -25,7 +25,7 @@ export async function submitResearch(ctx: AppCtx, b: ResearchInput) {
   const kind = b.kind === 'house_view' ? 'house_view' : b.kind === 'regulatory_note' ? 'regulatory_note' : 'research'
   let procedural: ProceduralNote | undefined
   if (kind === 'regulatory_note') {
-    const errs = proceduralErrors(b.procedural)
+    const errs = proceduralErrors(b.procedural, (await loadConfigs(ctx)).banned)
     if (errs.length) throw new HttpError(422, errs.join('; '))
     const p = b.procedural!
     procedural = { regulation: p.regulation.trim().slice(0, 300), status: p.status, ...(p.effective_date ? { effective_date: p.effective_date } : {}), applies_to: [...new Set(p.applies_to)], lead_time_weeks: p.lead_time_weeks, documents: p.documents.map(d => String(d).trim()).filter(Boolean).slice(0, 10), client_message: p.client_message.trim().slice(0, 1000), rm_talking_points: p.rm_talking_points.trim().slice(0, 1500) }
@@ -51,7 +51,7 @@ export async function releaseResearch(ctx: AppCtx, id: string, approve: boolean,
   const n = await ctx.repo.get<NewsItem>('news_items', id)
   if (!n || n.origin !== 'exclusive' || !n.research) throw new HttpError(404, `Không có báo cáo nghiên cứu ${id}`)
   if (n.research.status !== 'PENDING_RELEASE') throw new HttpError(409, 'Báo cáo không ở trạng thái chờ phát hành')
-  if (n.research.submitted_by.endsWith(`:${ctx.user.id}`)) throw new HttpError(409, 'Người cho phát hành phải khác người nạp báo cáo')
+  if (samePerson(ctx, n.research.submitted_by)) throw new HttpError(409, 'Người cho phát hành phải khác người nạp báo cáo')
   if (approve) {
     const hits = restrictedHits([n.title, n.summary, n.research.procedural?.client_message ?? '', n.research.procedural?.rm_talking_points ?? ''], activeRestricted(await loadConfigs(ctx), ctx.now()))
     if (hits.length) throw new HttpError(409, 'Báo cáo nhắc tổ chức trong danh sách hạn chế: không cho phát hành vào hệ thống (BR-27)')

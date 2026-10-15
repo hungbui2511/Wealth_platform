@@ -979,7 +979,13 @@ export const DEFAULT_FACTOR_MODEL = {
   "long": 7.0,
   "CORP_BOND": 2.5
  },
- "uncertainty_weeks": 1,
+ "horizon_months": [
+  0.25,
+  3,
+  12
+ ],
+ "core_shock_uncertainty": 0.4,
+ "idio_default_r2": 0.35,
  "vol_frequency": "tháng",
  "estimation": {
   "months": 55,
@@ -1003,6 +1009,7 @@ export const DEFAULT_FACTOR_MODEL = {
   }
  },
  "quantiles": {
+  "severe": 0.05,
   "bad": 0.1,
   "base": 0.5,
   "good": 0.9

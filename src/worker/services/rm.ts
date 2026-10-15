@@ -80,11 +80,19 @@ export async function interpretation(ctx: AppCtx, runId: string, familyId: strin
   const restrictedEntries = activeRestricted(cfg, ctx.now())
   const restricted = new Set(restrictedEntries.flatMap(e => e.instruments))
   let text: string, model: string
-  if (ctx.agentMode !== 'live') { text = mockInterpretation(fam.name, familyId, r, redactRestricted(run.view_body.summary, restrictedEntries), restricted); model = 'mock' }
+  // Rào chắn thông tin: dữ liệu gia đình không gửi tới mô hình AI bên ngoài. Mặc định diễn giải bằng mẫu xác định.
+  // Chỉ khi ngân hàng có mô hình chạy trong hạ tầng của mình (INTERPRETATION_LLM=internal) mới gọi LLM, và vẫn bỏ tên,
+  // tài sản ròng, danh sách vị thế khỏi gói gửi đi.
+  const llmAllowed = ctx.agentMode === 'live' && ctx.env.INTERPRETATION_LLM === 'internal'
+  if (!llmAllowed) {
+    const safeSummary = redactRestricted(run.view_body.summary, restrictedEntries)
+    text = ctx.agentMode === 'mock' ? mockInterpretation(fam.name, familyId, r, safeSummary, restricted) : templateInterpretation(fam.name, r, { ...run.view_body, summary: safeSummary }, restricted)
+    model = ctx.agentMode === 'mock' ? 'mock' : 'mẫu xác định (không gửi dữ liệu gia đình ra ngoài)'
+  }
   else {
     const models = await activeConfig<ModelSet>(ctx, 'MODEL'); const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
-    const pkg = { family_name: fam.name, result: { ...r, top_instruments: r.top_instruments.filter(t => !restricted.has(t.instrument_id)), positions: undefined }, view: { summary: run.view_body.summary, impacts: run.view_body.impacts.filter(l => l.level !== 0) } }
-    try { const res = await callJson(ctx.env, models.content.interpretation, prompts.content.interpretation, wrapData('kết quả M6', pkg), ctx.fetchFn); text = String((res.json as { text?: string }).text ?? ''); model = res.model }
+    const pkg = { family_label: 'Gia đình', result: { ...r, family_id: undefined, net_worth: undefined, top_instruments: r.top_instruments.filter(t => !restricted.has(t.instrument_id)), positions: undefined }, view: { summary: run.view_body.summary, impacts: run.view_body.impacts.filter(l => l.level !== 0) } }
+    try { const res = await callJson(ctx.env, models.content.interpretation, prompts.content.interpretation, wrapData('kết quả M6', pkg), ctx.fetchFn); text = String((res.json as { text?: string }).text ?? '').replace(/Gia đình\b/, fam.name); model = res.model }
     catch (e) { text = ''; model = `lỗi: ${(e as Error).message}` }
   }
   const check = checkText(text, allowedFromResult(r, run.view_body), cfg.banned)

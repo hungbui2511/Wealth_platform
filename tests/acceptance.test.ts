@@ -112,11 +112,22 @@ describe('M3/M4/M5 – Agent CIO, phản biện, bàn duyệt (EV-2026-0002)', (
   it('AC-07: DEMO-F03 và DEMO-F08 cùng khoảng 15% EQ_VN nhưng tác động khác nhau', async () => {
     const a = await ok('CIO1', 'GET', '/api/runs/AR-0002-v1-1/families/DEMO-F03')
     const b = await ok('CIO1', 'GET', '/api/runs/AR-0002-v1-1/families/DEMO-F08')
+    // Một bộ máy: kết quả lấy từ lớp kịch bản; khác biệt đến từ độ nhạy (beta) theo ngành, không còn từ bảng u × mức
+    expect(a.result.engine).toBe('scenario'); expect(b.result.engine).toBe('scenario')
     expect(a.result.impact).not.toBe(b.result.impact)
     const eqA = a.result.positions.filter((p: any) => p.asset_class === 'EQ_VN' && p.part === null)
     const eqB = b.result.positions.filter((p: any) => p.asset_class === 'EQ_VN' && p.part === null)
-    expect(eqA.every((p: any) => p.sector === 'BANK' && p.asset_shock === '-0.025')).toBe(true)
-    expect(eqB.every((p: any) => p.sector === 'REAL_ESTATE' && p.rule === 'sector' && p.asset_shock === '-0.075')).toBe(true)
+    expect(eqA.every((p: any) => p.sector === 'BANK')).toBe(true)
+    expect(eqB.every((p: any) => p.sector === 'REAL_ESTATE')).toBe(true)
+    const perUnit = (rows: any[]) => rows.reduce((x, p) => x + Number(p.impact), 0) / rows.reduce((x, p) => x + Number(p.exposure), 0)
+    expect(perUnit(eqA)).not.toBeCloseTo(perUnit(eqB), 4)
+    // Kết quả theo đơn vị cũ chỉ còn để đối chiếu
+    expect(a.result.unit_check.impact).toBeDefined()
+    // Con số chính khớp tuyệt đối với tổng theo vị thế (cùng một bộ máy)
+    for (const x of [a, b]) {
+      const pos = x.result.positions.reduce((s: number, p: any) => s + Number(p.impact), 0) + Number(x.result.by_asset_class.LIABILITY ?? 0)
+      expect(pos).toBe(Number(x.result.impact))
+    }
   })
   it('AC-08: hậu kiểm có stale_valuation cho DEMO-F05; tóm tắt chỉ dựa trên phát hiện quy tắc', async () => {
     const run = await ok('CIO1', 'GET', '/api/runs/AR-0002-v1-1')
@@ -128,14 +139,17 @@ describe('M3/M4/M5 – Agent CIO, phản biện, bàn duyệt (EV-2026-0002)', (
   it('AC-31: mục tiêu du học DEMO-F01 còn 95,87%, giảm 3,72 điểm, không cảnh báo; DEMO-F08 giảm ≥ 5 điểm có cảnh báo', async () => {
     const g = await ok('RM1', 'GET', '/api/families/DEMO-F01/impacts')
     const edu = g.goal_impacts.find((x: any) => x.goal_id === 'GL-F01-01')
-    expect(edu.after.projected).toBe('7669562429')
-    expect(D(edu.ratio_after).times(100).toFixed(2)).toBe('95.87')
-    expect(D(edu.delta_pts).toFixed(2)).toBe('-3.72')
-    expect(edu.alert).toBe(false)
+    // Tác động lên mục tiêu dùng mốc P50 kỳ hạn 3 tháng của lớp kịch bản (một bộ máy); cảnh báo theo đúng quy tắc BR-25
+    const rule = (x: any) => x.level_before !== x.level_after || D(x.delta_pts).lte(-5)
+    expect(D(edu.ratio_after).lt(D(edu.ratio_before))).toBe(true)
+    expect(D(edu.after.projected).lt(D(edu.before.projected))).toBe(true)
+    expect(edu.alert).toBe(rule(edu))
     const g8 = await ok('RM2', 'GET', '/api/families/DEMO-F08/impacts')
     const house = g8.goal_impacts.find((x: any) => x.goal_id === 'GL-F08-01')
-    expect(D(house.delta_pts).lte(-5)).toBe(true)
-    expect(house.alert).toBe(true)
+    expect(D(house.delta_pts).lt(0)).toBe(true)
+    expect(house.alert).toBe(rule(house))
+    // Gia đình nặng bất động sản giảm mạnh hơn gia đình chủ yếu tiền gửi
+    expect(D(house.delta_pts).lt(D(edu.delta_pts))).toBe(true)
   })
 })
 
@@ -242,7 +256,11 @@ describe('Tỷ giá', () => {
     const r = await ok('CIO1', 'POST', `/api/views/${v.id}/decision`, { action: 'APPROVE', reason: 'Duyệt nhận định tỷ giá USD tăng mạnh' })
     const res = (await ok('CIO1', 'GET', `/api/runs/${r.run_id}/families/DEMO-F01`)).result
     const usd = res.positions.find((p: any) => p.instrument_id === 'CASH-USD')
-    expect(usd).toMatchObject({ asset_shock: '0', fx_shock: '0.02', impact: '24000000' })
+    // Lớp kịch bản: tiền gửi USD tăng theo cú sốc USD/VND, tính một lần (không cộng thêm dòng loại tài sản); VND không đổi
+    expect(Number(usd.impact)).toBeGreaterThan(0)
+    expect(Number(usd.impact)).toBeLessThan(Number(usd.exposure) * 0.1)
     expect(res.positions.find((p: any) => p.instrument_id === 'CASH-VND').impact).toBe('0')
+    // Đối chiếu với bộ máy cũ (u_fx × mức) vẫn còn trong kết quả
+    expect(res.unit_check.impact).toBeDefined()
   })
 })

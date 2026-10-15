@@ -177,9 +177,9 @@ model = {
  'credit_factor': {'VHM12613': 'CREDIT_RE', 'VIC12510': 'CREDIT_RE', 'VIB12508': 'CREDIT_FIN', 'BANK': 'CREDIT_FIN', 'REAL_ESTATE': 'CREDIT_RE', 'ENERGY': 'CREDIT_FIN', 'DEFAULT': 'CREDIT_FIN'},
  'proxy': {'PRIVATE_EQ': {'factor': 'VN_EQ', 'loading': 0.5, 'note': 'Cổ phần chưa niêm yết: ánh xạ qua VN-Index hệ số 0,5, ghi nhận chậm'}, 'REAL_ESTATE': {'factor': 'VN_RE', 'loading': 1.0}},
  'fund_duration': {'short': 2.0, 'long': 7.0, 'CORP_BOND': 2.5},
- 'uncertainty_weeks': 1, 'vol_frequency': 'tháng',
+ 'horizon_months': [0.25, 3, 12], 'core_shock_uncertainty': 0.4, 'idio_default_r2': 0.35, 'vol_frequency': 'tháng',
  'estimation': {'months': EST['n'], 'start': EST['start'], 'end': EST['end'], 'factors': EST['keys'], 'shrink_to_prior': SHRINK, 'foreign_flow': EST.get('ff')},
- 'quantiles': {'bad': 0.1, 'base': 0.5, 'good': 0.9},
+ 'quantiles': {'severe': 0.05, 'bad': 0.1, 'base': 0.5, 'good': 0.9},
  'priced_in': {'none': 1.0, 'partial': 0.5, 'full': 0.0},
  'lane2_route_rm_pct': -0.05,
  'analogs': [

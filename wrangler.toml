@@ -12,6 +12,11 @@ PRICE_MODE = "sample" # sample | live (live cần thỏa thuận dữ liệu và
 AUTH_MODE = "access"  # access: chỉ tin JWT Cloudflare Access đã xác minh. dev: chỉ dùng trên máy (.dev.vars)
 ACCESS_TEAM_DOMAIN = "bitter-tree-c714.cloudflareaccess.com" # team Cloudflare Access (khóa ký JWT lấy từ /cdn-cgi/access/certs)
 # Tùy chọn, đặt trên dashboard: ACCESS_AUD (chỉ nhận JWT của đúng ứng dụng này), DEMO_OPERATORS, ROLE_MAP (xem README)
+# Kiểm soát bổ sung (tắt mặc định để một người vận hành vẫn chạy được toàn bộ demo; /api/health liệt kê cái nào đang tắt):
+#   SOD_STRICT = "on"        tách bạch nhiệm vụ theo email đã xác minh, không chỉ theo mã người dùng demo
+#   EXTERNAL_HMAC_KEY (secret) bản ghi của vùng AI phải có chữ ký HMAC; bật kênh POST /api/external/submit
+#   AUDIT_HMAC_KEY (secret)    nhật ký dùng HMAC thay SHA-256 thường
+#   INTERPRETATION_LLM = "internal"  chỉ đặt khi mô hình AI chạy trong hạ tầng ngân hàng (diễn giải có dữ liệu gia đình)
 
 [[d1_databases]]
 binding = "DB"

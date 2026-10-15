@@ -17,7 +17,7 @@ export function runPostcheck(prefix: string, inp: PostcheckInput, t: PostcheckTh
     out.push({ stage: 'post_check', origin: 'rule', check, severity, target, issue, suggestion, value, threshold })
 
   for (const fam of inp.families) {
-    const seenMissing = new Set<string>(), seenFallback = new Set<string>(), seenStale = new Set<string>()
+    const seenMissing = new Set<string>(), seenFallback = new Set<string>(), seenStale = new Set<string>(), seenAi = new Set<string>()
     for (const p of fam.positions) {
       if (p.listed && p.missing_price && !seenMissing.has(p.instrument_id)) {
         seenMissing.add(p.instrument_id)
@@ -26,6 +26,10 @@ export function runPostcheck(prefix: string, inp: PostcheckInput, t: PostcheckTh
       if (p.listed && p.price_point?.flag === 'fallback' && !seenFallback.has(p.instrument_id)) {
         seenFallback.add(p.instrument_id)
         f('price_fallback', 'medium', fam.family_id, `Công cụ ${p.instrument_id} dùng giá dự phòng ngày ${p.price_point.date} thay cho nguồn chính`, 'Kiểm tra nguồn chính và tải lại giá khi có', p.price_point.date, String(t.fallback_max_sessions))
+      }
+      if (p.price_point?.flag === 'external_ai' && !seenAi.has(p.instrument_id)) {
+        seenAi.add(p.instrument_id)
+        f('price_external_ai', 'low', fam.family_id, `Giá ${p.instrument_id} ngày ${p.price_point.date} do AI lấy từ nguồn công khai (${p.price_point.source}), chưa đối soát với nguồn chính thức`, 'Đối soát với nguồn giá có thỏa thuận dữ liệu trước khi dùng cho báo cáo chính thức', p.price_point.date)
       }
       const vd = p.price_point?.valuation_date
       if (vd && !seenStale.has(p.holding_id) && monthsBetween(vd, inp.price_date) > t.stale_months) {

@@ -18,6 +18,11 @@ tác nhân `ADMIN:CLAUDE`; lượt chạy ghi `mode: external` và tên mô hìn
 Quyền D1 của phiên hiện là quyền toàn cơ sở dữ liệu: rào chắn này là **cam kết quy trình**, chưa phải chặn kỹ thuật. Bản
 thật cần một tài khoản dịch vụ chỉ được ghi `external_outputs` và đọc các bảng ở cột trái.
 
+**Kênh có chữ ký (đích kiến trúc, đã có trong mã):** khi đặt secret `EXTERNAL_HMAC_KEY` trên Worker, vùng AI không cần quyền
+D1: gửi `POST /api/external/submit` với `{"id","kind","subject","data"}`, trong đó `data._sig` = HMAC-SHA-256(khóa, JSON chuẩn
+hóa của `data` bỏ `_sig`, khóa sắp xếp). Khi khóa đang bật, mọi bản ghi không ký hoặc ký sai (kể cả ghi thẳng vào bảng) bị từ
+chối khi nhập. Chưa đặt khóa thì báo cáo nhập liệt kê các bản ghi "chưa ký" và `/api/health` cảnh báo.
+
 ## Quy trình một lần chạy
 
 1. Đọc yêu cầu đang chờ:
@@ -56,7 +61,8 @@ thật cần một tài khoản dịch vụ chỉ được ghi `external_outputs
 2–4 nhánh, tổng xác suất = 1, mỗi nhánh 1–5 yếu tố lõi lấy trong mô hình yếu tố (`src/data/factorModel.ts` hoặc cấu hình
 `FACTOR_MODEL`): US10Y, DXY, GLOBAL_EQ, OIL, GOLD_W, CRYPTO, USDVND, VN_RATE, VN_GOV, CREDIT_RE, CREDIT_FIN, VN_EQ,
 FOREIGN_FLOW, SJC_PREM, VN_RE. Chỉ chọn yếu tố là kênh truyền dẫn trực tiếp và cỡ trong thư viện; KHÔNG tự đặt con số.
-Hệ thống tự suy ra các yếu tố còn lại theo tương quan và tính dải xấu/cơ sở/tốt cho từng gia đình. Với tin quốc tế, nêu kênh
+Hệ thống tự suy ra các yếu tố còn lại theo tương quan và tính dải P5/P10/P50/P90 cho từng gia đình. **Bắt buộc**: nhận
+định không có ít nhất 2 nhánh kịch bản thì CIO không duyệt được (điều kiện (e)); mọi con số tới RM và khách chỉ đến từ lớp kịch bản. Với tin quốc tế, nêu kênh
 về Việt Nam (USDVND, VN_RATE, FOREIGN_FLOW) khi có căn cứ; VND là tiền tệ có quản lý. `priced_in` = mức thị trường đã phản ánh. Kiểm chứng 2022: tương quan chỉ suy ra khoảng 60% mức giảm VN-Index, nên nhánh căng thẳng phải đưa VN_EQ (và CREDIT_RE khi có rủi ro tín dụng) vào yếu tố lõi.
 
 **Nguồn tin**: mỗi tin mang `origin` (`global` | `local`; hệ thống tự gắn). Tin `exclusive` (nghiên cứu Techcombank/TCBS)
@@ -70,14 +76,26 @@ Nhận định cuối phải có đủ 11 dòng loại tài sản (CASH, GOV_BON
 PRIVATE_EQ, CRYPTO, INSURANCE) và 3 dòng tỷ giá (USD, SGD, AUD). Không phần trăm, không giá mục tiêu, không khuyến nghị mua bán.
 
 Phản biện: `check` thuộc `source_support`, `opposite_direction`, `overconfidence`, `inconsistency_with_past_view`,
-`second_order_effect`; `severity` `critical` (tối đa 3, chỉ khi có thể đảo hướng hoặc lệch ≥ 2 mức) | `medium` | `low`;
+`second_order_effect`; `severity` `critical` (chỉ khi có thể đảo hướng hoặc lệch ≥ 2 mức; không bị hạ mức tự động) | `medium` | `low`;
 `target` dạng `asset_class:GOLD:GOLD`; `issue`, `suggestion` ≥ 20 ký tự.
+
+**`challenge`** (phản biện độc lập, subject = mã nhận định `VW-…`): `{"findings":[…],"counter_scenario":"…","meta":{"model":"…","session":"…"}}`.
+Phản biện đi kèm trong `cio_view` do **cùng phiên** soạn nên hệ thống đánh dấu *chưa độc lập* và CIO **không duyệt được**
+(điều kiện (f)). Phải có một bản ghi `challenge` từ **phiên làm việc khác** (`meta.session` khác phiên soạn) và **mô hình khác**
+(`meta.model` khác mô hình soạn), chỉ đọc nhận định cuối, tin và danh mục (BR-05). Nếu nhận định đang chờ phản biện lại (CIO
+đã sửa dòng hoặc nhánh kịch bản), bản ghi này được dùng làm lượt phản biện lại.
+
+Phát hiện Nghiêm trọng không còn bị tự hạ mức: mọi phát hiện `critical` đều phải được CIO phản hồi trước khi duyệt.
 
 **`policy_summary`** (subject = mã văn bản `PD-…`, văn bản phải được Tuân thủ xác nhận nguồn trước):
 `{"summary":{"changes":[{"change_id","article_refs":["Điều 3 khoản 1"],"quote","summary","topics":[…],"affected_parties","effective_from","certainty":"draft|final"}]},"meta":{…}}`
 
 **`prices`** (subject để trống): tạo ảnh chụp giá mới từ ảnh chụp hiện tại, thay giá các mã có nguồn thật.
 `{"price_date":"YYYY-MM-DD","points":[{"key":"MBB","price":"26150","date":"2026-10-09","source":"TCBS (MCP)","source_ref":"getTickerOverview"}],"meta":{…}}`
+Giá do Claude lấy được gắn cờ `external_ai` (không phải nguồn chính thức có thỏa thuận dữ liệu); hậu kiểm ghi phát hiện mức Thấp
+`price_external_ai` để người xem biết cần đối soát.
+
+Tin có thời điểm công bố ở tương lai (lệch quá 10 phút so với lúc nhập) bị từ chối, không còn bị kéo về giờ nhập.
 Khóa giá: mã công cụ (MBB, VHM12613, VEOF, SJC, BTC, AAPL…) hoặc `FX:USD`, `FX:SGD`, `FX:AUD`. Giá theo đơn vị của công cụ
 (cổ phiếu VND/cổ phiếu, vàng VND/lượng, AAPL và VT USD/chứng chỉ). Mã không có trong lần đẩy giữ giá và nhãn nguồn của ảnh chụp
 trước. Cổ phiếu niêm yết lấy từ kết nối TCBS (MCP) khi đã bật; không lấy giá bằng cách sao chép trang web của sở giao dịch.

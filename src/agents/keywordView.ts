@@ -91,3 +91,36 @@ export function keywordScenarios(news: NewsLite[]) {
     notes: 'Nhánh kịch bản mô phỏng theo từ khóa, chưa có AI; CIO cần xem lại xác suất và cỡ cú sốc',
   }
 }
+
+// Chế độ mô phỏng cho sự kiện của gói mẫu (đầu ra ghi sẵn chỉ có dòng nhận định): dựng nhánh kịch bản từ dòng nhận định,
+// để mọi con số đi qua cùng một bộ máy kịch bản. Ghi rõ không phải AI; CIO xem lại trước khi duyệt.
+const LINE_FACTOR: Record<string, { factor: string; sign: 1 | -1 }> = {
+  EQ_VN: { factor: 'VN_EQ', sign: 1 }, FUND: { factor: 'VN_EQ', sign: 1 }, EQ_INTL: { factor: 'GLOBAL_EQ', sign: 1 },
+  GOLD: { factor: 'GOLD_W', sign: 1 }, GOV_BOND: { factor: 'VN_GOV', sign: -1 }, CORP_BOND: { factor: 'CREDIT_FIN', sign: -1 },
+  REAL_ESTATE: { factor: 'VN_RE', sign: 1 }, CRYPTO: { factor: 'CRYPTO', sign: 1 }, 'FX:USD': { factor: 'USDVND', sign: 1 },
+}
+export function scenariosFromImpacts(impacts: ImpactLine[], sourceIds: string[]) {
+  const best = new Map<string, { dir: 'up' | 'down'; mag: number; label: string }>()
+  for (const l of impacts) {
+    if (l.level === 0 || l.scope === 'instrument') continue
+    const key = l.scope === 'fx' ? `FX:${l.target}` : l.scope === 'sector' ? String(l.asset_class) : l.target
+    const m = LINE_FACTOR[key]
+    if (!m) continue
+    const mag = Math.abs(l.level)
+    const dir = (Math.sign(l.level) * m.sign) > 0 ? 'up' as const : 'down' as const
+    const cur = best.get(m.factor)
+    if (!cur || mag > cur.mag) best.set(m.factor, { dir, mag, label: key })
+  }
+  const core = [...best.entries()].sort((a, b) => b[1].mag - a[1].mag || a[0].localeCompare(b[0])).slice(0, 4)
+  if (!core.length || !sourceIds.length) return undefined
+  const size = (mag: number, bump: number) => (['S', 'M', 'L'] as const)[Math.min(2, Math.max(0, (mag >= 3 ? 2 : mag >= 2 ? 1 : 0) + bump))]
+  const names = core.map(([f, c]) => `${f} ${c.dir === 'up' ? 'tăng' : 'giảm'}`).join(', ')
+  return {
+    priced_in: 'partial' as const,
+    branches: [
+      { id: 'B1', name: 'Cơ sở: theo các dòng nhận định', probability: 0.7, regime: 'calm' as const, core_shocks: core.map(([factor, c]) => ({ factor, size: size(c.mag, 0), direction: c.dir })), rationale: `Mô phỏng từ dòng nhận định (không phải AI): ${names}`, source_ids: sourceIds },
+      { id: 'B2', name: 'Bất lợi: cùng hướng, mạnh hơn', probability: 0.3, regime: 'stress' as const, core_shocks: core.map(([factor, c]) => ({ factor, size: size(c.mag, 1), direction: c.dir })), rationale: 'Mô phỏng từ dòng nhận định (không phải AI): cỡ lớn hơn một bậc, chế độ căng thẳng', source_ids: sourceIds },
+    ],
+    notes: 'Nhánh kịch bản dựng từ dòng nhận định của gói mẫu, chưa có AI; CIO cần xem lại xác suất và cỡ cú sốc',
+  }
+}

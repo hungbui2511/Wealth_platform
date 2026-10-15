@@ -48,7 +48,7 @@ export function resolveAgentMode(env: Env): 'mock' | 'live' | 'external' {
 }
 
 export function makeCtx(env: Env, user: User, opts: { now?: () => string; fetchFn?: typeof fetch; accessEmail?: string; background?: (p: Promise<unknown>) => void; progress?: (step: string) => Promise<void> } = {}): AppCtx {
-  const repo = new Repo(env.DB)
+  const repo = new Repo(env.DB, typeof env.AUDIT_HMAC_KEY === 'string' && env.AUDIT_HMAC_KEY ? env.AUDIT_HMAC_KEY : undefined)
   const now = opts.now ?? (() => new Date().toISOString())
   return {
     repo, env, user, now, accessEmail: opts.accessEmail,
@@ -77,6 +77,17 @@ export function assertFamily(ctx: AppCtx, familyId: string): void {
 export const RM_VISIBLE_RUN_STATUSES = ['EFFECTIVE', 'SUPERSEDED', 'WITHDRAWN']
 export function canSeeRun(ctx: AppCtx, run: { status: string }): boolean {
   return ctx.user.role !== 'RM' || RM_VISIBLE_RUN_STATUSES.includes(run.status)
+}
+
+// Tách bạch nhiệm vụ: so người thực hiện hiện tại với chuỗi actor đã lưu ("VAI_TRÒ:MÃ <email>").
+// Mặc định so theo mã người dùng demo. SOD_STRICT=on: so thêm theo email đã xác minh qua Cloudflare Access, để một người
+// vận hành chuyển vai trò demo không tự làm cả hai bước.
+export const sodStrict = (env: Env) => env.SOD_STRICT === 'on'
+export function samePerson(ctx: AppCtx, actorStr: string | undefined): boolean {
+  const m = /^[A-Z_]+:([^\s<]+)(?:\s<([^>]+)>)?/.exec(actorStr ?? '')
+  if (!m) return false
+  if (m[1] === ctx.user.id) return true
+  return sodStrict(ctx.env) && !!m[2] && !!ctx.accessEmail && m[2].toLowerCase() === ctx.accessEmail.toLowerCase()
 }
 
 export const actor = (ctx: AppCtx) => `${ctx.user.role}:${ctx.user.id}${ctx.accessEmail ? ` <${ctx.accessEmail}>` : ''}`

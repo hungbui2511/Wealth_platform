@@ -73,7 +73,7 @@ function Overview({ d }: { d: any }) {
                   <td className="text-xs">{ACL[p.asset_class]}{p.sector ? ` · ${p.sector}` : ''}</td>
                   <td className="text-xs">{acc?.custodian}<div className="text-fgm">{acc?.owners.map((o: any) => `${name(o.id)} ${fmtPct(o.pct, 0)}`).join(', ')}</div></td>
                   <td className="num">{fmtVnd(p.quantity)}</td><td className="num">{p.price ? `${fmtVnd(p.price)}${p.currency !== 'VND' ? ' ' + p.currency : ''}` : <Badge tone="red">thiếu giá</Badge>}</td>
-                  <td className="text-xs" title={p.range ? `Khoảng giá ${fmtVnd(p.range[0])}–${fmtVnd(p.range[1])}` : undefined}>{p.price_source}{p.price_date && <div className="text-fgm">{p.price_date}{p.valuation_date ? ` · định giá ${p.valuation_date}` : ''}</div>}{p.price_flag === 'fallback' && <Badge tone="amber">dự phòng</Badge>}{stale && <Badge tone="amber">định giá cũ</Badge>}</td>
+                  <td className="text-xs" title={p.range ? `Khoảng giá ${fmtVnd(p.range[0])}–${fmtVnd(p.range[1])}` : undefined}>{p.price_source}{p.price_date && <div className="text-fgm">{p.price_date}{p.valuation_date ? ` · định giá ${p.valuation_date}` : ''}</div>}{p.price_flag === 'fallback' && <Badge tone="amber">dự phòng</Badge>}{p.price_flag === 'external_ai' && <Badge tone="amber">AI lấy, chưa đối soát</Badge>}{stale && <Badge tone="amber">định giá cũ</Badge>}</td>
                   <td><Money v={p.value_vnd} /></td><td className="num">{fmtPct(p.eff_own, 0)}</td><td><Money v={p.exposure} /></td>
                 </tr>
               )
@@ -265,10 +265,10 @@ function Goals({ familyId }: { familyId: string }) {
       {(proc.data ?? []).length > 0 && <Card title="Lưu ý thủ tục cho mục tiêu (từ ghi chú quy định của TCB)">
         <p className="text-[13px] text-fgm mb-2">Quy định mới không đổi giá tài sản nhưng có thể làm chậm mục tiêu có dòng tiền ra nước ngoài. Khớp theo mục tiêu của gia đình, không theo hồ sơ rủi ro của khách.</p>
         <div className="space-y-2">{proc.data!.map((a: any) => <div key={a.note_id + a.goal_id} className="border border-border rounded p-2 text-[13px]">
-          <div className="flex flex-wrap gap-1.5 items-center"><Badge tone={a.tier === 'contact' ? 'red' : a.tier === 'remind' ? 'amber' : undefined}>{TIER_LABEL[a.tier as keyof typeof TIER_LABEL]}</Badge><b>{a.goal_name}</b><span className="mono text-fgm">{a.goal_id}</span><span className="text-fgm">· {PURPOSE_LABEL[a.purpose as keyof typeof PURPOSE_LABEL]}{a.country ? ` · ${a.country}` : ''} · cần tiền {a.goal_month}</span>{a.inferred && <Badge>suy từ tên, RM xác nhận</Badge>}</div>
+          <div className="flex flex-wrap gap-1.5 items-center"><Badge tone={a.tier === 'contact' ? 'red' : a.tier === 'remind' ? 'amber' : a.tier === 'confirm' ? 'primary' : undefined}>{TIER_LABEL[a.tier as keyof typeof TIER_LABEL]}</Badge><b>{a.goal_name}</b><span className="mono text-fgm">{a.goal_id}</span><span className="text-fgm">· {PURPOSE_LABEL[a.purpose as keyof typeof PURPOSE_LABEL]}{a.country ? ` · ${a.country}` : ''} · cần tiền {a.goal_month}</span>{a.inferred && <Badge>suy từ tên, RM xác nhận</Badge>}</div>
           <div className="mt-1">Nên chuẩn bị hồ sơ trước <b>{a.prepare_by}</b>: {a.documents.join('; ')}.</div>
           <div className="text-fgm text-xs">{a.reason}</div>
-          <div className="mt-1 p-2 rounded bg-muted text-xs"><b>Khách thấy trên thẻ mục tiêu:</b> "{a.client_message}"</div>
+          {a.client_message ? <div className="mt-1 p-2 rounded bg-muted text-xs"><b>Khách thấy trên thẻ mục tiêu:</b> "{a.client_message}"</div> : <div className="mt-1 p-2 rounded bg-muted text-xs">Mục tiêu suy từ tên: chưa hiện thông điệp cho khách. RM khai báo "ra nước ngoài" trên mục tiêu nếu đúng.</div>}
           {user.role === 'RM' && <div className="text-xs mt-1"><b>Gợi ý trao đổi:</b> {a.rm_talking_points}</div>}
           <div className="text-fgm text-xs mt-1">Nguồn: {a.doc_no} – {a.regulation} ({a.status === 'draft' ? 'dự thảo' : a.status === 'issued' ? 'đã ban hành' : 'đã có hiệu lực'}{a.effective_date ? `, hiệu lực ${a.effective_date}` : ''})</div>
         </div>)}</div>

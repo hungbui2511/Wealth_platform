@@ -61,7 +61,7 @@ export async function auditExport(ctx: AppCtx, format: 'csv' | 'json') {
 
 export async function verifyChain(ctx: AppCtx) {
   requireRole(ctx, 'COMPLIANCE', 'ADMIN')
-  return verifyAuditChain(ctx.env.DB)
+  return verifyAuditChain(ctx.env.DB, ctx.repo.auditKey)
 }
 
 // FR-805: danh mục agent – tên, mục đích, chủ sở hữu, mức rủi ro, mô hình, phiên bản prompt, ngày đánh giá gần nhất

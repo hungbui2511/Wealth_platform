@@ -1,14 +1,16 @@
-// Bản tin CIO (FR-1008): nội dung chung, hai mốc phát hành (Private sớm hơn đại chúng), Tuân thủ duyệt; MVP1 không gửi.
+// Bản tin CIO (FR-1008): nội dung chung, hai mốc phát hành, Tuân thủ duyệt; MVP1 không gửi.
+// Phân phối công bằng: mặc định khách Private và đại chúng nhận cùng lúc. Cho Private sớm hơn chỉ khi CIO ghi căn cứ
+// (ví dụ: nội dung là tư vấn theo hợp đồng dịch vụ riêng) và Tuân thủ xem căn cứ đó khi duyệt.
 import { ASSET_CLASS_LABELS, SECTOR_LABELS } from '../../shared/catalog'
 import { checkText, extractNumbers } from '../../engine/numbercheck'
 import { mentionsRestricted, redactRestricted, type RestrictedEntry } from '../../compliance/controls'
-import { actor, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
+import { actor, HttpError, minReason, requireRole, samePerson, type AppCtx } from '../ctx'
 import { activeRestricted, loadConfigs } from './config'
 import { getView, type ViewRec } from './views'
 
 export interface ReleaseRec {
   id: string; view_id: string; status: 'DRAFT' | 'PENDING_COMPLIANCE' | 'APPROVED' | 'REJECTED'
-  content: string; release_private_at: string; release_public_at: string
+  content: string; release_private_at: string; release_public_at: string; early_access_basis?: string
   created_by: string; created_at: string; reviewed_by?: string; reviewed_at?: string; review_note?: string; checks?: ReturnType<typeof releaseChecks> extends Promise<infer T> ? T : never
 }
 
@@ -35,20 +37,21 @@ export async function releaseChecks(ctx: AppCtx, v: ViewRec, content: string) {
   return { ok: num.ok && !restricted.length && !familyData, violations: num.violations, restricted, family_data: familyData }
 }
 
-function checkTimes(v: ViewRec, priv: string, pub: string) {
+function checkTimes(v: ViewRec, priv: string, pub: string, basis?: string) {
   if (Number.isNaN(Date.parse(priv)) || Number.isNaN(Date.parse(pub))) throw new HttpError(422, 'Mốc phát hành không hợp lệ')
-  if (Date.parse(priv) >= Date.parse(pub)) throw new HttpError(422, 'Mốc phát hành cho khách Private phải sớm hơn mốc đại chúng')
+  if (Date.parse(priv) > Date.parse(pub)) throw new HttpError(422, 'Mốc phát hành cho khách Private không được muộn hơn mốc đại chúng')
+  if (Date.parse(priv) < Date.parse(pub) && (basis ?? '').trim().length < 20) throw new HttpError(422, 'Cho khách Private nhận sớm hơn đại chúng phải ghi căn cứ (tối thiểu 20 ký tự) để Tuân thủ xem xét phân phối công bằng')
   if (v.approved_at && Date.parse(priv) < Date.parse(v.approved_at)) throw new HttpError(422, 'Mốc phát hành không được sớm hơn thời điểm CIO duyệt (BR-29)')
 }
 
-export async function createRelease(ctx: AppCtx, body: { view_id: string; release_private_at: string; release_public_at: string; content?: string }) {
+export async function createRelease(ctx: AppCtx, body: { view_id: string; release_private_at: string; release_public_at: string; content?: string; early_access_basis?: string }) {
   requireRole(ctx, 'CIO')
   const v = await getView(ctx, body.view_id)
   if (!['APPROVED', 'SUPERSEDED'].includes(v.status)) throw new HttpError(409, 'Chỉ tạo bản tin từ nhận định đã duyệt')
-  checkTimes(v, body.release_private_at, body.release_public_at)
+  checkTimes(v, body.release_private_at, body.release_public_at, body.early_access_basis)
   const n = await ctx.repo.nextSeq(`release:${v.id}`, 'SELECT count(*) FROM research_releases WHERE view_id = ?', [v.id])
   const content = body.content ?? draftContent(v, activeRestricted(await loadConfigs(ctx), ctx.now()))
-  const r: ReleaseRec = { id: `RR-${v.event_id.slice(-4)}-v${v.version}${n > 1 ? `-${n}` : ''}`, view_id: v.id, status: 'DRAFT', content, release_private_at: new Date(body.release_private_at).toISOString(), release_public_at: new Date(body.release_public_at).toISOString(), created_by: actor(ctx), created_at: ctx.now() }
+  const r: ReleaseRec = { id: `RR-${v.event_id.slice(-4)}-v${v.version}${n > 1 ? `-${n}` : ''}`, view_id: v.id, status: 'DRAFT', content, release_private_at: new Date(body.release_private_at).toISOString(), release_public_at: new Date(body.release_public_at).toISOString(), created_by: actor(ctx), created_at: ctx.now(), ...(body.early_access_basis && Date.parse(body.release_private_at) < Date.parse(body.release_public_at) ? { early_access_basis: body.early_access_basis.trim().slice(0, 500) } : {}) }
   r.checks = await releaseChecks(ctx, v, content)
   const u = ctx.uow(); u.insert('research_releases', r as never); u.audit({ actor: actor(ctx), action: 'release.created', object: r.id, data: { view_id: v.id, release_private_at: r.release_private_at, release_public_at: r.release_public_at, checks: r.checks } }); await u.commit()
   return r
@@ -60,13 +63,13 @@ async function getRelease(ctx: AppCtx, id: string) {
   return r
 }
 
-export async function updateRelease(ctx: AppCtx, id: string, body: { content?: string; release_private_at?: string; release_public_at?: string }) {
+export async function updateRelease(ctx: AppCtx, id: string, body: { content?: string; release_private_at?: string; release_public_at?: string; early_access_basis?: string }) {
   requireRole(ctx, 'CIO')
   const r = await getRelease(ctx, id)
   if (r.status !== 'DRAFT' && r.status !== 'REJECTED') throw new HttpError(409, 'Chỉ sửa bản tin ở trạng thái nháp hoặc bị từ chối')
   const v = await getView(ctx, r.view_id)
-  const nr = { ...r, status: 'DRAFT' as const, content: body.content ?? r.content, release_private_at: body.release_private_at ?? r.release_private_at, release_public_at: body.release_public_at ?? r.release_public_at }
-  checkTimes(v, nr.release_private_at, nr.release_public_at)
+  const nr = { ...r, status: 'DRAFT' as const, content: body.content ?? r.content, release_private_at: body.release_private_at ?? r.release_private_at, release_public_at: body.release_public_at ?? r.release_public_at, early_access_basis: body.early_access_basis ?? r.early_access_basis }
+  checkTimes(v, nr.release_private_at, nr.release_public_at, nr.early_access_basis)
   nr.checks = await releaseChecks(ctx, v, nr.content)
   const u = ctx.uow(); u.update('research_releases', nr as never); u.audit({ actor: actor(ctx), action: 'release.updated', object: id, data: { checks: nr.checks } }); await u.commit()
   return nr
@@ -86,6 +89,7 @@ export async function reviewRelease(ctx: AppCtx, id: string, approve: boolean, n
   const note = minReason(noteRaw, 'Ghi chú duyệt')
   const r = await getRelease(ctx, id)
   if (r.status !== 'PENDING_COMPLIANCE') throw new HttpError(409, 'Bản tin không ở trạng thái chờ Tuân thủ')
+  if (samePerson(ctx, r.created_by)) throw new HttpError(409, 'Người duyệt phát hành phải khác người lập bản tin')
   const v = await getView(ctx, r.view_id)
   const checks = await releaseChecks(ctx, v, r.content)
   if (approve && !checks.ok) throw new HttpError(409, 'Bản tin vi phạm BR-13, BR-14 hoặc nhắc mã hạn chế (BR-27): không được duyệt phát hành', checks)

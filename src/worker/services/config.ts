@@ -5,24 +5,28 @@ import { DEFAULT_MODELS, DEFAULT_PROMPTS } from '../../agents/prompts'
 import { DEFAULT_NEWS_SOURCES, PUBLIC_DOMAINS } from '../../news/sources'
 import { DEFAULT_FACTOR_MODEL } from '../../data/factorModel'
 import type { FactorModel } from '../../engine/scenario'
-import { actor, HttpError, minReason, requireRole, type AppCtx, type Role } from '../ctx'
+import { actor, HttpError, minReason, requireRole, samePerson, type AppCtx, type Role } from '../ctx'
+import { factorModelErrors } from '../../engine/scenario'
 import type { UnitOfWork } from '../db'
 
+// twoPerson: phiên bản mới chỉ có hiệu lực khi người có vai trò confirmer (và khác người đề xuất) xác nhận.
+// Các cấu hình làm đổi con số tới khách hoặc quyết định cho AI xem gì đều cần hai người.
 export const CONFIG_KINDS = {
-  UNIT: { label: 'Bảng đơn vị cú sốc u, u_fx', owner: 'CIO', twoPerson: false },
-  THRESHOLD: { label: 'Ngưỡng cảnh báo, hậu kiểm, thanh khoản, mục tiêu', owner: 'CIO', twoPerson: false },
+  UNIT: { label: 'Bảng đơn vị cú sốc u, u_fx (chỉ còn dùng để đối chiếu)', owner: 'CIO', twoPerson: false },
+  THRESHOLD: { label: 'Ngưỡng cảnh báo, hậu kiểm, thanh khoản, mục tiêu', owner: 'CIO', twoPerson: true, confirmer: 'COMPLIANCE' },
   ASSUMPTION: { label: 'Giả định dài hạn (lợi suất, lạm phát)', owner: 'CIO', twoPerson: false },
   BANNED: { label: 'Danh sách cụm từ cấm', owner: 'COMPLIANCE', twoPerson: false },
   WHITELIST: { label: 'Danh sách nguồn công khai', owner: 'COMPLIANCE', twoPerson: false },
-  RESTRICTED: { label: 'Danh sách hạn chế', owner: 'COMPLIANCE', twoPerson: false },
-  PROMPT: { label: 'Prompt của agent', owner: 'ADMIN', twoPerson: true },
-  MODEL: { label: 'Mô hình AI của agent', owner: 'ADMIN', twoPerson: true },
+  RESTRICTED: { label: 'Danh sách hạn chế', owner: 'COMPLIANCE', twoPerson: true, confirmer: 'COMPLIANCE' },
+  PROMPT: { label: 'Prompt của agent', owner: 'ADMIN', twoPerson: true, confirmer: 'COMPLIANCE' },
+  MODEL: { label: 'Mô hình AI của agent', owner: 'ADMIN', twoPerson: true, confirmer: 'COMPLIANCE' },
   PRICE_SOURCE: { label: 'Cấu hình nguồn giá (mã thỏa thuận dữ liệu)', owner: 'ADMIN', twoPerson: false },
   ONEMOUNT_CONFIRM: { label: 'Tuân thủ xác nhận căn cứ chia sẻ dữ liệu với One Mount (BR-22)', owner: 'COMPLIANCE', twoPerson: false },
   SYMBOL_MAP: { label: 'Bảng ánh xạ mã công cụ sang mã thị trường', owner: 'ADMIN', twoPerson: false },
   NEWS_SOURCES: { label: 'Nguồn tin cấu hình', owner: 'ADMIN', twoPerson: false },
-  FACTOR_MODEL: { label: 'Mô hình yếu tố rủi ro: thư viện cú sốc, tương quan, độ nhạy', owner: 'CIO', twoPerson: false },
-} as const satisfies Record<string, { label: string; owner: Role; twoPerson: boolean }>
+  // Xác nhận thứ hai: bản demo dùng vai trò Tuân thủ; bản thật là bộ phận Rủi ro mô hình (độc lập với CIO)
+  FACTOR_MODEL: { label: 'Mô hình yếu tố rủi ro: thư viện cú sốc, tương quan, độ nhạy', owner: 'CIO', twoPerson: true, confirmer: 'COMPLIANCE' },
+} as const satisfies Record<string, { label: string; owner: Role; twoPerson: boolean; confirmer?: Role }>
 export type ConfigKind = keyof typeof CONFIG_KINDS
 
 export interface ConfigVersion {
@@ -111,6 +115,8 @@ function validateContent(kind: ConfigKind, content: unknown) {
     const n = c.factors.length
     for (const r of ['calm', 'stress'] as const) if (c.corr[r].length !== n || c.corr[r].some(row => row.length !== n)) bad(`ma trận tương quan ${r} phải ${n}×${n}`)
     for (const f of c.factors) if (!f.library || !['S', 'M', 'L'].every(k => typeof f.library[k as 'S'] === 'number')) bad(`yếu tố ${f.id} thiếu thư viện cú sốc S/M/L`)
+    const errs = factorModelErrors(c)
+    if (errs.length) throw new HttpError(422, `Nội dung cấu hình ${kind} không hợp lệ`, errs)
   }
   if (kind === 'BANNED' && !(Array.isArray(content) && content.every(x => typeof x === 'string'))) bad('cần danh sách chuỗi')
   if (kind === 'WHITELIST' && !(Array.isArray(content) && content.every(x => typeof (x as { domain?: unknown }).domain === 'string'))) bad('mỗi mục cần domain')
@@ -138,13 +144,14 @@ export async function proposeConfig(ctx: AppCtx, kind: ConfigKind, content: unkn
   return v
 }
 
-// Tuân thủ xác nhận thay đổi prompt và mô hình (quy trình hai người)
+// Người thứ hai xác nhận (quy trình hai người): prompt, mô hình AI, mô hình yếu tố, ngưỡng, danh sách hạn chế
 export async function decideConfig(ctx: AppCtx, id: string, approve: boolean, reasonRaw: unknown): Promise<ConfigVersion> {
-  requireRole(ctx, 'COMPLIANCE')
   const reason = minReason(reasonRaw)
   const v = await configById(ctx, id)
+  const meta = CONFIG_KINDS[v.kind] as { confirmer?: Role }
+  requireRole(ctx, meta.confirmer ?? 'COMPLIANCE')
   if (v.status !== 'PENDING_CONFIRM') throw new HttpError(409, `Phiên bản ${id} không ở trạng thái chờ xác nhận`)
-  if (v.proposed_by.includes(`:${ctx.user.id}`)) throw new HttpError(409, 'Người xác nhận phải khác người đề xuất')
+  if (samePerson(ctx, v.proposed_by)) throw new HttpError(409, 'Người xác nhận phải khác người đề xuất')
   const uow = ctx.uow()
   const now = ctx.now()
   if (approve) for (const old of await ctx.repo.list<ConfigVersion>('config_versions', "kind = ? AND status = 'ACTIVE'", [v.kind])) uow.update('config_versions', { ...old, status: 'SUPERSEDED' } as never)

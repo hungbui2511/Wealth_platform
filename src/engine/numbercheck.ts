@@ -73,6 +73,8 @@ export function allowedFromResult(r: FamilyImpactResult, view: ViewBody): Allowe
   addM(r.impact); addM(r.net_worth); addM(r.illiquid_impact); addP(r.pct)
   Object.values(r.by_asset_class).forEach(addM); Object.values(r.by_fx).forEach(addM); Object.values(r.by_instrument).forEach(addM)
   r.top_instruments.forEach(t => addM(t.impact))
+  const sc = (r as { scenario?: { ranges: { bad: number; base: number; good: number; severe?: number; bad_pct: number | null; base_pct: number | null }[] } }).scenario
+  for (const x of sc?.ranges ?? []) { addM(String(x.bad)); addM(String(x.base)); addM(String(x.good)); if (x.severe !== undefined) addM(String(x.severe)); addP(x.bad_pct === null ? null : String(x.bad_pct)); addP(x.base_pct === null ? null : String(x.base_pct)) }
   for (const p of r.positions) {
     addM(p.value_vnd); addM(p.exposure); addM(p.impact); addM(p.asset_impact); addM(p.fx_impact)
     addP(p.asset_shock); addP(p.fx_shock); addP(p.u); addP(p.u_fx); addP(p.eff_own)
@@ -108,6 +110,8 @@ export function templateInterpretation(familyName: string, r: FamilyImpactResult
   const top = r.top_instruments.filter(t => !restricted.has(t.instrument_id))
   if (top.length) parts.push('Các công cụ đóng góp lớn nhất: ' + top.map(t => `${t.name} ${fmtVndShort(t.impact)}`).join('; ') + '.')
   if (Number(r.illiquid_impact) !== 0) parts.push(`Phần tác động lên tài sản kém thanh khoản là ước tính trên giấy: ${fmtVndShort(r.illiquid_impact)}.`)
-  parts.push('Đây là cú sốc giá tức thời giả định theo cấu hình minh họa, không phải dự báo và không phải khuyến nghị.')
+  const sc = (r as { scenario?: { ranges: { horizon: string; bad: number; good: number }[] } }).scenario
+  if (sc?.ranges?.[1]) parts.push(`Kỳ hạn ${sc.ranges[1].horizon}: mốc P10 (xấu) ${fmtVndShort(String(sc.ranges[1].bad))}, mốc P90 (tốt) ${fmtVndShort(String(sc.ranges[1].good))}; con số chính ở trên là mức kỳ vọng theo xác suất các nhánh.`)
+  parts.push(sc ? 'Đây là dải ước tính theo các nhánh kịch bản CIO đã duyệt và mô hình yếu tố, không phải dự báo và không phải khuyến nghị.' : 'Đây là cú sốc giá tức thời giả định theo cấu hình minh họa, không phải dự báo và không phải khuyến nghị.')
   return parts.join(' ')
 }

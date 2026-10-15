@@ -32,7 +32,9 @@ export const TABLES: Record<string, string[]> = {
 export type Doc = Record<string, unknown> & { id: string }
 
 export class Repo {
-  constructor(public db: D1Database) {}
+  // auditKey: khóa bí mật AUDIT_HMAC_KEY (nếu có). Có khóa thì mã băm nhật ký là HMAC, người chỉ có quyền ghi cơ sở dữ liệu
+  // không tự tính lại được chuỗi sau khi sửa.
+  constructor(public db: D1Database, public auditKey?: string) {}
 
   async get<T = Doc>(table: string, id: string): Promise<T | null> {
     const r = await this.db.prepare(`SELECT data FROM ${table} WHERE id = ?`).bind(id).first<{ data: string }>()
@@ -146,7 +148,7 @@ export class UnitOfWork {
           seq += 1
           const ts = this.now()
           const data = canonical(a.data ?? {})
-          const hash = await sha256(prev + canonical({ seq, ts, actor: a.actor, action: a.action, object: a.object ?? null, data }))
+          const hash = await auditHash(this.repo.auditKey, prev, { seq, ts, actor: a.actor, action: a.action, object: a.object ?? null, data })
           auditRows.push({ seq, ts, actor: a.actor, action: a.action, object: a.object ?? null, data, prev_hash: prev, hash })
           prev = hash
         }
@@ -175,15 +177,33 @@ export class UnitOfWork {
 
 export interface AuditRow { seq: number; ts: string; actor: string; action: string; object: string | null; data: string; prev_hash: string; hash: string }
 
-// Lệnh kiểm tra tính toàn vẹn của chuỗi mã băm (NFR-13)
-export async function verifyAuditChain(db: D1Database): Promise<{ ok: boolean; count: number; broken_at?: number; head?: string }> {
+// Mã băm của một dòng nhật ký. Không có khóa: SHA-256 (phát hiện sửa đổi khi người sửa không tính lại cả chuỗi).
+// Có khóa: "hmac:" + HMAC-SHA-256, chỉ ai giữ khóa mới tạo được chuỗi hợp lệ.
+async function hmacHex(key: string, text: string): Promise<string> {
+  const k = await crypto.subtle.importKey('raw', new TextEncoder().encode(key), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign'])
+  const sig = await crypto.subtle.sign('HMAC', k, new TextEncoder().encode(text))
+  return [...new Uint8Array(sig)].map(b => b.toString(16).padStart(2, '0')).join('')
+}
+export async function auditHash(key: string | undefined, prev: string, row: { seq: number; ts: string; actor: string; action: string; object: string | null; data: string }): Promise<string> {
+  const text = prev + canonical(row)
+  return key ? `hmac:${await hmacHex(key, text)}` : sha256(text)
+}
+
+// Lệnh kiểm tra tính toàn vẹn của chuỗi mã băm (NFR-13). Khi đã có dòng HMAC thì mọi dòng sau phải là HMAC
+// (không cho hạ về SHA-256 thường). head là mã đầu chuỗi để neo ra ngoài (lưu định kỳ ở nơi chỉ ghi thêm).
+export async function verifyAuditChain(db: D1Database, key?: string): Promise<{ ok: boolean; count: number; broken_at?: number; head?: string; hmac_from_seq?: number; reason?: string }> {
   const r = await db.prepare('SELECT * FROM audit_log ORDER BY seq').all<AuditRow>()
   let prev = 'GENESIS'
   let expectedSeq = (r.results[0]?.seq) ?? 1
+  let hmacFrom: number | undefined
   for (const row of r.results) {
-    const h = await sha256(prev + canonical({ seq: row.seq, ts: row.ts, actor: row.actor, action: row.action, object: row.object, data: row.data }))
-    if (row.prev_hash !== prev || row.hash !== h || row.seq !== expectedSeq) return { ok: false, count: r.results.length, broken_at: row.seq }
+    const isHmac = row.hash.startsWith('hmac:')
+    if (isHmac && hmacFrom === undefined) hmacFrom = row.seq
+    if (!isHmac && hmacFrom !== undefined) return { ok: false, count: r.results.length, broken_at: row.seq, hmac_from_seq: hmacFrom, reason: 'Dòng SHA-256 thường sau khi chuỗi đã chuyển sang HMAC' }
+    if (isHmac && !key) return { ok: false, count: r.results.length, broken_at: row.seq, hmac_from_seq: hmacFrom, reason: 'Chuỗi có dòng HMAC nhưng máy kiểm tra không có khóa AUDIT_HMAC_KEY' }
+    const h = await auditHash(isHmac ? key : undefined, prev, { seq: row.seq, ts: row.ts, actor: row.actor, action: row.action, object: row.object, data: row.data })
+    if (row.prev_hash !== prev || row.hash !== h || row.seq !== expectedSeq) return { ok: false, count: r.results.length, broken_at: row.seq, ...(hmacFrom ? { hmac_from_seq: hmacFrom } : {}) }
     prev = row.hash; expectedSeq++
   }
-  return { ok: true, count: r.results.length, head: prev }
+  return { ok: true, count: r.results.length, head: prev, ...(hmacFrom ? { hmac_from_seq: hmacFrom } : {}) }
 }

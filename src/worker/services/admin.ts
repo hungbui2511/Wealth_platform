@@ -7,7 +7,7 @@ import { createPriceSnapshot } from './portfolio'
 
 export async function reseed(ctx: AppCtx, opts: { skipAuth?: boolean } = {}) {
   if (!opts.skipAuth) requireRole(ctx, 'ADMIN')
-  const prev = await verifyAuditChain(ctx.env.DB).catch(() => ({ ok: false, count: 0 }))
+  const prev = await verifyAuditChain(ctx.env.DB, ctx.repo.auditKey).catch(() => ({ ok: false, count: 0 }))
   // Xóa dữ liệu nghiệp vụ và nạp lại trong cùng một lô nguyên tử. Nhật ký không bị xóa (NFR-13):
   // chuỗi mã băm nối tiếp, bản ghi system.reseed ghi lại tình trạng chuỗi trước khi nạp lại.
   const uow = ctx.uow()
