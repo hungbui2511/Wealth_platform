@@ -53,6 +53,12 @@
     "families": []
   },
   {
+    "id": "CMP2",
+    "name": "Trưởng nhóm Tuân thủ (demo, người xác nhận thứ hai)",
+    "role": "COMPLIANCE",
+    "families": []
+  },
+  {
     "id": "ADM1",
     "name": "Quản trị hệ thống (demo)",
     "role": "ADMIN",

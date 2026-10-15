@@ -517,6 +517,7 @@ out('data/seed/users.json', [
   { id: 'RM2', name: 'RM Trần Văn Khôi (demo)', role: 'RM', families: allFamilies.filter(f => f.rm_id === 'RM2').map(f => f.id) },
   { id: 'RM3', name: 'RM Lê Minh Phương (demo)', role: 'RM', families: allFamilies.filter(f => f.rm_id === 'RM3').map(f => f.id) },
   { id: 'CMP1', name: 'Chuyên viên Tuân thủ (demo)', role: 'COMPLIANCE', families: [] },
+  { id: 'CMP2', name: 'Trưởng nhóm Tuân thủ (demo, người xác nhận thứ hai)', role: 'COMPLIANCE', families: [] },
   { id: 'ADM1', name: 'Quản trị hệ thống (demo)', role: 'ADMIN', families: [] },
 ])
 out('data/seed/instruments.json', Object.values(I))
