@@ -35,4 +35,15 @@ describe('Văn bản do Agent Rà soát pháp luật tìm', () => {
     const list = await h.ok('CIO1', 'GET', '/api/external')
     expect(list.filter((x: any) => x.status === 'REJECTED').map((x: any) => x.error).join(' ')).toMatch(/đã có trên radar|why_changed|không thuộc danh sách/)
   })
+
+  it('đánh số tiếp theo mã lớn nhất đã có, kể cả khi văn bản mẫu được nạp với mã cố định', async () => {
+    const loaded = await h.ok('ADM1', 'POST', '/api/admin/load-sample-policies')
+    await push('policy_doc', { doc: { ...doc, url: 'https://quochoi.vn/van-ban-moi' }, assessment: { ...assessment, sources: ['https://quochoi.vn/van-ban-moi'] }, meta: { model: 'claude-opus-5-5', session: 'S2' } })
+    const r = await h.ok('ADM1', 'POST', '/api/external/import')
+    expect(r.rejected).toEqual([])
+    expect(r.policy_docs.length).toBe(1)
+    const ids = (await h.ok('CMP1', 'GET', '/api/policies')).documents.map((x: any) => x.id)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(loaded.loaded.every((id: string) => ids.includes(id))).toBe(true)
+  })
 })

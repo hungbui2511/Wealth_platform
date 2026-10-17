@@ -77,7 +77,7 @@ export async function addPolicy(ctx: AppCtx, input: Omit<PolicyDoc, 'state' | 'i
     throw new HttpError(422, 'Văn bản không qua kiểm soát nguồn công khai (BR-26)', errs)
   }
   const year = now.slice(0, 4)
-  const id = input.id ?? `PD-${year}-${String(await ctx.repo.nextSeq(`PD-${year}`)).padStart(3, '0')}`
+  const id = input.id ?? await ctx.repo.nextId('policy_documents', `PD-${year}-`, 3)
   if (await ctx.repo.get('policy_documents', id)) throw new HttpError(409, `Văn bản ${id} đã tồn tại`)
   const doc: PolicyDoc = { id, title: input.title, agency: input.agency, kind: input.kind, status: input.status, published_at: input.published_at, effective_expected: input.effective_expected, url: input.url, topics, content: input.content, simulated: !!input.simulated, state: 'PENDING_SOURCE_CONFIRM', ingested_at: now, origin: input.ai_assessment ? 'ai_scan' : 'manual', ...(input.ai_assessment ? { ai_assessment: input.ai_assessment } : {}) }
   const u = ctx.uow(); u.insert('policy_documents', doc as never); u.audit({ actor: actor(ctx), action: 'policy.added', object: id, data: { title: doc.title, url: doc.url, published_at: doc.published_at, origin: doc.origin, ...(doc.ai_assessment ? { importance: doc.ai_assessment.importance, score: doc.ai_assessment.score, recommended_action: doc.ai_assessment.recommended_action } : {}) } }); await u.commit()
