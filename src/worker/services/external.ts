@@ -10,7 +10,7 @@ import { ConflictError } from '../db'
 import { createEventFromNews, getEvent, type EventRec } from './events'
 import { addToInbox, type IncomingItem } from './ingest'
 import { completeWaiting, type JobRec } from './jobs'
-import { analyzePolicy } from './policy'
+import { addPolicy, analyzePolicy } from './policy'
 import { runCioAgent, type ExternalCio, type ViewRec } from './views'
 import { currentSnapshot, type SnapshotRecord } from './portfolio'
 import { canonical, hashOf } from '../../engine/hash'
@@ -18,7 +18,7 @@ import { runPreChallenge, runReChallenge, getView, viewChallenges } from './view
 import type { PricePoint } from '../../shared/types'
 
 export interface ExternalRec {
-  id: string; kind: 'news' | 'event' | 'cio_view' | 'challenge' | 'policy_summary' | 'prices'; subject?: string
+  id: string; kind: 'news' | 'event' | 'cio_view' | 'challenge' | 'policy_doc' | 'policy_summary' | 'prices'; subject?: string
   status: 'READY' | 'PROCESSING' | 'IMPORTED' | 'REJECTED'; created_at: string
   data: any; result?: Record<string, unknown>; error?: string; note?: string; rev?: number
 }
@@ -72,7 +72,7 @@ export async function submitExternal(env: Env, body: unknown, now: string) {
   if (typeof env.EXTERNAL_HMAC_KEY !== 'string' || !env.EXTERNAL_HMAC_KEY) throw new HttpError(503, 'Chưa bật EXTERNAL_HMAC_KEY: kênh gửi có chữ ký đang tắt')
   const b = (body ?? {}) as { id?: string; kind?: string; subject?: string; data?: Record<string, unknown> }
   if (!b.id || !/^[A-Za-z0-9._:-]{3,80}$/.test(b.id)) throw new HttpError(422, 'id không hợp lệ')
-  if (!['news', 'event', 'cio_view', 'challenge', 'policy_summary', 'prices'].includes(String(b.kind))) throw new HttpError(422, 'kind không hợp lệ')
+  if (!['news', 'event', 'cio_view', 'challenge', 'policy_doc', 'policy_summary', 'prices'].includes(String(b.kind))) throw new HttpError(422, 'kind không hợp lệ')
   const sig = await signatureOk(env, b.data)
   if (!sig.ok) throw new HttpError(401, sig.reason ?? 'Chữ ký không hợp lệ')
   await env.DB.prepare('INSERT INTO external_outputs (id, kind, subject, status, created_at, data) VALUES (?, ?, ?, ?, ?, ?)').bind(b.id, b.kind, b.subject ?? null, 'READY', now, JSON.stringify(b.data)).run()
@@ -101,7 +101,7 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     if (!sig.signed) unsigned.push(r.id)
     rows.push(r)
   }
-  const report = { trigger: opts.trigger ?? 'manual', news: { rows: 0, created: 0, duplicate: 0, rejected: 0, too_old: 0, irrelevant: 0 }, events: [] as string[], views: [] as { view_id: string; status: string }[], policies: [] as string[], prices: [] as string[], challenges: [] as { view_id: string; challenge: string }[], unsigned, rejected: [] as { id: string; reason: string }[], waiting: [] as { id: string; reason: string }[] }
+  const report = { trigger: opts.trigger ?? 'manual', news: { rows: 0, created: 0, duplicate: 0, rejected: 0, too_old: 0, irrelevant: 0 }, events: [] as string[], views: [] as { view_id: string; status: string }[], policies: [] as string[], policy_docs: [] as string[], prices: [] as string[], challenges: [] as { view_id: string; challenge: string }[], unsigned, rejected: [] as { id: string; reason: string }[], waiting: [] as { id: string; reason: string }[] }
   if (!rows.length) return report
 
   // 1. Tin
@@ -182,6 +182,23 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     } catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 1000) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
   }
 
+  // 3c. Agent Rà soát pháp luật: văn bản mới (dự thảo hoặc đã ban hành) kèm đánh giá mức quan trọng.
+  //     Vào radar ở trạng thái chờ Tuân thủ xác nhận nguồn; không tự chạy phân tích hay tới khách.
+  //     data = { doc: {title, agency, kind, status, published_at, effective_expected?, url, topics, content}, assessment, meta }
+  for (const r of rows.filter(x => x.kind === 'policy_doc')) {
+    if (!await claim(ctx, r)) continue
+    try {
+      const d = r.data?.doc ?? {}
+      const a = { ...(r.data?.assessment ?? {}), model: r.data?.meta?.model, session: r.data?.meta?.session, prepared_at: r.data?.meta?.prepared_at }
+      const doc = await addPolicy(ctx, { title: String(d.title ?? ''), agency: String(d.agency ?? ''), kind: d.kind, status: String(d.status ?? ''), published_at: d.published_at ? new Date(d.published_at).toISOString() : '', ...(d.effective_expected ? { effective_expected: String(d.effective_expected) } : {}), url: String(d.url ?? ''), topics: Array.isArray(d.topics) ? d.topics : [], content: String(d.content ?? '').slice(0, 20000), simulated: false, ai_assessment: a })
+      await mark(ctx, r, { status: 'IMPORTED', result: { doc_id: doc.id, importance: a.importance, score: a.score } })
+      report.policy_docs.push(doc.id)
+    } catch (e) {
+      const det = (e as HttpError).details as string[] | undefined
+      await mark(ctx, r, { status: 'REJECTED', error: (String((e as Error).message ?? e) + (det ? ': ' + det.join('; ') : '')).slice(0, 1500) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) })
+    }
+  }
+
   // 4. Tóm tắt văn bản chính sách
   for (const r of rows.filter(x => x.kind === 'policy_summary')) {
     const docId = r.subject ?? r.data?.doc_id
@@ -212,7 +229,7 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
   }
 
   // Chỉ ghi nhật ký khi có thay đổi (tránh một bản ghi mỗi 10 phút khi các bản ghi chỉ đang chờ)
-  const changed = report.news.created + report.events.length + report.views.length + report.challenges.length + report.policies.length + report.prices.length + report.rejected.length
+  const changed = report.news.created + report.events.length + report.views.length + report.challenges.length + report.policies.length + report.policy_docs.length + report.prices.length + report.rejected.length
   if (changed || report.trigger !== 'cron') { const u = ctx.uow(); u.audit({ actor: report.trigger === 'cron' ? 'SYSTEM:cron' : 'ADMIN:CLAUDE', action: 'external.imported', object: 'external_outputs', data: report }); await u.commit() }
   return report
 }

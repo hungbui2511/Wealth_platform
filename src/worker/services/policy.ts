@@ -23,6 +23,40 @@ export interface PolicyDoc {
   state: 'PENDING_SOURCE_CONFIRM' | 'SOURCE_CONFIRMED' | 'ANALYZED' | 'ERROR'
   source_confirmed_by?: string; source_confirmed_at?: string; ingested_at: string
   summary?: { changes: PolicyChange[]; run_id: string; model: string }; event_id?: string; errors?: string[]
+  // Agent Rà soát pháp luật (AI, ngoài TCB) tìm và chấm điểm văn bản; chỉ là gợi ý ưu tiên, người quyết định có phân tích tiếp hay không
+  origin?: 'manual' | 'ai_scan'; ai_assessment?: PolicyAssessment
+}
+
+export const DOC_TYPES = ['luat', 'nghi_quyet', 'nghi_dinh', 'thong_tu', 'quyet_dinh', 'khac'] as const
+export const STAGES = ['lay_y_kien', 'tham_dinh', 'trinh_quoc_hoi', 'thao_luan_quoc_hoi', 'thong_qua', 'ban_hanh', 'co_hieu_luc'] as const
+export interface PolicyAssessment {
+  importance: 'high' | 'medium' | 'low'; score: number
+  doc_type: typeof DOC_TYPES[number]; stage: typeof STAGES[number]
+  comment_deadline?: string; expected_adoption?: string
+  why_changed: string                      // vì sao cơ quan soạn thảo thay đổi (bất cập, mục tiêu chính sách)
+  key_points: string[]                     // điểm mới chính, mỗi điểm nêu điều khoản
+  impact_private: string                   // tác động tới khách Private: tài sản, thuế, mục tiêu, thủ tục
+  impact_tcb: string                       // tác động tới hoạt động ngân hàng: sản phẩm, quy trình, tuân thủ
+  recommended_action: 'analyze_now' | 'monitor' | 'ignore'
+  sources: string[]
+  model?: string; session?: string; prepared_at?: string
+}
+
+export function assessmentErrors(a: Partial<PolicyAssessment> | undefined): string[] {
+  const e: string[] = []
+  if (!a) return ['Thiếu đánh giá của agent']
+  if (!['high', 'medium', 'low'].includes(String(a.importance))) e.push('importance phải là high, medium hoặc low')
+  if (!(Number.isInteger(a.score) && a.score! >= 1 && a.score! <= 10)) e.push('score phải là số nguyên 1–10')
+  if (!DOC_TYPES.includes(a.doc_type as never)) e.push(`doc_type phải thuộc ${DOC_TYPES.join(', ')}`)
+  if (!STAGES.includes(a.stage as never)) e.push(`stage phải thuộc ${STAGES.join(', ')}`)
+  for (const k of ['comment_deadline', 'expected_adoption'] as const) if (a[k] && Number.isNaN(Date.parse(a[k]!))) e.push(`${k} không phải ngày hợp lệ`)
+  if (!a.why_changed || a.why_changed.trim().length < 40) e.push('why_changed tối thiểu 40 ký tự')
+  if (!Array.isArray(a.key_points) || !a.key_points.length || a.key_points.some(x => typeof x !== 'string' || x.trim().length < 15)) e.push('key_points cần ít nhất một điểm, mỗi điểm ≥ 15 ký tự')
+  if (!a.impact_private || a.impact_private.trim().length < 30) e.push('impact_private tối thiểu 30 ký tự')
+  if (!a.impact_tcb || a.impact_tcb.trim().length < 30) e.push('impact_tcb tối thiểu 30 ký tự')
+  if (!['analyze_now', 'monitor', 'ignore'].includes(String(a.recommended_action))) e.push('recommended_action phải là analyze_now, monitor hoặc ignore')
+  if (!Array.isArray(a.sources) || !a.sources.length) e.push('Cần ít nhất một đường dẫn nguồn')
+  return e
 }
 
 export async function addPolicy(ctx: AppCtx, input: Omit<PolicyDoc, 'state' | 'ingested_at' | 'id'> & { id?: string }) {
@@ -30,6 +64,11 @@ export async function addPolicy(ctx: AppCtx, input: Omit<PolicyDoc, 'state' | 'i
   const cfg = await loadConfigs(ctx)
   const now = ctx.now()
   const errs = checkPublicSource(input, cfg.whitelist, now)
+  if (input.ai_assessment) {
+    errs.push(...assessmentErrors(input.ai_assessment))
+    for (const u of input.ai_assessment.sources ?? []) errs.push(...checkPublicSource({ url: u, published_at: input.published_at }, cfg.whitelist, now).filter(x => x.startsWith('Miền')).map(x => `Nguồn đánh giá: ${x}`))
+  }
+  if (input.url && (await ctx.repo.list<PolicyDoc>('policy_documents', "json_extract(data, '$.url') = ?", [input.url])).length) errs.push('Văn bản cùng đường dẫn đã có trên radar')
   if (!input.title || !input.content) errs.push('Thiếu tiêu đề hoặc nội dung')
   if (!['draft', 'final'].includes(input.kind)) errs.push('Loại văn bản phải là dự thảo (draft) hoặc đã ban hành (final)')
   const topics = (input.topics ?? []).filter(t => POLICY_TOPICS.includes(t))
@@ -40,8 +79,8 @@ export async function addPolicy(ctx: AppCtx, input: Omit<PolicyDoc, 'state' | 'i
   const year = now.slice(0, 4)
   const id = input.id ?? `PD-${year}-${String(await ctx.repo.nextSeq(`PD-${year}`)).padStart(3, '0')}`
   if (await ctx.repo.get('policy_documents', id)) throw new HttpError(409, `Văn bản ${id} đã tồn tại`)
-  const doc: PolicyDoc = { id, title: input.title, agency: input.agency, kind: input.kind, status: input.status, published_at: input.published_at, effective_expected: input.effective_expected, url: input.url, topics, content: input.content, simulated: !!input.simulated, state: 'PENDING_SOURCE_CONFIRM', ingested_at: now }
-  const u = ctx.uow(); u.insert('policy_documents', doc as never); u.audit({ actor: actor(ctx), action: 'policy.added', object: id, data: { title: doc.title, url: doc.url, published_at: doc.published_at } }); await u.commit()
+  const doc: PolicyDoc = { id, title: input.title, agency: input.agency, kind: input.kind, status: input.status, published_at: input.published_at, effective_expected: input.effective_expected, url: input.url, topics, content: input.content, simulated: !!input.simulated, state: 'PENDING_SOURCE_CONFIRM', ingested_at: now, origin: input.ai_assessment ? 'ai_scan' : 'manual', ...(input.ai_assessment ? { ai_assessment: input.ai_assessment } : {}) }
+  const u = ctx.uow(); u.insert('policy_documents', doc as never); u.audit({ actor: actor(ctx), action: 'policy.added', object: id, data: { title: doc.title, url: doc.url, published_at: doc.published_at, origin: doc.origin, ...(doc.ai_assessment ? { importance: doc.ai_assessment.importance, score: doc.ai_assessment.score, recommended_action: doc.ai_assessment.recommended_action } : {}) } }); await u.commit()
   return doc
 }
 
@@ -125,7 +164,7 @@ export async function radar(ctx: AppCtx) {
   return {
     documents: docs.map(d => {
       const ev = events.find(e => e.id === d.event_id)
-      return { id: d.id, title: d.title, agency: d.agency, kind: d.kind, status: d.status, state: d.state, published_at: d.published_at, effective_expected: d.effective_expected, url: d.url, topics: d.topics, simulated: d.simulated, changes: d.summary?.changes ?? [], event_id: d.event_id, matched_total: matches.filter(m => m.doc_id === d.id).length, matched_mine: matches.filter(m => m.doc_id === d.id && own(m.family_id)).length, reaction_ms: ev ? reactionMs(ev.timestamps) : null, timestamps: ev?.timestamps ?? null }
+      return { id: d.id, title: d.title, agency: d.agency, kind: d.kind, status: d.status, state: d.state, origin: d.origin ?? 'manual', ai_assessment: d.ai_assessment ?? null, published_at: d.published_at, effective_expected: d.effective_expected, url: d.url, topics: d.topics, simulated: d.simulated, changes: d.summary?.changes ?? [], event_id: d.event_id, matched_total: matches.filter(m => m.doc_id === d.id).length, matched_mine: matches.filter(m => m.doc_id === d.id && own(m.family_id)).length, reaction_ms: ev ? reactionMs(ev.timestamps) : null, timestamps: ev?.timestamps ?? null }
     }),
     events: allEvents,
   }

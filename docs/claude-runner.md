@@ -87,6 +87,12 @@ Phản biện đi kèm trong `cio_view` do **cùng phiên** soạn nên hệ th�
 
 Phát hiện Nghiêm trọng không còn bị tự hạ mức: mọi phát hiện `critical` đều phải được CIO phản hồi trước khi duyệt.
 
+**`policy_doc`** (Agent Rà soát pháp luật, subject để trống): văn bản mới (dự thảo hoặc đã ban hành) kèm đánh giá mức quan trọng.
+`{"doc":{"title","agency","kind":"draft|final","status","published_at":"ISO 8601","effective_expected":"(tùy chọn)","url":"đường dẫn chính thức thuộc danh sách nguồn","topics":[POLICY_TOPICS],"content":"nguyên văn các điều khoản chính, tối đa 20.000 ký tự"},"assessment":{"importance":"high|medium|low","score":1-10,"doc_type":"luat|nghi_quyet|nghi_dinh|thong_tu|quyet_dinh|khac","stage":"lay_y_kien|tham_dinh|trinh_quoc_hoi|thao_luan_quoc_hoi|thong_qua|ban_hanh|co_hieu_luc","comment_deadline":"YYYY-MM-DD (tùy chọn)","expected_adoption":"YYYY-MM-DD (tùy chọn)","why_changed":"≥ 40 ký tự: bất cập và mục tiêu chính sách","key_points":["điểm mới, nêu điều khoản"],"impact_private":"≥ 30 ký tự","impact_tcb":"≥ 30 ký tự","recommended_action":"analyze_now|monitor|ignore","sources":["đường dẫn thuộc danh sách nguồn"]},"meta":{"model","session","prepared_at"}}`.
+Văn bản vào Radar chính sách ở trạng thái chờ Tuân thủ xác nhận nguồn; trùng đường dẫn bị từ chối. Đánh giá là gợi ý ưu tiên của AI; trích dẫn
+điều khoản chỉ được kiểm chứng khi Agent Chính sách phân tích (policy_summary) sau khi Tuân thủ xác nhận nguồn và CIO/Quản trị bấm chạy.
+POLICY_TOPICS: TAX_SECURITIES, PROPERTY_LAND, INHERITANCE_GIFT, CORPORATE_HOLDING, FX_OFFSHORE, GOLD, DIGITAL_ASSET, CREDIT, INSURANCE.
+
 **`policy_summary`** (subject = mã văn bản `PD-…`, văn bản phải được Tuân thủ xác nhận nguồn trước):
 `{"summary":{"changes":[{"change_id","article_refs":["Điều 3 khoản 1"],"quote","summary","topics":[…],"affected_parties","effective_from","certainty":"draft|final"}]},"meta":{…}}`
 

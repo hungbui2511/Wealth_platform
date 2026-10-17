@@ -22,4 +22,18 @@ export const PUBLIC_DOMAINS = [
   { domain: 'sbv.gov.vn', name: 'Ngân hàng Nhà nước Việt Nam' }, { domain: 'mof.gov.vn', name: 'Bộ Tài chính' },
   { domain: 'ssc.gov.vn', name: 'Ủy ban Chứng khoán Nhà nước' }, { domain: 'vbpl.vn', name: 'CSDL quốc gia về văn bản pháp luật' },
   { domain: 'quochoi.vn', name: 'Quốc hội (cổng dự thảo)' }, { domain: 'federalreserve.gov', name: 'Federal Reserve (Mỹ)' }, { domain: 'hnx.vn', name: 'Sở GDCK Hà Nội' }, { domain: 'hsx.vn', name: 'Sở GDCK TP.HCM' },
+  // Văn bản pháp luật và dự thảo (cho Agent Rà soát pháp luật)
+  { domain: 'moj.gov.vn', name: 'Bộ Tư pháp' }, { domain: 'moit.gov.vn', name: 'Bộ Công Thương' }, { domain: 'moc.gov.vn', name: 'Bộ Xây dựng' },
+  { domain: 'mae.gov.vn', name: 'Bộ Nông nghiệp và Môi trường' }, { domain: 'mps.gov.vn', name: 'Bộ Công an' },
+  { domain: 'thuvienphapluat.vn', name: 'Thư viện Pháp luật (tra cứu văn bản)' }, { domain: 'luatvietnam.vn', name: 'LuatVietnam (tra cứu văn bản)' },
+  // Tin và số liệu quốc tế: hãng tin, báo tài chính lớn và nguồn số liệu chính thức
+  { domain: 'reuters.com', name: 'Reuters' }, { domain: 'apnews.com', name: 'Associated Press' }, { domain: 'bloomberg.com', name: 'Bloomberg' },
+  { domain: 'cnbc.com', name: 'CNBC' }, { domain: 'ft.com', name: 'Financial Times' }, { domain: 'wsj.com', name: 'The Wall Street Journal' },
+  { domain: 'bbc.com', name: 'BBC' }, { domain: 'euronews.com', name: 'Euronews' }, { domain: 'aljazeera.com', name: 'Al Jazeera' },
+  { domain: 'scmp.com', name: 'South China Morning Post' }, { domain: 'asia.nikkei.com', name: 'Nikkei Asia' }, { domain: 'finance.yahoo.com', name: 'Yahoo Finance (đăng lại Reuters, AP)' },
+  { domain: 'bls.gov', name: 'Cục Thống kê Lao động Mỹ (CPI, PPI, việc làm)' }, { domain: 'bea.gov', name: 'Cục Phân tích Kinh tế Mỹ (GDP, PCE)' },
+  { domain: 'census.gov', name: 'Cục Điều tra Dân số Mỹ (bán lẻ)' }, { domain: 'treasury.gov', name: 'Bộ Tài chính Mỹ' }, { domain: 'eia.gov', name: 'Cơ quan Thông tin Năng lượng Mỹ' },
+  { domain: 'ecb.europa.eu', name: 'Ngân hàng Trung ương châu Âu' }, { domain: 'ec.europa.eu', name: 'Ủy ban châu Âu, Eurostat' }, { domain: 'bankofengland.co.uk', name: 'Ngân hàng Trung ương Anh' },
+  { domain: 'boj.or.jp', name: 'Ngân hàng Trung ương Nhật Bản' }, { domain: 'imf.org', name: 'IMF' }, { domain: 'worldbank.org', name: 'Ngân hàng Thế giới' },
+  { domain: 'oecd.org', name: 'OECD' }, { domain: 'bis.org', name: 'Ngân hàng Thanh toán Quốc tế' }, { domain: 'opec.org', name: 'OPEC' },
 ]
