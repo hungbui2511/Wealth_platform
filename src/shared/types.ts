@@ -115,9 +115,40 @@ export interface Finding {
   value?: string; threshold?: string
 }
 
+// Một nhận định của Agent Chính sách: gắn nhãn căn cứ (dẫn điều khoản hoặc trích nguyên văn có trong văn bản)
+// hoặc suy luận (bắt buộc nêu lập luận), kèm mức tin cậy. Cao: hệ quả trực tiếp của câu chữ; vừa: phụ thuộc giả định
+// hoặc còn cách hiểu khác; thấp: dự báo hành vi tương lai hoặc phụ thuộc dữ liệu chưa có.
+export interface PolicyClaim {
+  text: string; basis: 'evidence' | 'inference'; confidence: 'high' | 'medium' | 'low'
+  reasoning?: string; evidence?: { article_ref?: string; quote?: string }
+}
+
+// Năm câu hỏi cho mỗi thay đổi (theo phương pháp phân tích tác động VBPL): thay đổi gì nằm ở before + summary + quote
+export interface PolicyChangeAnalysis {
+  why: PolicyClaim             // vì sao cơ quan ban hành thay đổi
+  goal: PolicyClaim            // cơ quan muốn hành vi nào thay đổi
+  next_signal: PolicyClaim     // tín hiệu, bước tiếp theo nên theo dõi
+  private_impact: PolicyClaim  // hàm ý cho khách Private (theo nhóm khách, không theo gia đình cụ thể)
+  second_order?: PolicyClaim   // tác động bậc hai: thị trường, giá, hành vi của các bên khác
+  opportunity?: PolicyClaim    // cơ hội tư vấn hoặc sản phẩm
+}
+
 export interface PolicyChange {
   change_id: string; article_refs: string[]; quote: string; summary: string
   topics: PolicyTopic[]; affected_parties: string; effective_from?: string; certainty: 'draft' | 'final'
+  before?: string                               // quy định trước đây, để đặt cũ và mới cạnh nhau
+  materiality?: 'high' | 'medium' | 'low'       // mức trọng yếu với khách Private
+  analysis?: PolicyChangeAnalysis
+}
+
+// Phân tích trọng yếu đối với khách Private: phần đầu của tóm tắt, đọc trong một màn hình
+export interface PolicyPrivateBrief {
+  headline: string
+  key_findings: (PolicyClaim & { title: string; change_ids: string[] })[]
+  segments: { segment: string; why: string; change_ids: string[] }[]
+  milestones: { date: string; label: string; article_ref?: string }[]
+  open_questions: { issue: string; reading_1: string; reading_2: string; consequence: string }[]
+  advisor_message: string
 }
 
 export interface UnitConfig { u: Record<string, Dec>; u_fx: Record<string, Dec> }

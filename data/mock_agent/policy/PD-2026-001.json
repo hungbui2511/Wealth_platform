@@ -6,13 +6,55 @@
         "Điều 3 khoản 1"
       ],
       "quote": "Thuế suất 2% trên giá chuyển nhượng được thay bằng thuế suất 20% trên phần chênh lệch giữa giá bán và giá mua có chứng từ.",
-      "summary": "Đổi cách tính thuế chuyển nhượng bất động sản từ 2% giá bán sang 20% phần chênh lệch có chứng từ.",
+      "summary": "Đổi cách tính thuế chuyển nhượng bất động sản từ 2% giá bán sang 20% phần chênh lệch có chứng từ; không xác định được giá mua thì vẫn 2% giá bán.",
       "topics": [
         "PROPERTY_LAND"
       ],
       "affected_parties": "Cá nhân chuyển nhượng bất động sản",
       "effective_from": "2027-07-01",
-      "certainty": "draft"
+      "certainty": "draft",
+      "before": "Thuế 2% trên giá chuyển nhượng, không phụ thuộc lãi hay lỗ (theo chính văn bản: \"như hiện hành\").",
+      "materiality": "high",
+      "analysis": {
+        "why": {
+          "text": "Thuế 2% trên giá bán đánh như nhau dù người bán lãi lớn hay lỗ, nên không phản ánh thu nhập thực. Chuyển sang đánh trên phần chênh lệch đưa thuế về đúng bản chất thuế thu nhập.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Văn bản giả lập không kèm tờ trình. Suy ra từ cấu trúc điều khoản: cơ sở tính thuế đổi từ giá bán sang chênh lệch có chứng từ, còn khoản 2 giữ 2% khi không có giá mua."
+        },
+        "goal": {
+          "text": "Khuyến khích người bán xuất trình giá mua có chứng từ để thuế bám theo lãi thực; tuy vậy khoản 2 vẫn giữ 2% giá bán khi không xác định được giá mua, nên động cơ này chưa trọn (xem điểm chưa rõ).",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Văn bản không nêu mục tiêu. Suy ra từ việc khoản 1 chỉ đánh trên chênh lệch \"có chứng từ\"; nhưng khoản 2 tạo lối thoát 2% giá bán, nên kết luận về động cơ chỉ ở mức vừa."
+        },
+        "next_signal": {
+          "text": "Theo dõi văn bản hướng dẫn thế nào là \"giá mua có chứng từ\" (hợp đồng công chứng, hoá đơn, chi phí cải tạo có được cộng không) và có tính trượt giá hay không.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Khoản 1 dùng khái niệm \"giá mua có chứng từ\" nhưng không định nghĩa; một khái niệm quyết định số thuế mà chưa có định nghĩa thường phải được hướng dẫn chi tiết."
+        },
+        "private_impact": {
+          "text": "Với tài sản xác định được giá mua có chứng từ và lãi lớn, thuế cao hơn nhiều. Ví dụ minh hoạ: mua 10 tỷ, bán 30 tỷ thì thuế từ 0,6 tỷ (2% × 30) lên 4 tỷ (20% × 20), gấp khoảng 6,7 lần. Mức hoà vốn là khi lãi bằng khoảng 10% giá bán.",
+          "basis": "evidence",
+          "confidence": "high",
+          "evidence": {
+            "article_ref": "Điều 3 khoản 1"
+          }
+        },
+        "second_order": {
+          "text": "Trước ngày hiệu lực dự kiến có thể có làn sóng bán sớm để khoá mức 2%, tạo áp lực cung lên phân khúc nhà đất nắm giữ lâu năm.",
+          "basis": "inference",
+          "confidence": "low",
+          "reasoning": "Khi thuế mới cao hơn rõ rệt cho tài sản lãi lớn và có ngày hiệu lực biết trước, người bán có động cơ dời giao dịch lên trước; mức độ phụ thuộc vào thanh khoản thị trường nên chỉ là dự báo."
+        },
+        "opportunity": {
+          "text": "Rà soát cùng khách hồ sơ giá mua và chi phí của từng bất động sản đang nắm giữ, vì có chứng từ hay không quyết định cách tính thuế.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Khoản 1 chỉ áp dụng cho chênh lệch có chứng từ; khách có lãi nhỏ hoặc lỗ sẽ có lợi nếu chứng minh được giá mua."
+        }
+      }
     },
     {
       "change_id": "C2",
@@ -21,13 +63,123 @@
         "Điều 5 khoản 2"
       ],
       "quote": "Bất động sản nắm giữ dưới 2 năm chịu thuế suất bổ sung 10% trên phần chênh lệch.",
-      "summary": "Thêm thuế suất bổ sung khi chuyển nhượng nhiều bất động sản trong năm hoặc nắm giữ dưới 2 năm.",
+      "summary": "Thêm thuế suất bổ sung khi chuyển nhượng từ bất động sản thứ hai trong cùng năm; tài sản nắm giữ dưới 2 năm chịu thêm 10% trên phần chênh lệch.",
       "topics": [
         "PROPERTY_LAND"
       ],
       "affected_parties": "Cá nhân chuyển nhượng từ bất động sản thứ hai trong năm",
       "effective_from": "2027-07-01",
-      "certainty": "draft"
+      "certainty": "draft",
+      "before": "Văn bản được cung cấp không nêu quy định trước đây về thuế bổ sung khi chuyển nhượng nhiều lần.",
+      "materiality": "medium",
+      "analysis": {
+        "why": {
+          "text": "Nhắm vào hành vi mua đi bán lại ngắn hạn (lướt sóng) bất động sản, vốn không bị phân biệt dưới cách đánh 2% trên giá bán.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Thuế bổ sung chỉ áp dụng từ bất động sản thứ hai trong năm và cho tài sản nắm giữ dưới 2 năm, tức đúng đặc điểm của giao dịch đầu cơ; văn bản không nêu lý do trực tiếp."
+        },
+        "goal": {
+          "text": "Kéo dài thời gian nắm giữ và giảm số giao dịch lặp lại trong năm của cùng một cá nhân.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Văn bản không nêu mục tiêu. Suy ra từ việc thuế bổ sung chỉ áp dụng từ bất động sản thứ hai trong năm và tăng khi thời gian nắm giữ ngắn (Điều 5 khoản 1, 2)."
+        },
+        "next_signal": {
+          "text": "Theo dõi bậc thuế bổ sung cho thời gian nắm giữ từ 2 năm trở lên, vì khoản 1 nói \"theo thời gian nắm giữ\" nhưng khoản 2 mới chỉ nêu một mốc.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Khoản 1 hàm ý một biểu thuế theo thời gian nắm giữ, trong khi văn bản chỉ quy định mốc dưới 2 năm; phần còn thiếu nhiều khả năng sẽ được bổ sung hoặc hướng dẫn."
+        },
+        "private_impact": {
+          "text": "Từ bất động sản thứ hai bán trong cùng năm, nếu nắm giữ dưới 2 năm và xác định được giá mua, mức tính là 20% (Điều 3) cộng 10% bổ sung, tức 30% trên phần chênh lệch; bất động sản thứ nhất vẫn 20%. Thứ tự và năm thực hiện giao dịch trở thành biến số thuế.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Ghép Điều 3 khoản 1 với Điều 5 khoản 1–2. Văn bản chưa định nghĩa \"cùng năm\" (năm dương lịch hay 12 tháng) và chưa nói thuế bổ sung áp dụng thế nào khi chỉ tính được 2% giá bán theo Điều 3 khoản 2, nên kết luận phụ thuộc giả định."
+        }
+      }
     }
-  ]
+  ],
+  "private_brief": {
+    "headline": "Dự thảo đổi bản chất thuế chuyển nhượng bất động sản từ thuế trên giá bán (2%) sang thuế trên lãi (20% chênh lệch có chứng từ, thêm 10% với tài sản thứ hai trở lên trong năm nắm giữ dưới 2 năm). Với khách Private, tác động lớn nhất nằm ở tài sản mua lâu, lãi lớn và ở việc có xác định được giá mua hay không.",
+    "key_findings": [
+      {
+        "title": "Tài sản lãi lớn, có chứng từ giá mua, chịu thuế cao hơn nhiều lần",
+        "text": "Mua 10 tỷ, bán 30 tỷ: thuế từ 0,6 tỷ lên 4 tỷ (khoảng 6,7 lần), giả định xác định được giá mua. Văn bản chưa nói cách xử lý khi chênh lệch âm.",
+        "basis": "evidence",
+        "confidence": "high",
+        "change_ids": [
+          "C1"
+        ],
+        "evidence": {
+          "article_ref": "Điều 3 khoản 1"
+        }
+      },
+      {
+        "title": "Chứng từ giá mua quyết định cách tính thuế",
+        "text": "Không xác định được giá mua thì vẫn 2% giá bán, nên với tài sản lãi lớn, việc thiếu chứng từ có thể lại cho số thuế thấp hơn. Đây là điểm chưa rõ cần chờ hướng dẫn.",
+        "basis": "inference",
+        "confidence": "medium",
+        "change_ids": [
+          "C1"
+        ],
+        "reasoning": "Khoản 2 giữ mức 2% khi không xác định được giá mua; nếu không có cơ chế ấn định giá mua, người có lãi lớn có động cơ không xuất trình chứng từ. Cơ quan soạn thảo nhiều khả năng sẽ bịt khe hở này."
+      },
+      {
+        "title": "Bán nhiều, nắm giữ ngắn: tới 30% trên lãi",
+        "text": "Từ bất động sản thứ hai trong cùng năm, tài sản nắm giữ dưới 2 năm chịu thêm 10% trên phần chênh lệch, cộng với 20% theo Điều 3; tài sản thứ nhất vẫn 20%.",
+        "change_ids": [
+          "C2"
+        ],
+        "basis": "inference",
+        "confidence": "medium",
+        "reasoning": "Ghép Điều 3 khoản 1 với Điều 5 khoản 2; \"cùng năm\" chưa được định nghĩa và chưa rõ thuế bổ sung có áp dụng khi tính theo 2% giá bán."
+      }
+    ],
+    "segments": [
+      {
+        "segment": "Gia đình nắm nhiều bất động sản mua từ lâu",
+        "why": "Chênh lệch giữa giá bán và giá mua lớn nên thuế 20% trên lãi cao hơn nhiều so với 2% giá bán.",
+        "change_ids": [
+          "C1"
+        ]
+      },
+      {
+        "segment": "Khách đầu tư bất động sản ngắn hạn, giao dịch nhiều lần trong năm",
+        "why": "Có thể chịu thêm thuế bổ sung 10% khi bán từ tài sản thứ hai trong cùng năm với thời gian nắm giữ dưới 2 năm.",
+        "change_ids": [
+          "C2"
+        ]
+      },
+      {
+        "segment": "Khách thiếu hồ sơ giá mua (tài sản thừa kế, mua qua giấy tay)",
+        "why": "Cách tính thuế phụ thuộc việc xác định được giá mua; quy định về chứng từ còn chờ hướng dẫn.",
+        "change_ids": [
+          "C1"
+        ]
+      }
+    ],
+    "milestones": [
+      {
+        "date": "2027-07-01",
+        "label": "Dự kiến có hiệu lực (dự thảo, có thể thay đổi)",
+        "article_ref": "Điều 9"
+      }
+    ],
+    "open_questions": [
+      {
+        "issue": "Tài sản thừa kế hoặc được tặng cho thì giá mua xác định thế nào?",
+        "reading_1": "Lấy giá trị tại thời điểm nhận thừa kế, tặng cho làm giá mua.",
+        "reading_2": "Coi là không xác định được giá mua và áp dụng 2% giá bán theo Điều 3 khoản 2.",
+        "consequence": "Hai cách hiểu cho số thuế rất khác nhau với tài sản gia đình truyền lại."
+      },
+      {
+        "issue": "Thuế bổ sung 10% của Điều 5 có áp dụng khi không xác định được giá mua không?",
+        "reading_1": "Không: Điều 5 khoản 2 tính trên \"phần chênh lệch\", nên khi chỉ tính 2% giá bán thì không có chênh lệch để cộng thêm.",
+        "reading_2": "Có: cơ quan thuế ấn định một mức tương đương trên giá bán.",
+        "consequence": "Quyết định thuế của khách giao dịch nhiều lần mà thiếu chứng từ giá mua."
+      }
+    ],
+    "advisor_message": "Đây là dự thảo đang lấy ý kiến, chưa phải quy định. Khi trao đổi với khách nên nói rõ cơ chế (thuế trên lãi, không còn trên giá bán), ví dụ số minh hoạ và các điểm còn chờ hướng dẫn; không khuyến khích khách bán sớm chỉ vì dự thảo."
+  }
 }

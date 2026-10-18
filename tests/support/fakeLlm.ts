@@ -34,7 +34,12 @@ export function answer(system: string, user: string): unknown {
   if (system.includes('tóm tắt ngắn bằng tiếng Việt cho CIO')) return { summary: 'Tóm tắt hậu kiểm giả' }
   if (system.includes('Agent Chính sách')) {
     const firstArticle = String(p.content ?? '').match(/Điều \d+/)?.[0] ?? 'Điều 1'
-    return { changes: [{ change_id: 'C1', article_refs: [firstArticle], quote: String(p.content ?? '').split('\n')[1]?.slice(0, 300) || 'Trích dẫn', summary: 'Thay đổi giả lập', topics: [p.topics_catalog?.[1] ?? 'PROPERTY_LAND'], affected_parties: 'Cá nhân', certainty: p.kind === 'final' ? 'final' : 'draft' }] }
+    const inf = (text: string) => ({ text, basis: 'inference', confidence: 'medium', reasoning: 'Mô hình giả: suy luận từ cấu trúc điều khoản, không có tờ trình kèm theo' })
+    const analysis = { why: inf('Lý do giả lập của cơ quan ban hành'), goal: { text: 'Mục tiêu giả lập theo điều khoản đầu tiên', basis: 'evidence', confidence: 'high', evidence: { article_ref: firstArticle } }, next_signal: inf('Theo dõi văn bản hướng dẫn giả lập'), private_impact: inf('Tác động giả lập tới khách Private') }
+    return {
+      changes: [{ change_id: 'C1', article_refs: [firstArticle], quote: String(p.content ?? '').split('\n')[1]?.slice(0, 300) || 'Trích dẫn', summary: 'Thay đổi giả lập', topics: [p.topics_catalog?.[1] ?? 'PROPERTY_LAND'], affected_parties: 'Cá nhân', certainty: p.kind === 'final' ? 'final' : 'draft', before: 'Chưa có quy định tương ứng', materiality: 'medium', analysis }],
+      private_brief: { headline: 'Tóm tắt giả lập: văn bản có một thay đổi, mức trọng yếu vừa với khách Private, chờ hướng dẫn chi tiết.', key_findings: [{ title: 'Phát hiện giả lập', change_ids: ['C1'], ...inf('Phát hiện giả lập về tác động chính') }], segments: [{ segment: 'Khách cá nhân', why: 'Đối tượng chịu tác động theo văn bản giả lập', change_ids: ['C1'] }], milestones: [], open_questions: [], advisor_message: 'Thông điệp giả lập cho RM: trao đổi cơ chế, nêu rõ điểm còn chờ hướng dẫn.' },
+    }
   }
   if (system.includes('diễn giải nội bộ')) return { text: 'Diễn giải giả cho RM; đây là cú sốc giả định, không phải dự báo.' }
   return {}

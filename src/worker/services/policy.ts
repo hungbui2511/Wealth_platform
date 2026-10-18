@@ -1,6 +1,6 @@
 // Radar chính sách (M10): nạp văn bản, Tuân thủ xác nhận nguồn, Agent Chính sách, khớp đối tượng (BR-30), sự kiện policy.
 import { POLICY_TOPICS, type PolicyTopic } from '../../shared/catalog'
-import type { Family, PolicyChange } from '../../shared/types'
+import type { Family, PolicyChange, PolicyPrivateBrief } from '../../shared/types'
 import { validatePolicySummary } from '../../shared/schemas'
 import { checkPublicSource } from '../../compliance/controls'
 import { matchFamily } from '../../engine/policyMatch'
@@ -22,7 +22,7 @@ export interface PolicyDoc {
   url: string; topics: PolicyTopic[]; content: string; simulated: boolean
   state: 'PENDING_SOURCE_CONFIRM' | 'SOURCE_CONFIRMED' | 'ANALYZED' | 'ERROR'
   source_confirmed_by?: string; source_confirmed_at?: string; ingested_at: string
-  summary?: { changes: PolicyChange[]; run_id: string; model: string }; event_id?: string; errors?: string[]
+  summary?: { changes: PolicyChange[]; private_brief?: PolicyPrivateBrief; run_id: string; model: string }; event_id?: string; errors?: string[]
   // Agent Rà soát pháp luật (AI, ngoài TCB) tìm và chấm điểm văn bản; chỉ là gợi ý ưu tiên, người quyết định có phân tích tiếp hay không
   origin?: 'manual' | 'ai_scan'; ai_assessment?: PolicyAssessment
 }
@@ -130,7 +130,7 @@ export async function analyzePolicy(ctx: AppCtx, id: string, opts: { external?: 
     if (!raw) throw new HttpError(409, 'Chưa có tóm tắt ghi sẵn cho văn bản này: chạy AGENT_MODE=live hoặc thêm tóm tắt đã duyệt vào data/mock_agent/policy/')
   } else { await ctx.progress?.('policy'); const r = await callJson(ctx.env, models.content.policy, promptText, wrapData('văn bản chính sách', pkg), ctx.fetchFn); raw = r.json; model = r.model }
   const runId = `RUN-POL-${d.id}-${await ctx.repo.nextSeq('RUN-POL')}`
-  const val = validatePolicySummary(raw, d.content, d.kind)
+  const val = validatePolicySummary(raw, d.content, d.kind, (await loadConfigs(ctx)).banned)
   const u = ctx.uow()
   u.insert('agent_runs', { id: runId, agent: 'policy', subject_id: d.id, created_at: ctx.now(), mode: opts.external ? 'external' : ctx.agentMode, model, prompt_version: prompts.version.id, prompt: promptText, input_package: pkg, output: raw, ok: val.ok, errors: val.errors } as never)
   u.audit({ actor: 'AGENT:policy', action: 'agent.policy_run', object: d.id, data: { run_id: runId, model, ok: val.ok, errors: val.errors } })
@@ -149,7 +149,7 @@ export async function analyzePolicy(ctx: AppCtx, id: string, opts: { external?: 
   // Tóm tắt và các điều trích dẫn là tin của sự kiện policy
   const items = val.changes.map(c => ({ title: `${d.simulated ? '[VĂN BẢN GIẢ LẬP] ' : ''}${c.article_refs.join(', ')}: ${c.summary}`, url: d.url, published_at: d.published_at, summary: `${c.summary} Trích: "${c.quote}" (${c.certainty === 'draft' ? 'dự thảo' : 'chính thức'})`, simulated: d.simulated, policy_change: c }))
   const { event } = await createEvent(ctx, { type: 'policy', title: d.title.replace(/^\[VĂN BẢN GIẢ LẬP\]\s*/, ''), items, policy_doc_id: d.id }, { skipRole: true })
-  const nd: PolicyDoc = { ...d, state: 'ANALYZED', summary: { changes: val.changes, run_id: runId, model }, event_id: event.id }
+  const nd: PolicyDoc = { ...d, state: 'ANALYZED', summary: { changes: val.changes, private_brief: val.brief, run_id: runId, model }, event_id: event.id }
   const u2 = ctx.uow(); save(u2, nd); u2.audit({ actor: actor(ctx), action: 'policy.analyzed', object: d.id, data: { matched_families: matched, topics, event_id: event.id } }); await u2.commit()
   return { doc: nd, matched, event_id: event.id }
 }
@@ -164,7 +164,7 @@ export async function radar(ctx: AppCtx) {
   return {
     documents: docs.map(d => {
       const ev = events.find(e => e.id === d.event_id)
-      return { id: d.id, title: d.title, agency: d.agency, kind: d.kind, status: d.status, state: d.state, origin: d.origin ?? 'manual', ai_assessment: d.ai_assessment ?? null, published_at: d.published_at, effective_expected: d.effective_expected, url: d.url, topics: d.topics, simulated: d.simulated, changes: d.summary?.changes ?? [], event_id: d.event_id, matched_total: matches.filter(m => m.doc_id === d.id).length, matched_mine: matches.filter(m => m.doc_id === d.id && own(m.family_id)).length, reaction_ms: ev ? reactionMs(ev.timestamps) : null, timestamps: ev?.timestamps ?? null }
+      return { id: d.id, title: d.title, agency: d.agency, kind: d.kind, status: d.status, state: d.state, origin: d.origin ?? 'manual', ai_assessment: d.ai_assessment ?? null, published_at: d.published_at, effective_expected: d.effective_expected, url: d.url, topics: d.topics, simulated: d.simulated, changes: d.summary?.changes ?? [], private_brief: d.summary?.private_brief ?? null, event_id: d.event_id, matched_total: matches.filter(m => m.doc_id === d.id).length, matched_mine: matches.filter(m => m.doc_id === d.id && own(m.family_id)).length, reaction_ms: ev ? reactionMs(ev.timestamps) : null, timestamps: ev?.timestamps ?? null }
     }),
     events: allEvents,
   }

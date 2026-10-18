@@ -42,7 +42,8 @@ export default function PolicyRadar() {
           </div>
           <div className="flex flex-wrap gap-1 mt-2">{d.topics.map((t: string) => <Badge key={t}>{TOPIC[t]}</Badge>)}</div>
           {d.ai_assessment && <AiAssessment a={d.ai_assessment} />}
-          {d.changes.length > 0 && <div className="mt-3 space-y-2">{d.changes.map((c: any) => <div key={c.change_id} className="border border-border rounded-md p-2 text-[13px]"><div className="flex flex-wrap gap-2 items-center"><b>{c.article_refs.join(', ')}</b><Badge tone={c.certainty === 'draft' ? 'amber' : 'green'}>{c.certainty === 'draft' ? 'dự thảo' : 'chính thức'}</Badge>{c.topics.map((t: string) => <Badge key={t}>{TOPIC[t]}</Badge>)}{c.effective_from && <span className="text-fgm">hiệu lực {c.effective_from}</span>}</div><p className="mt-1">{c.summary}</p><p className="text-fgm italic">“{c.quote}”</p><p className="text-fgm">Đối tượng: {c.affected_parties}</p></div>)}</div>}
+          {d.private_brief && <PrivateBrief b={d.private_brief} changes={d.changes} />}
+          {d.changes.length > 0 && <div className="mt-3 space-y-2">{d.changes.map((c: any) => <ChangeCard key={c.change_id} c={c} />)}</div>}
           {d.state === 'ANALYZED' && <div className="mt-3 flex flex-wrap gap-4 items-center text-[13px]">
             <span>Gia đình bị chạm: <b>{user.role === 'RM' ? d.matched_mine : d.matched_total}</b>{user.role === 'RM' && <span className="text-fgm"> (của bạn)</span>}</span>
             <span>Thời gian từ công bố tới có hiệu lực: <b>{duration(d.reaction_ms)}</b></span>
@@ -78,4 +79,73 @@ function Matches({ id }: { id: string }) {
   const { data } = useApi(`/api/policies/${id}`)
   if (!data) return <Loading />
   return <table className="t mt-2"><thead><tr><th>Gia đình</th><th>Chủ đề khớp</th><th>Lý do</th><th className="num">Mức chạm</th></tr></thead><tbody>{data.matches.map((m: any) => <tr key={m.family_id}><td><Link className="text-primary hover:underline mono" to={`/families/${m.family_id}`}>{m.family_id}</Link></td><td>{m.topics.map((t: string) => <Badge key={t}>{TOPIC[t]}</Badge>)}</td><td className="text-xs">{m.reasons.join(' · ')}</td><td className="num">{(Number(m.touch) * 100).toFixed(0)}%</td></tr>)}</tbody></table>
+}
+
+const MAT: Record<string, [string, string]> = { high: ['red', 'Trọng yếu cao'], medium: ['amber', 'Trọng yếu vừa'], low: ['primary', 'Trọng yếu thấp'] }
+const CONF: Record<string, string> = { high: 'cao', medium: 'vừa', low: 'thấp' }
+
+// Nhãn của một nhận định: căn cứ (dẫn điều khoản/trích nguyên văn) hay suy luận, kèm mức tin cậy
+function ClaimTag({ c }: { c: any }) {
+  return <Badge tone={c.basis === 'evidence' ? 'green' : 'amber'}>{c.basis === 'evidence' ? 'Căn cứ' : 'Suy luận'} · tin cậy {CONF[c.confidence]}</Badge>
+}
+function Claim({ label, c }: { label: string; c?: any }) {
+  if (!c) return null
+  return (
+    <div className="py-1.5 border-t border-border first:border-t-0">
+      <div className="flex flex-wrap gap-2 items-center"><span className="text-fgm">{label}</span><ClaimTag c={c} /></div>
+      <p className="mt-0.5">{c.text}</p>
+      {c.basis === 'evidence' && c.evidence && <p className="text-fgm text-xs">{c.evidence.article_ref}{c.evidence.article_ref && c.evidence.quote && ': '}{c.evidence.quote && <i>“{c.evidence.quote}”</i>}</p>}
+      {c.basis === 'inference' && c.reasoning && <p className="text-fgm text-xs">Lập luận: {c.reasoning}</p>}
+    </div>
+  )
+}
+
+// Phần đầu: đọc trong một màn hình, theo khung tóm tắt điều hành của báo cáo phân tích tác động VBPL
+function PrivateBrief({ b, changes }: { b: any; changes: any[] }) {
+  const ref = (ids: string[]) => ids.map(id => changes.find(c => c.change_id === id)?.article_refs.join(', ') ?? id).join('; ')
+  return (
+    <div className="mt-3 border border-border rounded-md p-3 text-[13px] space-y-3 bg-muted">
+      <div><b>Phân tích trọng yếu đối với khách Private</b><p className="mt-1">{b.headline}</p></div>
+      <div>
+        <div className="text-fgm mb-1">Phát hiện chính</div>
+        <ol className="list-decimal pl-5 space-y-1.5">{b.key_findings.map((k: any, i: number) => <li key={i}>
+          <span className="font-medium">{k.title}.</span> {k.text} <ClaimTag c={k} /> <span className="text-fgm text-xs">({ref(k.change_ids)})</span>
+          {k.basis === 'inference' && k.reasoning && <div className="text-fgm text-xs">Lập luận: {k.reasoning}</div>}
+        </li>)}</ol>
+      </div>
+      <div>
+        <div className="text-fgm mb-1">Nhóm khách chịu tác động</div>
+        <div className="overflow-x-auto"><table className="t"><tbody>{b.segments.map((g: any, i: number) => <tr key={i}><td className="font-medium">{g.segment}</td><td>{g.why}</td><td className="text-fgm text-xs">{ref(g.change_ids)}</td></tr>)}</tbody></table></div>
+      </div>
+      {b.milestones.length > 0 && <div><span className="text-fgm">Mốc thời gian: </span>{b.milestones.map((m: any, i: number) => <span key={i} className="mr-3"><b>{m.date}</b> {m.label}{m.article_ref && <span className="text-fgm"> ({m.article_ref})</span>}</span>)}</div>}
+      {b.open_questions.length > 0 && <details><summary className="cursor-pointer text-fgm">Điểm chưa rõ, cần cơ quan ban hành làm rõ ({b.open_questions.length})</summary>
+        <ul className="list-disc pl-5 mt-1 space-y-1">{b.open_questions.map((q: any, i: number) => <li key={i}><b>{q.issue}</b> Cách hiểu 1: {q.reading_1} Cách hiểu 2: {q.reading_2} <span className="text-fgm">Hệ quả: {q.consequence}</span></li>)}</ul>
+      </details>}
+      <div className="border-l-2 border-primary pl-2"><span className="text-fgm">Thông điệp cho RM: </span>{b.advisor_message}</div>
+      <p className="text-fgm text-xs">AI lập, chưa phải tư vấn pháp lý hay thuế. Nhận định "Căn cứ": hệ thống đã kiểm tra điều khoản được dẫn có trong văn bản và câu trích khớp nguyên văn (không tự kiểm được điều khoản có thực sự ủng hộ nhận định); nhận định "Suy luận" cần người rà soát xác nhận, nhất là mức tin cậy vừa và thấp.</p>
+    </div>
+  )
+}
+
+// Mỗi thay đổi: thay đổi gì (cũ và mới), vì sao, cơ quan muốn đạt gì, tín hiệu tiếp theo, hàm ý cho khách Private
+function ChangeCard({ c }: { c: any }) {
+  return (
+    <div className="border border-border rounded-md p-2 text-[13px]">
+      <div className="flex flex-wrap gap-2 items-center"><b>{c.article_refs.join(', ')}</b>{c.materiality && <Badge tone={MAT[c.materiality][0]}>{MAT[c.materiality][1]}</Badge>}<Badge tone={c.certainty === 'draft' ? 'amber' : 'green'}>{c.certainty === 'draft' ? 'dự thảo' : 'chính thức'}</Badge>{c.topics.map((t: string) => <Badge key={t}>{TOPIC[t]}</Badge>)}{c.effective_from && <span className="text-fgm">hiệu lực {c.effective_from}</span>}</div>
+      <p className="mt-1">{c.summary}</p>
+      {c.before && <p className="text-fgm"><span>Trước đây: </span>{c.before}</p>}
+      <p className="text-fgm italic">“{c.quote}”</p>
+      <p className="text-fgm">Đối tượng: {c.affected_parties}</p>
+      {c.analysis && <details className="mt-1"><summary className="cursor-pointer text-primary">Vì sao thay đổi và hàm ý cho khách Private</summary>
+        <div className="mt-1">
+          <Claim label="Vì sao thay đổi" c={c.analysis.why} />
+          <Claim label="Cơ quan muốn đạt gì" c={c.analysis.goal} />
+          <Claim label="Tín hiệu tiếp theo" c={c.analysis.next_signal} />
+          <Claim label="Hàm ý cho khách Private" c={c.analysis.private_impact} />
+          <Claim label="Tác động bậc hai" c={c.analysis.second_order} />
+          <Claim label="Cơ hội tư vấn" c={c.analysis.opportunity} />
+        </div>
+      </details>}
+    </div>
+  )
 }

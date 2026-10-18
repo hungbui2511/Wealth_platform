@@ -6,13 +6,45 @@
         "Điều 4 khoản 2"
       ],
       "quote": "Công ty holding phải công bố danh sách thành viên gia đình nắm giữ từ 10% vốn trở lên trong vòng 30 ngày kể từ ngày tặng cho.",
-      "summary": "Công ty holding phải công bố thành viên gia đình nắm từ 10% vốn sau khi tặng cho.",
+      "summary": "Công ty holding phải công bố thành viên gia đình nắm từ 10% vốn trong 30 ngày sau khi tặng cho.",
       "topics": [
         "CORPORATE_HOLDING"
       ],
       "affected_parties": "Công ty holding của gia đình",
       "effective_from": "2026-12-01",
-      "certainty": "final"
+      "certainty": "final",
+      "before": "Văn bản được cung cấp không nêu quy định trước đây về nghĩa vụ công bố này.",
+      "materiality": "medium",
+      "analysis": {
+        "why": {
+          "text": "Tăng minh bạch về người thực sự nắm quyền trong công ty gia đình sau mỗi lần chuyển giao cổ phần.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Nghĩa vụ công bố gắn với sự kiện tặng cho và ngưỡng 10% vốn, tức nhắm vào thay đổi chủ sở hữu đáng kể; văn bản không nêu lý do."
+        },
+        "goal": {
+          "text": "Sau mỗi lần tặng cho, công ty holding phải công bố danh sách thành viên gia đình nắm từ 10% vốn trong 30 ngày.",
+          "basis": "evidence",
+          "confidence": "high",
+          "evidence": {
+            "article_ref": "Điều 4 khoản 2"
+          }
+        },
+        "next_signal": {
+          "text": "Theo dõi hướng dẫn về nơi công bố, mẫu công bố và chế tài khi công bố chậm, vì nghị định chưa nêu.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Khoản 2 đặt thời hạn 30 ngày nhưng không nêu hình thức và chế tài; nghĩa vụ chưa có chế tài thường được bổ sung ở văn bản xử phạt."
+        },
+        "private_impact": {
+          "text": "Gia đình dùng công ty holding để chuyển giao tài sản phải tính thêm thủ tục công bố danh sách thành viên nắm từ 10% vốn trong 30 ngày sau tặng cho; nơi công bố và ai được xem chưa được nêu.",
+          "basis": "evidence",
+          "confidence": "high",
+          "evidence": {
+            "article_ref": "Điều 4 khoản 2"
+          }
+        }
+      }
     },
     {
       "change_id": "C2",
@@ -20,13 +52,118 @@
         "Điều 6 khoản 1"
       ],
       "quote": "Tặng cho, thừa kế cổ phần giữa cha mẹ và con được miễn thuế thu nhập cá nhân nếu bên nhận cam kết nắm giữ tối thiểu 3 năm.",
-      "summary": "Miễn thuế thu nhập cá nhân khi tặng cho, thừa kế cổ phần giữa cha mẹ và con nếu nắm giữ tối thiểu 3 năm.",
+      "summary": "Miễn thuế thu nhập cá nhân khi tặng cho, thừa kế cổ phần giữa cha mẹ và con nếu bên nhận nắm giữ tối thiểu 3 năm.",
       "topics": [
         "INHERITANCE_GIFT"
       ],
       "affected_parties": "Cha mẹ và con tặng cho, thừa kế cổ phần",
       "effective_from": "2026-12-01",
-      "certainty": "final"
+      "certainty": "final",
+      "before": "Văn bản được cung cấp không nêu chế độ thuế trước đây với tặng cho, thừa kế cổ phần giữa cha mẹ và con.",
+      "materiality": "high",
+      "analysis": {
+        "why": {
+          "text": "Hỗ trợ chuyển giao doanh nghiệp gia đình giữa hai thế hệ mà không phát sinh thuế, đồng thời tránh việc nhận cổ phần rồi bán ngay.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Ưu đãi chỉ dành cho quan hệ cha mẹ và con, kèm điều kiện nắm giữ 3 năm; cấu trúc này cho thấy mục tiêu là chuyển giao quyền sở hữu lâu dài chứ không phải giao dịch tài chính."
+        },
+        "goal": {
+          "text": "Ưu đãi miễn thuế gắn với cam kết nắm giữ tối thiểu 3 năm của bên nhận; hậu quả khi vi phạm cam kết chưa được nêu.",
+          "basis": "evidence",
+          "confidence": "high",
+          "evidence": {
+            "quote": "nếu bên nhận cam kết nắm giữ tối thiểu 3 năm"
+          }
+        },
+        "next_signal": {
+          "text": "Theo dõi hướng dẫn về hình thức cam kết và hậu quả khi bán trước 3 năm (truy thu thuế, tiền chậm nộp), vì nghị định chưa nêu.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Điều kiện \"cam kết nắm giữ\" cần cơ chế giám sát và xử lý vi phạm; nghị định được cung cấp không có phần này."
+        },
+        "private_impact": {
+          "text": "Tặng cho, thừa kế cổ phần công ty gia đình giữa cha mẹ và con có thể không phát sinh thuế thu nhập cá nhân, đổi lại bên nhận cam kết nắm giữ tối thiểu 3 năm.",
+          "basis": "evidence",
+          "confidence": "high",
+          "evidence": {
+            "article_ref": "Điều 6 khoản 1"
+          }
+        },
+        "opportunity": {
+          "text": "Đưa điều kiện miễn thuế và ràng buộc 3 năm vào trao đổi kế hoạch kế thừa với các gia đình có doanh nghiệp, nhất là về nhu cầu thanh khoản của người nhận trong 3 năm đó.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Ràng buộc nắm giữ làm cổ phần kém thanh khoản với người nhận, nên kế hoạch tài chính của người nhận cần tính đến giai đoạn này."
+        },
+        "second_order": {
+          "text": "Quan hệ khác (ông bà và cháu, anh chị em) có thể không được miễn theo nghị định này, nên cấu trúc chuyển giao qua nhiều thế hệ có thể phải đi qua bước cha mẹ và con.",
+          "basis": "inference",
+          "confidence": "medium",
+          "reasoning": "Điều 6 khoản 1 chỉ nêu quan hệ cha mẹ và con; đây là lập luận từ việc văn bản không nhắc tới, các văn bản thuế khác có thể có quy định miễn riêng."
+        }
+      }
     }
-  ]
+  ],
+  "private_brief": {
+    "headline": "Nghị định mở đường tặng cho, thừa kế cổ phần công ty gia đình giữa cha mẹ và con không phát sinh thuế thu nhập cá nhân, đổi lại bên nhận cam kết nắm giữ tối thiểu 3 năm; công ty holding phải công bố danh sách thành viên nắm từ 10% vốn trong 30 ngày. Có hiệu lực từ 01/12/2026.",
+    "key_findings": [
+      {
+        "title": "Miễn thuế khi tặng cho, thừa kế cổ phần giữa cha mẹ và con",
+        "text": "Điều kiện là bên nhận cam kết nắm giữ tối thiểu 3 năm; hậu quả khi bán trước hạn chưa được nêu.",
+        "basis": "evidence",
+        "confidence": "high",
+        "change_ids": [
+          "C2"
+        ],
+        "evidence": {
+          "article_ref": "Điều 6 khoản 1"
+        }
+      },
+      {
+        "title": "Holding gia đình phải công bố thành viên nắm từ 10% vốn",
+        "text": "Sau mỗi lần tặng cho, holding phải công bố danh sách trong 30 ngày; nơi công bố chưa được nêu.",
+        "basis": "evidence",
+        "confidence": "high",
+        "change_ids": [
+          "C1"
+        ],
+        "evidence": {
+          "article_ref": "Điều 4 khoản 2"
+        }
+      }
+    ],
+    "segments": [
+      {
+        "segment": "Gia đình có doanh nghiệp, đang chuẩn bị chuyển giao cho thế hệ sau",
+        "why": "Có thể tặng cho cổ phần cho con không phát sinh thuế thu nhập cá nhân nếu con cam kết nắm giữ tối thiểu 3 năm.",
+        "change_ids": [
+          "C2"
+        ]
+      },
+      {
+        "segment": "Gia đình nắm tài sản qua công ty holding",
+        "why": "Phải công bố danh sách thành viên nắm từ 10% vốn trong 30 ngày sau tặng cho.",
+        "change_ids": [
+          "C1"
+        ]
+      }
+    ],
+    "milestones": [
+      {
+        "date": "2026-12-01",
+        "label": "Nghị định có hiệu lực",
+        "article_ref": "Điều 8"
+      }
+    ],
+    "open_questions": [
+      {
+        "issue": "Giá trị sổ sách dùng để xác định giá trị cổ phần tặng cho có áp dụng cả khi được miễn thuế không?",
+        "reading_1": "Có: giá trị sổ sách vẫn được ghi nhận để làm giá vốn khi người nhận bán sau này.",
+        "reading_2": "Không: khi miễn thuế thì không cần xác định giá trị theo Điều 4 khoản 1.",
+        "consequence": "Ảnh hưởng tới giá vốn và thuế phải nộp khi người nhận bán cổ phần sau 3 năm."
+      }
+    ],
+    "advisor_message": "Nghị định đã ban hành và có hiệu lực từ 01/12/2026. Khi trao đổi với khách, nêu rõ điều kiện miễn thuế (quan hệ cha mẹ và con, cam kết nắm giữ 3 năm) và nghĩa vụ công bố của holding; các câu hỏi về cấu trúc cụ thể của từng gia đình cần chuyên gia thuế, pháp lý xác nhận."
+  }
 }

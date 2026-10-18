@@ -93,8 +93,30 @@ Văn bản vào Radar chính sách ở trạng thái chờ Tuân thủ xác nh�
 điều khoản chỉ được kiểm chứng khi Agent Chính sách phân tích (policy_summary) sau khi Tuân thủ xác nhận nguồn và CIO/Quản trị bấm chạy.
 POLICY_TOPICS: TAX_SECURITIES, PROPERTY_LAND, INHERITANCE_GIFT, CORPORATE_HOLDING, FX_OFFSHORE, GOLD, DIGITAL_ASSET, CREDIT, INSURANCE.
 
-**`policy_summary`** (subject = mã văn bản `PD-…`, văn bản phải được Tuân thủ xác nhận nguồn trước):
-`{"summary":{"changes":[{"change_id","article_refs":["Điều 3 khoản 1"],"quote","summary","topics":[…],"affected_parties","effective_from","certainty":"draft|final"}]},"meta":{…}}`
+**`policy_summary`** (subject = mã văn bản `PD-…`, văn bản phải được Tuân thủ xác nhận nguồn trước). Từ 18/10/2026 dùng
+khung phân tích tác động VBPL (skill `vbpl-impact-analysis`) nhìn từ phía khách Private; tóm tắt kiểu cũ chỉ có `changes` bị từ chối.
+```json
+{"summary":{
+  "changes":[{"change_id":"C1","article_refs":["Điều 3 khoản 1"],"quote":"<nguyên văn ≤400 ký tự>","summary":"…","before":"<quy định cũ | Chưa có quy định tương ứng>",
+    "topics":["PROPERTY_LAND"],"affected_parties":"…","effective_from":"2027-07-01","certainty":"draft","materiality":"high",
+    "analysis":{"why":CLAIM,"goal":CLAIM,"next_signal":CLAIM,"private_impact":CLAIM,"second_order":CLAIM?,"opportunity":CLAIM?}}],
+  "private_brief":{"headline":"…","key_findings":[{"title":"…","text":"…","change_ids":["C1"],…CLAIM}],
+    "segments":[{"segment":"…","why":"…","change_ids":["C1"]}],"milestones":[{"date":"2027-07-01","label":"…","article_ref":"Điều 9"}],
+    "open_questions":[{"issue":"…","reading_1":"…","reading_2":"…","consequence":"…"}],"advisor_message":"…"}},
+ "meta":{…}}
+```
+CLAIM = `{"text","basis":"evidence|inference","confidence":"high|medium|low","reasoning"?,"evidence"?:{"article_ref"?,"quote"?}}`.
+Hệ thống kiểm tra và từ chối khi:
+- `quote` hoặc `evidence.quote` không khớp nguyên văn với nội dung đã lưu. Khi so, hệ thống bỏ qua khác biệt khoảng trắng và kiểu dấu ngoặc.
+- Điều khoản được dẫn không có trong văn bản.
+- Nhận định `evidence` không dẫn điều khoản hoặc câu trích.
+- Nhận định `inference` thiếu `reasoning` (≥ 30 ký tự).
+- Dự báo (`next_signal`, `second_order`) là suy luận nhưng đặt `high`.
+- Thay đổi `materiality: high` không có mặt trong `key_findings`.
+- `change_ids` trỏ tới thay đổi không có.
+- Có cụm từ trong danh sách cấm (BANNED) hoặc cụm từ kế hoạch hành động ("chủ trì", "đơn vị đầu mối", "giao cho khối/phòng"). Riêng câu trích nguyên văn không bị quét cụm từ.
+
+Agent không nhận dữ liệu danh mục, nên tác động chỉ được viết theo nhóm khách, không theo gia đình. Hệ thống tự khớp gia đình bị chạm bằng quy tắc xác định. Mẫu đầy đủ: `data/mock_agent/policy/PD-2026-001.json`.
 
 **`prices`** (subject để trống): tạo ảnh chụp giá mới từ ảnh chụp hiện tại, thay giá các mã có nguồn thật.
 `{"price_date":"YYYY-MM-DD","points":[{"key":"MBB","price":"26150","date":"2026-10-09","source":"TCBS (MCP)","source_ref":"getTickerOverview"}],"meta":{…}}`

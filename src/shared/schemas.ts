@@ -1,7 +1,7 @@
 // Schema đầu ra của agent (Mục 7.3), kiểm tra bằng zod (tương đương Pydantic).
 import { z } from 'zod'
 import { ASSET_CLASSES, FX_CURRENCIES, POLICY_TOPICS, SECTORS } from './catalog'
-import type { Finding, ImpactLine, Instrument, PolicyChange, ScenarioSetBody, ViewBody } from './types'
+import type { Finding, ImpactLine, Instrument, PolicyChange, PolicyClaim, PolicyPrivateBrief, ScenarioSetBody, ViewBody } from './types'
 import { DEFAULT_FACTOR_MODEL } from '../data/factorModel'
 export const DEFAULT_FACTOR_IDS: readonly string[] = DEFAULT_FACTOR_MODEL.factors.map(f => f.id)
 
@@ -39,6 +39,15 @@ export const FindingSchema = z.object({
   source_ids: z.array(z.string()).optional(),
 })
 
+const CONFIDENCE = ['high', 'medium', 'low'] as const
+export const PolicyClaimSchema = z.object({
+  text: z.string().min(20, 'Nhận định tối thiểu 20 ký tự').max(900),
+  basis: z.enum(['evidence', 'inference']),
+  confidence: z.enum(CONFIDENCE),
+  reasoning: z.string().optional(),
+  evidence: z.object({ article_ref: z.string().optional(), quote: z.string().max(400).optional() }).optional(),
+})
+
 export const PolicyChangeSchema = z.object({
   change_id: z.string().min(1),
   article_refs: z.array(z.string().min(1)).min(1),
@@ -48,8 +57,22 @@ export const PolicyChangeSchema = z.object({
   affected_parties: z.string().min(1),
   effective_from: z.string().optional(),
   certainty: z.enum(['draft', 'final']),
+  before: z.string().min(5, 'before: nêu quy định trước đây hoặc "Chưa có quy định tương ứng"'),
+  materiality: z.enum(['high', 'medium', 'low']),
+  analysis: z.object({
+    why: PolicyClaimSchema, goal: PolicyClaimSchema, next_signal: PolicyClaimSchema, private_impact: PolicyClaimSchema,
+    second_order: PolicyClaimSchema.optional(), opportunity: PolicyClaimSchema.optional(),
+  }),
 })
-export const PolicySummarySchema = z.object({ changes: z.array(PolicyChangeSchema).min(1) })
+export const PolicyPrivateBriefSchema = z.object({
+  headline: z.string().min(60, 'headline tối thiểu 60 ký tự').max(700),
+  key_findings: z.array(PolicyClaimSchema.extend({ title: z.string().min(5).max(120), change_ids: z.array(z.string().min(1)).min(1) })).min(1).max(5),
+  segments: z.array(z.object({ segment: z.string().min(5), why: z.string().min(20), change_ids: z.array(z.string().min(1)).min(1) })).min(1).max(6),
+  milestones: z.array(z.object({ date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'date dạng YYYY-MM-DD'), label: z.string().min(5), article_ref: z.string().optional() })),
+  open_questions: z.array(z.object({ issue: z.string().min(10), reading_1: z.string().min(10), reading_2: z.string().min(10), consequence: z.string().min(10) })).max(6),
+  advisor_message: z.string().min(40).max(800),
+})
+export const PolicySummarySchema = z.object({ changes: z.array(PolicyChangeSchema).min(1), private_brief: PolicyPrivateBriefSchema })
 
 export const lineKey = (l: Pick<ImpactLine, 'scope' | 'asset_class' | 'target'>) => `${l.scope}:${l.asset_class ?? ''}:${l.target}`
 
@@ -147,18 +170,65 @@ export function articleRefExists(ref: string, text: string): boolean {
   return new RegExp(`(^|\\s|\\n)${m[2]}\\.\\s`).test(section) || section.includes(`khoản ${m[2]}`)
 }
 
-export function validatePolicySummary(raw: unknown, docText: string, docKind: 'draft' | 'final'): { ok: boolean; errors: string[]; changes: PolicyChange[] } {
+// Trích nguyên văn: so sau khi chuẩn hoá khoảng trắng và dấu ngoặc kép, giữ nguyên chữ hoa thường
+export function quoteInText(quote: string, text: string): boolean {
+  const norm = (x: string) => x.normalize('NFC').replace(/[“”„«»]/g, '"').replace(/[‘’]/g, "'").replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim()
+  const q = norm(quote).replace(/^["']|["']$/g, '').replace(/\s*(\.\.\.|…)\s*$/, '').trim()
+  return q.length > 0 && norm(text).includes(q)
+}
+
+// Cụm từ ngoài phạm vi: kế hoạch hành động giao việc (thuộc ngân hàng quyết định) và lời khẳng định chắc chắn về tương lai
+export const POLICY_OUT_OF_SCOPE = ['chủ trì', 'đơn vị đầu mối', 'giao cho khối', 'giao cho phòng', 'chắc chắn sẽ', 'không định lượng được']
+
+export interface PolicySummaryResult { ok: boolean; errors: string[]; changes: PolicyChange[]; brief?: PolicyPrivateBrief }
+
+export function validatePolicySummary(raw: unknown, docText: string, docKind: 'draft' | 'final', banned: readonly string[] = []): PolicySummaryResult {
   const r = PolicySummarySchema.safeParse(raw)
   if (!r.success) return { ok: false, errors: r.error.issues.map(i => `${i.path.join('.')}: ${i.message}`), changes: [] }
   const errors: string[] = []
   const ids = new Set<string>()
+  const claim = (where: string, c: PolicyClaim, forecast = false) => {
+    if (c.basis === 'evidence') {
+      const ev = c.evidence
+      if (!ev || (!ev.article_ref && !ev.quote)) errors.push(`${where}: nhận định "căn cứ" phải dẫn điều khoản hoặc trích nguyên văn`)
+      if (ev?.article_ref && !articleRefExists(ev.article_ref, docText)) errors.push(`${where}: điều khoản "${ev.article_ref}" không có trong văn bản`)
+      if (ev?.quote && ev.quote.replace(/[\s"'“”.…]/g, '').length < 15) errors.push(`${where}: câu trích làm căn cứ quá ngắn (tối thiểu 15 ký tự)`)
+      else if (ev?.quote && !quoteInText(ev.quote, docText)) errors.push(`${where}: câu trích không khớp nguyên văn văn bản`)
+    } else {
+      if (!c.reasoning || c.reasoning.trim().length < 30) errors.push(`${where}: nhận định "suy luận" phải nêu lập luận (tối thiểu 30 ký tự)`)
+      if (forecast && c.confidence === 'high') errors.push(`${where}: dự báo bước tiếp theo là suy luận thì không thể có độ tin cậy cao`)
+    }
+  }
   for (const c of r.data.changes) {
     if (ids.has(c.change_id)) errors.push(`change_id trùng ${c.change_id}`)
     ids.add(c.change_id)
     for (const ref of c.article_refs) if (!articleRefExists(ref, docText)) errors.push(`${c.change_id}: trích dẫn "${ref}" không có trong văn bản`)
+    if (!quoteInText(c.quote, docText)) errors.push(`${c.change_id}: quote không khớp nguyên văn văn bản`)
     if (c.certainty !== docKind) errors.push(`${c.change_id}: độ chắc chắn ${c.certainty} không khớp loại văn bản ${docKind}`)
+    const a = c.analysis
+    claim(`${c.change_id}.why`, a.why); claim(`${c.change_id}.goal`, a.goal); claim(`${c.change_id}.next_signal`, a.next_signal, true)
+    claim(`${c.change_id}.private_impact`, a.private_impact)
+    if (a.second_order) claim(`${c.change_id}.second_order`, a.second_order, true)
+    if (a.opportunity) claim(`${c.change_id}.opportunity`, a.opportunity)
   }
-  return { ok: errors.length === 0, errors, changes: r.data.changes as PolicyChange[] }
+  const b = r.data.private_brief
+  b.key_findings.forEach((k, i) => {
+    claim(`private_brief.key_findings[${i}]`, k)
+    for (const id of k.change_ids) if (!ids.has(id)) errors.push(`private_brief.key_findings[${i}]: không có thay đổi ${id}`)
+  })
+  b.segments.forEach((g, i) => { for (const id of g.change_ids) if (!ids.has(id)) errors.push(`private_brief.segments[${i}]: không có thay đổi ${id}`) })
+  b.milestones.forEach((m, i) => {
+    if (Number.isNaN(Date.parse(m.date))) errors.push(`private_brief.milestones[${i}]: ngày không hợp lệ`)
+    if (m.article_ref && !articleRefExists(m.article_ref, docText)) errors.push(`private_brief.milestones[${i}]: điều khoản "${m.article_ref}" không có trong văn bản`)
+  })
+  const covered = new Set(b.key_findings.flatMap(k => k.change_ids))
+  for (const c of r.data.changes) if (c.materiality === 'high' && !covered.has(c.change_id)) errors.push(`${c.change_id}: thay đổi trọng yếu cao phải có trong phát hiện chính của private_brief`)
+  // Quét cụm từ cấm trên toàn bộ chữ do agent viết (trừ câu trích nguyên văn)
+  const strip = (x: unknown): unknown => Array.isArray(x) ? x.map(strip) : x && typeof x === 'object' ? Object.fromEntries(Object.entries(x).filter(([k]) => k !== 'quote').map(([k, v]) => [k, strip(v)])) : x
+  const nfc = (x: string) => x.normalize('NFC').toLowerCase()
+  const written = nfc(JSON.stringify(strip(r.data)))
+  for (const p of [...banned, ...POLICY_OUT_OF_SCOPE]) if (written.includes(nfc(p))) errors.push(`Có cụm từ ngoài phạm vi hoặc bị cấm: "${p}"`)
+  return { ok: errors.length === 0, errors, changes: r.data.changes as PolicyChange[], brief: r.data.private_brief as PolicyPrivateBrief }
 }
 
 // Nhánh kịch bản do agent đề xuất (thiết kế v2): 2–4 nhánh có xác suất, mỗi nhánh 1–5 yếu tố lõi với cỡ cú sốc trong thư viện CIO
