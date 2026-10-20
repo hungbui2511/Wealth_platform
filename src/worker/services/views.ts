@@ -4,7 +4,7 @@ import type { Finding, ImpactLine, ViewBody } from '../../shared/types'
 import { lineKey, validateView, type ViewContext } from '../../shared/schemas'
 import { buildCioGraph, ANALYSTS, type NodeRun } from '../../agents/cioGraph'
 import { keywordView } from '../../agents/keywordView'
-import { citationChecks, diffLines, normalizeLlmFindings, ruleChecks, scenarioRuleChecks, type RawFinding } from '../../agents/challenger'
+import { citationChecks, diffLines, normalizeLlmFindings, ruleChecks, scenarioRuleChecks, sourceRuleChecks, type RawFinding } from '../../agents/challenger'
 import { callJson } from '../../agents/llm'
 import { wrapData, type ModelSet, type PromptSet } from '../../agents/prompts'
 import { MOCK } from '../../data/mock'
@@ -261,6 +261,7 @@ export async function runPreChallenge(ctx: AppCtx, viewId: string, external?: { 
   for (const l of v.removed_restricted) rule.push({ check: 'restricted_instrument', severity: 'medium', target: lineKey(l), issue: `Dòng cấp mã ${l.target} thuộc danh sách hạn chế đã bị loại ở bước kiểm tra schema (BR-27)`, suggestion: 'Không đưa nhận định cấp mã cho mã hạn chế; dòng loại tài sản và dòng ngành vẫn áp dụng bình thường' })
   rule.push(...await policyCitationFindings(ctx, e, news))
   rule.push(...scenarioRuleChecks(v.body, v.body.scenarios ? (await loadFactorModel(ctx)).model as never : null))
+  rule.push(...sourceRuleChecks(v.body, news))
   const recent = await recentApproved(ctx, e.id)
   // BR-05: chỉ đầu ra cuối, tiêu đề và tóm tắt tin, danh mục, ≤ 5 nhận định đã duyệt, kết quả quy tắc
   const pkg = { view: v.body, news: news.map(n => ({ id: n.id, title: n.title, summary: n.summary })), catalog: { asset_classes: ASSET_CLASSES, sectors: SECTORS, fx: FX_CURRENCIES }, recent_approved: recent, rule_results: rule }
@@ -367,6 +368,7 @@ export async function runReChallenge(ctx: AppCtx, viewId: string, external?: { f
   const keys = new Set(v.unchallenged)
   const rule = ruleChecks(v.body, vctx, keys)
   rule.push(...scenarioRuleChecks(v.body, v.body.scenarios ? (await loadFactorModel(ctx)).model as never : null, keys))
+  rule.push(...sourceRuleChecks(v.body, news, keys))
   const recent = await recentApproved(ctx, e.id)
   const edits = v.cio_edits.filter(x => keys.has(x.key))
   const pkg = { view: v.body, changed_lines: [...keys], diff: edits.map(x => ({ key: x.key, kind: x.kind, before: x.before, after: x.after })), cio_notes: edits.map(x => x.note).filter(Boolean), news: news.map(n => ({ id: n.id, title: n.title, summary: n.summary })), catalog: { asset_classes: ASSET_CLASSES, sectors: SECTORS, fx: FX_CURRENCIES }, recent_approved: recent, rule_results: rule }

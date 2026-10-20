@@ -3,6 +3,7 @@
 import { beforeAll, describe, expect, it } from 'vitest'
 import { harness } from './support/harness'
 import { redactRestricted } from '../src/compliance/controls'
+import { confirmPolicy } from './support/policy'
 
 const h = harness()
 const RESTRICTED = [{ id: 'RL-001', issuer: 'Công ty Demo X', instruments: ['DMXYZ'], keywords: ['Công ty Demo X', 'Demo X'] }]
@@ -20,7 +21,7 @@ describe('Văn bản chính sách', () => {
     const doc = d.doc ?? d
     expect(doc.status).toBe('Lấy ý kiến')
     expect(doc.state).toBe('PENDING_SOURCE_CONFIRM')
-    await h.ok('CMP1', 'POST', '/api/policies/PD-2026-001/confirm-source', { note: 'Đã kiểm tra đường dẫn công khai' })
+    await confirmPolicy(h, 'PD-2026-001', 'Đã kiểm tra đường dẫn công khai')
     const after = await h.ok('CIO1', 'GET', '/api/policies/PD-2026-001')
     expect((after.doc ?? after).status).toBe('Lấy ý kiến')
     expect((after.doc ?? after).state).toBe('SOURCE_CONFIRMED')

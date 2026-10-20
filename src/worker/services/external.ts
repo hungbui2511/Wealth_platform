@@ -15,7 +15,7 @@ import { runCioAgent, type ExternalCio, type ViewRec } from './views'
 import { currentSnapshot, type SnapshotRecord } from './portfolio'
 import { importMarketData } from './quality'
 import { importGoldenRun } from './golden'
-import { AGENTS, agentControls, importRunLog, KIND_AGENT } from './ops'
+import { AGENTS, agentControls, importRunLog, importScanLog, KIND_AGENT } from './ops'
 import { scoreCanary } from './canary'
 import { canonical, hashOf } from '../../engine/hash'
 import { runPreChallenge, runReChallenge, getView, viewChallenges } from './views'
@@ -204,7 +204,7 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     try {
       const d = r.data?.doc ?? {}
       const a = { ...(r.data?.assessment ?? {}), model: r.data?.meta?.model, session: r.data?.meta?.session, prepared_at: r.data?.meta?.prepared_at }
-      const doc = await addPolicy(ctx, { title: String(d.title ?? ''), agency: String(d.agency ?? ''), kind: d.kind, status: String(d.status ?? ''), published_at: d.published_at ? new Date(d.published_at).toISOString() : '', ...(d.effective_expected ? { effective_expected: String(d.effective_expected) } : {}), url: String(d.url ?? ''), topics: Array.isArray(d.topics) ? d.topics : [], content: String(d.content ?? '').slice(0, 20000), simulated: false, ai_assessment: a })
+      const doc = await addPolicy(ctx, { title: String(d.title ?? ''), agency: String(d.agency ?? ''), kind: d.kind, status: String(d.status ?? ''), published_at: d.published_at ? new Date(d.published_at).toISOString() : '', ...(d.effective_expected ? { effective_expected: String(d.effective_expected) } : {}), url: String(d.url ?? ''), topics: Array.isArray(d.topics) ? d.topics : [], content: String(d.content ?? '').slice(0, 20000), original_length: String(d.content ?? '').length, simulated: false, ai_assessment: a })
       await mark(ctx, r, { status: 'IMPORTED', result: { doc_id: doc.id, importance: a.importance, score: a.score } })
       report.policy_docs.push(doc.id)
     } catch (e) {
@@ -259,8 +259,14 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 500) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
   }
 
+  for (const r of rows.filter(x => x.kind === 'scan_log')) {
+    if (!await claim(ctx, r)) continue
+    try { const l = await importScanLog(ctx, r.data); await mark(ctx, r, { status: 'IMPORTED', result: { scan_log_id: l.id } }); report.scan_logs.push(l.id) }
+    catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 500) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
+  }
+
   // Chỉ ghi nhật ký khi có thay đổi (tránh một bản ghi mỗi 10 phút khi các bản ghi chỉ đang chờ)
-  const changed = report.news.created + report.events.length + report.views.length + report.challenges.length + report.policies.length + report.policy_docs.length + report.prices.length + report.market.length + report.golden.length + report.run_logs.length + report.rejected.length
+  const changed = report.news.created + report.events.length + report.views.length + report.challenges.length + report.policies.length + report.policy_docs.length + report.prices.length + report.market.length + report.golden.length + report.run_logs.length + report.scan_logs.length + report.rejected.length
   if (changed || report.trigger !== 'cron') { const u = ctx.uow(); u.audit({ actor: report.trigger === 'cron' ? 'SYSTEM:cron' : 'ADMIN:CLAUDE', action: 'external.imported', object: 'external_outputs', data: report }); await u.commit() }
   return report
 }

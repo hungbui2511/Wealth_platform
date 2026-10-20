@@ -39,3 +39,22 @@ export const PUBLIC_DOMAINS = [
   // Số liệu chính thức làm nguồn thứ hai cho sổ dự báo (đợt 2–3 sau phản biện độc lập): thống kê, giá vàng, tỷ giá niêm yết
   { domain: 'gso.gov.vn', name: 'Tổng cục Thống kê' }, { domain: 'nso.gov.vn', name: 'Cục Thống kê' }, { domain: 'sjc.com.vn', name: 'Công ty Vàng bạc Đá quý Sài Gòn (SJC)' }, { domain: 'vietcombank.com.vn', name: 'Vietcombank (tỷ giá niêm yết)' },
 ]
+
+// Hạng nguồn (đợt 3 sau phản biện độc lập). T1: văn bản, số liệu, thông cáo của cơ quan nhà nước, ngân hàng trung ương, sở giao
+// dịch, tổ chức quốc tế. T2: hãng tin quốc tế và báo của cơ quan nhà nước. T3: báo tài chính, báo trong nước. T4: trang tra cứu
+// thứ cấp (chép lại văn bản), dùng làm manh mối, phải đối chiếu bản gốc.
+export type SourceTier = 'T1' | 'T2' | 'T3' | 'T4'
+const TIER_DOMAINS: Record<Exclude<SourceTier, 'T3'>, string[]> = {
+  T1: ['chinhphu.vn', 'sbv.gov.vn', 'mof.gov.vn', 'ssc.gov.vn', 'vbpl.vn', 'quochoi.vn', 'federalreserve.gov', 'hnx.vn', 'hsx.vn', 'moj.gov.vn', 'moit.gov.vn', 'moc.gov.vn', 'mae.gov.vn', 'mps.gov.vn', 'bls.gov', 'bea.gov', 'census.gov', 'treasury.gov', 'eia.gov', 'ecb.europa.eu', 'ec.europa.eu', 'bankofengland.co.uk', 'boj.or.jp', 'imf.org', 'worldbank.org', 'oecd.org', 'bis.org', 'opec.org', 'gso.gov.vn', 'nso.gov.vn'],
+  T2: ['reuters.com', 'apnews.com', 'bloomberg.com', 'baochinhphu.vn', 'nhandan.vn'],
+  T4: ['thuvienphapluat.vn', 'luatvietnam.vn'],
+}
+export const TIER_LABELS: Record<SourceTier, string> = { T1: 'Nguồn chính thức', T2: 'Hãng tin, báo cơ quan nhà nước', T3: 'Báo tài chính, báo trong nước', T4: 'Trang tra cứu thứ cấp' }
+export function hostOf(url: string): string { try { return new URL(url).hostname.toLowerCase().replace(/^www\./, '') } catch { return '' } }
+export function sourceTier(url: string): SourceTier {
+  const h = hostOf(url)
+  for (const t of ['T1', 'T2', 'T4'] as const) if (TIER_DOMAINS[t].some(d => h === d || h.endsWith('.' + d))) return t
+  return 'T3'
+}
+// Hai nguồn coi là độc lập khi khác miền gốc (bỏ tiền tố www, gộp tên miền con)
+export function rootDomain(url: string): string { const h = hostOf(url); const p = h.split('.'); return p.length > 2 && ['vn', 'uk', 'jp'].includes(p[p.length - 1]) && ['com', 'gov', 'co', 'or', 'org'].includes(p[p.length - 2]) ? p.slice(-3).join('.') : p.slice(-2).join('.') }

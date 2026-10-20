@@ -3,7 +3,7 @@ import { useMemo, useState } from 'react'
 import { api } from '../api'
 import { useUser } from '../App'
 import { Badge, Btn, Card, ErrorBox, Loading, ts, useApi } from '../ui'
-import { OriginBadge } from '../scenario'
+import { TierBadge, OriginBadge } from '../scenario'
 
 const TYPES: Record<string, string> = { monetary_policy: 'Chính sách tiền tệ', fiscal_tax: 'Tài khóa và thuế', sector_regulation: 'Quy định ngành', corporate: 'Doanh nghiệp', global_macro: 'Vĩ mô quốc tế', commodity: 'Hàng hóa', fx: 'Tỷ giá', geopolitical: 'Địa chính trị' }
 
@@ -36,7 +36,7 @@ export default function NewsInbox({ onCreated }: { onCreated: () => void }) {
                 <div className="min-w-0 flex-1 text-[13px]">
                   <div className="flex flex-wrap items-center gap-1.5"><b className="text-[14px]">{n.title}</b>{n.restricted_hit && <Badge tone="amber">Nhắc tổ chức trong danh sách hạn chế</Badge>}</div>
                   <div className="text-fgm">{n.summary}</div>
-                  <div className="flex flex-wrap gap-1.5 mt-1 items-center text-fgm"><OriginBadge o={n.origin ?? 'local'} />{n.by_claude && <Badge tone="primary">Claude tìm</Badge>}{n.origin === 'exclusive' ? <span>{n.source} · số {n.research?.doc_no}</span> : <a className="text-primary hover:underline" href={n.url} target="_blank" rel="noreferrer">{n.feed ?? n.source}</a>}<span>· công bố {ts(n.published_at)}</span><Badge>{TYPES[n.suggested_type] ?? n.suggested_type}</Badge>{(n.tickers ?? []).map((t: string) => <Badge key={t} tone="primary">{t}</Badge>)}</div>
+                  <div className="flex flex-wrap gap-1.5 mt-1 items-center text-fgm"><OriginBadge o={n.origin ?? 'local'} />{n.by_claude && <Badge tone="primary">Claude tìm</Badge>}{n.origin === 'exclusive' ? <span>{n.source} · số {n.research?.doc_no}</span> : <><a className="text-primary hover:underline" href={n.url} target="_blank" rel="noreferrer">{n.feed ?? n.source}</a><TierBadge url={n.url} /></>}<span>· công bố {ts(n.published_at)}</span><Badge>{TYPES[n.suggested_type] ?? n.suggested_type}</Badge>{(n.tickers ?? []).map((t: string) => <Badge key={t} tone="primary">{t}</Badge>)}</div>
                 </div>
               </li>
             ))}

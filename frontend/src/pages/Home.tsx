@@ -37,12 +37,14 @@ export default function Home() {
     <>
       <h1 className="text-xl font-semibold">Tổng quan</h1>
       <Note>Chế độ agent: <b>{health.data?.agent_mode}</b> · chế độ giá: <b>{health.data?.price_mode}</b> · ngày giá: <b>{health.data?.price_date}</b>. Mọi tiêu chí chấp nhận chấm ở chế độ mock và giá mẫu.</Note>
-      {alerts.data && (alerts.data.schedules.length > 0 || alerts.data.paused.length > 0 || alerts.data.pending_prices > 0 || alerts.data.open_incidents > 0) && (
+      {alerts.data && (alerts.data.schedules.length > 0 || alerts.data.paused.length > 0 || alerts.data.pending_prices > 0 || alerts.data.open_incidents > 0 || alerts.data.calendar_missed?.length > 0 || alerts.data.calendar_upcoming?.length > 0) && (
         <Note tone="warn">
           {alerts.data.schedules.map((s: any) => <div key={s.id}>{s.label}: {s.message ?? 'lượt chạy lỗi'}</div>)}
           {alerts.data.paused.length > 0 && <div>Agent tạm dừng: {alerts.data.paused.map((p: any) => p.label).join(', ')}</div>}
           {alerts.data.pending_prices > 0 && <div>{alerts.data.pending_prices} ảnh chụp giá do AI lấy chờ xác nhận</div>}
           {alerts.data.open_incidents > 0 && <div>{alerts.data.open_incidents} sự cố agent đang mở</div>}
+          {alerts.data.calendar_missed?.map((c: any) => <div key={c.id}>Lịch {c.date}: {c.title} đã qua mà chưa có sự kiện</div>)}
+          {alerts.data.calendar_upcoming?.map((c: any) => <div key={c.id}>Sắp tới {c.date}: {c.title}</div>)}
           <Link className="text-primary hover:underline" to="/quality">Mở trang Chất lượng, vận hành</Link>
         </Note>
       )}

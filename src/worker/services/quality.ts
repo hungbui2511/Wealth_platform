@@ -207,3 +207,19 @@ export async function scheduledQuality(env: Env, opts: { now?: () => string } = 
   }
   return { ...scored, canaries_expired: expired }
 }
+
+// Biến động thị trường từ trước khi có tin tới quan sát mới nhất: căn cứ để CIO và phản biện xem "tin đã phản ánh vào giá chưa"
+// (priced_in). Chỉ dùng số liệu thị trường đã nhập (market_series), không dùng dữ liệu gia đình.
+const MOVE_KEYS = ['VNINDEX', 'USDVND_CENTRAL', 'US10Y', 'DXY', 'SPX', 'BRENT', 'GOLD_SPOT_USD', 'SJC_PREM', 'VN_INTERBANK_1M'] as const
+export async function marketMoves(ctx: AppCtx, firstPublishedAt: string) {
+  const d0 = new Date(Date.parse(firstPublishedAt) - 864e5).toISOString().slice(0, 10)
+  const out: { key: string; label: string; unit: string; from: { date: string; value: number } | null; to: { date: string; value: number } | null; move: number | null; move_unit: string }[] = []
+  for (const k of MOVE_KEYS) {
+    const from = await valueAt(ctx, k, d0, 7)
+    const to = (await ctx.repo.list<SeriesPoint>('market_series', 'key = ? AND date >= ?', [k, d0], 'date DESC'))[0] ?? null
+    const kind = ['US10Y', 'VN_INTERBANK_1M'].includes(k) ? 'bp' : k === 'SJC_PREM' ? 'pts' : 'pct'
+    const move = from && to && to.date > from.date ? Math.round(realizedMove(kind, from.value, to.value) * 100) / 100 : null
+    out.push({ key: k, label: MARKET_KEYS[k].label, unit: MARKET_KEYS[k].unit, from: from ? { date: from.date, value: from.value } : null, to: to && (!from || to.date > from.date) ? { date: to.date, value: to.value } : null, move, move_unit: kind === 'bp' ? 'điểm cơ bản' : kind === 'pts' ? 'điểm %' : '%' })
+  }
+  return { since: d0, moves: out.filter(m => m.from || m.to) }
+}

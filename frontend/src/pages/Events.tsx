@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import NewsInbox from './NewsInbox'
 import { useUser } from '../App'
 import { Badge, Btn, Card, ErrorBox, Loading, Note, StatusBadge, ts, useApi } from '../ui'
+import { TierBadge } from '../scenario'
 
 const TYPES: Record<string, string> = { monetary_policy: 'Chính sách tiền tệ', fiscal_tax: 'Tài khóa và thuế', sector_regulation: 'Quy định ngành', corporate: 'Doanh nghiệp', global_macro: 'Vĩ mô quốc tế', commodity: 'Hàng hóa', fx: 'Tỷ giá', geopolitical: 'Địa chính trị', policy: 'Văn bản chính sách' }
 
@@ -70,5 +71,5 @@ export default function Events() {
 function EventNews({ id }: { id: string }) {
   const { data } = useApi(`/api/events/${id}`)
   if (!data) return <Loading />
-  return <ul className="space-y-2 py-1">{data.news.map((n: any) => <li key={n.id} className="text-[13px]"><span className="mono text-fgm">{n.id}</span> <b>{n.title}</b> <a className="text-primary hover:underline" href={n.url} target="_blank" rel="noreferrer">{n.source}</a> <span className="text-fgm">· công bố {ts(n.published_at)} · nạp {ts(n.ingested_at)}</span><div className="text-fgm">{n.summary}</div></li>)}</ul>
+  return <ul className="space-y-2 py-1">{data.news.map((n: any) => <li key={n.id} className="text-[13px]"><span className="mono text-fgm">{n.id}</span> <b>{n.title}</b> <a className="text-primary hover:underline" href={n.url} target="_blank" rel="noreferrer">{n.source}</a> <TierBadge url={n.url} /> <span className="text-fgm">· công bố {ts(n.published_at)} · nạp {ts(n.ingested_at)}</span><div className="text-fgm">{n.summary}</div></li>)}</ul>
 }

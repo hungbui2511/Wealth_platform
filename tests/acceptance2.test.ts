@@ -10,6 +10,7 @@ import { AdapterRefused, type PriceAdapter } from '../src/pricing/base'
 import { SAMPLE_STORE, SEED, SESSIONS } from '../src/data/seed'
 import { exampleView } from './fixtures'
 import invalidNews from '../data/seed/events/invalid_news_test.json'
+import { confirmPolicy } from './support/policy'
 
 async function boot() {
   const h = harness()
@@ -201,7 +202,7 @@ describe('M10 – radar chính sách và kiểm soát thông tin', () => {
   it('AC-34: văn bản thuế chuyển nhượng BĐS → tóm tắt đúng schema, gia đình bị chạm đúng bằng tập có REAL_ESTATE > 0', async () => {
     await h.ok('ADM1', 'POST', '/api/admin/load-sample-policies')
     expect((await h.call('ADM1', 'POST', '/api/policies/PD-2026-001/analyze')).status).toBe(409)
-    await h.ok('CMP1', 'POST', '/api/policies/PD-2026-001/confirm-source', { note: 'Đã kiểm tra đường dẫn công khai' })
+    await confirmPolicy(h, 'PD-2026-001', 'Đã kiểm tra đường dẫn công khai')
     const r = await h.ok('ADM1', 'POST', '/api/policies/PD-2026-001/analyze')
     expect(r.doc.summary.changes.map((c: any) => c.article_refs).flat()).toEqual(['Điều 3 khoản 1', 'Điều 5 khoản 1', 'Điều 5 khoản 2'])
     const withRe: string[] = []

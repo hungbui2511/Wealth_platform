@@ -31,7 +31,7 @@ export default function PolicyRadar() {
         <Card key={d.id} title={<span className="flex flex-wrap items-center gap-2"><span className="mono text-fgm">{d.id}</span>{d.title}</span>} actions={<>
           {d.ai_assessment && <Badge tone={IMP[d.ai_assessment.importance][0]}>{IMP[d.ai_assessment.importance][1]} · {d.ai_assessment.score}/10</Badge>}
           <Badge tone={STATE[d.state][0]}>{STATE[d.state][1]}</Badge>
-          {user.role === 'COMPLIANCE' && d.state === 'PENDING_SOURCE_CONFIRM' && <Btn small onClick={act(() => api(`/api/policies/${d.id}/confirm-source`, { method: 'POST', body: { note: 'Đã kiểm tra đường dẫn công khai và ngày công bố' } }))}>Xác nhận nguồn công khai</Btn>}
+
           {(user.role === 'ADMIN' || user.role === 'CIO') && d.state === 'SOURCE_CONFIRMED' && <Btn small onClick={act(() => apiJob(`/api/policies/${d.id}/analyze`, { method: 'POST' }))}>Chạy Agent Chính sách</Btn>}
         </>}>
           <div className="grid md:grid-cols-4 gap-3 text-[13px]">
@@ -40,7 +40,13 @@ export default function PolicyRadar() {
             <div><div className="text-fgm">Công bố / hiệu lực dự kiến</div>{ts(d.published_at)} · {d.effective_expected ?? '—'}</div>
             <div><div className="text-fgm">Đường dẫn công khai</div><a className="text-primary hover:underline break-all" href={d.url} target="_blank" rel="noreferrer">{new URL(d.url).hostname}</a></div>
           </div>
-          <div className="flex flex-wrap gap-1 mt-2">{d.topics.map((t: string) => <Badge key={t}>{TOPIC[t]}</Badge>)}</div>
+          <div className="flex flex-wrap gap-1 mt-2">{d.topics.map((t: string) => <Badge key={t}>{TOPIC[t]}</Badge>)}
+            {d.version > 1 && <Badge tone="primary">Phiên bản {d.version}{d.previous_id ? ` (thay ${d.previous_id})` : ''}</Badge>}
+            {d.superseded_by && <Badge tone="amber">Đã có phiên bản mới {d.superseded_by}</Badge>}
+            {d.truncated && <Badge tone="amber">Nội dung bị cắt: lưu {d.content_length?.toLocaleString('vi-VN')}/{d.original_length?.toLocaleString('vi-VN')} ký tự</Badge>}
+            {d.secondary_source && <Badge tone="amber">Nguồn thứ cấp (trang tra cứu): đối chiếu bản gốc</Badge>}
+          </div>
+          {user.role === 'COMPLIANCE' && d.state === 'PENDING_SOURCE_CONFIRM' && !d.superseded_by && <ConfirmSource d={d} onDone={reload} />}
           {d.ai_assessment && <AiAssessment a={d.ai_assessment} />}
           {d.private_brief && <PrivateBrief b={d.private_brief} changes={d.changes} />}
           {d.changes.length > 0 && <div className="mt-3 space-y-2">{d.changes.map((c: any) => <ChangeCard key={c.change_id} c={c} />)}</div>}
@@ -146,6 +152,25 @@ function ChangeCard({ c }: { c: any }) {
           <Claim label="Cơ hội tư vấn" c={c.analysis.opportunity} />
         </div>
       </details>}
+    </div>
+  )
+}
+
+// Tuân thủ xác nhận nguồn và nội dung: mở đường dẫn gốc, đối chiếu với nội dung đang lưu (mã băm hiển thị), đánh dấu đã đối chiếu
+function ConfirmSource({ d, onDone }: { d: any; onDone: () => void }) {
+  const [checked, setChecked] = useState(false)
+  const [note, setNote] = useState('')
+  const [show, setShow] = useState(false)
+  const [err, setErr] = useState<unknown>(null)
+  const { data } = useApi(show ? `/api/policies/${d.id}` : null)
+  return (
+    <div className="mt-3 border border-border rounded-md p-3 text-[13px] space-y-2">
+      <div className="flex flex-wrap gap-2 items-center"><b>Xác nhận nguồn và nội dung</b><span className="text-fgm mono text-xs">mã băm nội dung {String(d.content_hash ?? '').slice(0, 12)}…</span><button className="text-primary" onClick={() => setShow(!show)}>{show ? 'Ẩn nội dung đang lưu' : 'Xem nội dung đang lưu'}</button><a className="text-primary hover:underline" href={d.url} target="_blank" rel="noreferrer">Mở bản gốc</a></div>
+      {show && data && <pre className="whitespace-pre-wrap text-xs max-h-64 overflow-y-auto bg-muted p-2 rounded">{data.doc.content}</pre>}
+      <label className="flex items-center gap-2"><input type="checkbox" checked={checked} onChange={e => setChecked(e.target.checked)} />Đã đối chiếu nội dung đang lưu với bản gốc tại đường dẫn (điều khoản, câu chữ, ngày công bố)</label>
+      <input className="w-full" placeholder={d.secondary_source ? 'Đã đối chiếu với bản gốc nào (tối thiểu 20 ký tự)' : 'Ghi chú (không bắt buộc)'} value={note} onChange={e => setNote(e.target.value)} />
+      <ErrorBox error={err} />
+      <Btn small disabled={!checked} onClick={async () => { setErr(null); try { await api(`/api/policies/${d.id}/confirm-source`, { method: 'POST', body: { note: note || 'Đã kiểm tra đường dẫn công khai, ngày công bố và nội dung', content_checked: true, content_hash: d.content_hash } }); onDone() } catch (e) { setErr(e) } }}>Xác nhận nguồn và nội dung</Btn>
     </div>
   )
 }

@@ -2,11 +2,32 @@
 import { useEffect, useState } from 'react'
 import { DEFAULT_FACTOR_MODEL } from '../../src/data/factorModel'
 import { ASSET_CLASS_LABELS } from '../../src/shared/catalog'
+import { sourceTier, TIER_LABELS } from '../../src/news/sources'
 import { api } from './api'
 import { Badge, Btn, Card, ErrorBox, fmtPct, Money, Note, useApi } from './ui'
 
 export const FACTOR: Record<string, { label: string; unit: string; origin: string }> = Object.fromEntries(DEFAULT_FACTOR_MODEL.factors.map(f => [f.id, { label: f.label, unit: f.unit, origin: f.origin }]))
 const ORIGIN: Record<string, [string, string]> = { global: ['primary', 'Quốc tế'], local: ['green', 'Trong nước'], exclusive: ['amber', 'Độc quyền TCB'] }
+// Hạng nguồn của một tin (T1 chính thức … T4 tra cứu thứ cấp)
+export function TierBadge({ url }: { url?: string }) {
+  if (!url) return null
+  const t = sourceTier(url)
+  return <Badge tone={t === 'T1' ? 'green' : t === 'T2' ? 'primary' : t === 'T4' ? 'amber' : 'low'} title={TIER_LABELS[t]}>{t}</Badge>
+}
+
+// Biến động thị trường từ trước khi có tin: căn cứ đánh giá tin đã phản ánh vào giá chưa
+export function MarketMoves({ eventId }: { eventId: string }) {
+  const { data } = useApi<any>(`/api/events/${eventId}/market-moves`)
+  if (!data) return null
+  const rows = data.moves.filter((m: any) => m.move !== null)
+  return (
+    <Card title="Thị trường từ trước khi có tin (để xét tin đã phản ánh vào giá)">
+      {rows.length === 0 ? <p className="text-fgm text-[13px]">Chưa có số liệu thị trường từ {data.since} để so sánh (lượt chạy hằng ngày cần đẩy bản ghi market_data).</p> :
+        <div className="flex flex-wrap gap-x-5 gap-y-1 text-[13px]">{rows.map((m: any) => <span key={m.key}>{m.label}: <b className={m.move > 0 ? 'text-green' : m.move < 0 ? 'text-red' : ''}>{m.move > 0 ? '+' : ''}{String(m.move).replace('.', ',')} {m.move_unit}</b> <span className="text-fgm text-xs">({m.from.date} → {m.to.date})</span></span>)}</div>}
+    </Card>
+  )
+}
+
 // Nhãn hiệu chỉnh cạnh xác suất các nhánh: chưa đủ mốc chấm thì ghi rõ xác suất là giả định
 export function CalibrationNote() {
   const { data } = useApi<{ calibrated: boolean; label: string }>('/api/quality/calibration-label')

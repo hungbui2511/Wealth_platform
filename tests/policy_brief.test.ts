@@ -5,6 +5,7 @@ import { DEFAULT_BANNED_PHRASES } from '../src/shared/catalog'
 import p1 from '../data/mock_agent/policy/PD-2026-001.json'
 import sample1 from '../data/seed/policies/sample/PD-2026-001.json'
 import { harness } from './support/harness'
+import { confirmPolicy } from './support/policy'
 
 const clone = () => JSON.parse(JSON.stringify(p1))
 const run = (raw: unknown) => validatePolicySummary(raw, sample1.content, 'draft', DEFAULT_BANNED_PHRASES)
@@ -71,7 +72,7 @@ describe('Radar hiển thị phân tích trọng yếu', () => {
 
   it('sau khi phân tích, radar trả private_brief và năm câu cho mỗi thay đổi', async () => {
     await h.ok('ADM1', 'POST', '/api/admin/load-sample-policies')
-    await h.ok('CMP1', 'POST', '/api/policies/PD-2026-002/confirm-source', { note: 'Đã kiểm tra' })
+    await confirmPolicy(h, 'PD-2026-002', 'Đã kiểm tra')
     await h.ok('ADM1', 'POST', '/api/policies/PD-2026-002/analyze')
     const d = (await h.ok('RM1', 'GET', '/api/policies')).documents.find((x: any) => x.id === 'PD-2026-002')
     expect(d.private_brief.headline).toMatch(/giữa cha mẹ và con/)

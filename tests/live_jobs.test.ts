@@ -3,6 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { harness } from './support/harness'
 import { fakeLlmFetch } from './support/fakeLlm'
 import { executeJob } from '../src/worker/services/jobs'
+import { confirmPolicy } from './support/policy'
 
 const boot = async (h: ReturnType<typeof harness>) => {
   const r = await h.call(null, 'POST', '/api/bootstrap'); if (r.status >= 400) throw new Error(JSON.stringify(r.data))
@@ -94,7 +95,7 @@ describe('Tác vụ chạy nền (Workflows) ở chế độ live', () => {
 
   it('Agent Chính sách chạy nền: văn bản được tóm tắt, tạo sự kiện chính sách', async () => {
     await h.ok('ADM1', 'POST', '/api/admin/load-sample-policies')
-    await h.ok('CMP1', 'POST', '/api/policies/PD-2026-002/confirm-source', { note: 'Đã kiểm tra đường dẫn công khai' })
+    await confirmPolicy(h, 'PD-2026-002', 'Đã kiểm tra đường dẫn công khai')
     const r = await h.ok('ADM1', 'POST', '/api/policies/PD-2026-002/analyze')
     expect(r.job.kind).toBe('policy_analyze')
     const done = await executeJob(h.env, r.job.id, { now: h.now, fetchFn })

@@ -3,6 +3,7 @@ import type { Finding, ImpactLine, ViewBody } from '../shared/types'
 import { coverageErrors, lineErrors, lineKey, validateFindings, articleRefExists, type ViewContext } from '../shared/schemas'
 import { branchIssues, levelScenarioConflicts } from '../engine/consistency'
 import type { FactorModel, ScenarioSet } from '../engine/scenario'
+import { rootDomain, sourceTier } from '../news/sources'
 
 export type RawFinding = Omit<Finding, 'finding_id' | 'stage' | 'origin'>
 
@@ -35,6 +36,24 @@ export function scenarioRuleChecks(view: ViewBody, model: FactorModel | null, on
     if (all) for (const b of branchIssues(model, set)) out.push({ check: b.check, severity: b.severity, target: b.target, issue: b.issue, suggestion: b.suggestion })
   } catch (e) {
     out.push({ check: 'schema', severity: 'medium', target: 'scenarios', issue: `Không tính được kịch bản để đối chiếu: ${String((e as Error).message ?? e).slice(0, 200)}`, suggestion: 'Kiểm tra lại yếu tố lõi và cỡ cú sốc của các nhánh' })
+  }
+  return out
+}
+
+// Quy tắc hai nguồn (đợt 3): dòng có mức từ ±2 phải có ít nhất một nguồn chính thức (T1) hoặc hai nguồn độc lập (khác miền gốc).
+// Nguồn trang tra cứu thứ cấp (T4) không tính. Tin nghiên cứu độc quyền không có đường dẫn công khai thì bỏ qua quy tắc này.
+export function sourceRuleChecks(view: ViewBody, news: { id: string; url?: string; origin?: string }[], onlyKeys?: Set<string>): RawFinding[] {
+  const byId = new Map(news.map(n => [n.id, n]))
+  const out: RawFinding[] = []
+  for (const l of view.impacts) {
+    if (Math.abs(l.level) < 2 || (onlyKeys && !onlyKeys.has(lineKey(l)))) continue
+    const srcs = (l.source_ids ?? []).map(id => byId.get(id)).filter((n): n is NonNullable<typeof n> => !!n)
+    if (srcs.some(n => n.origin === 'exclusive' || !n.url)) continue
+    const tiers = srcs.map(n => sourceTier(n.url!))
+    if (tiers.includes('T1')) continue
+    const roots = new Set(srcs.filter(n => sourceTier(n.url!) !== 'T4').map(n => rootDomain(n.url!)))
+    if (roots.size >= 2) continue
+    out.push({ check: 'source_support', severity: 'medium', target: lineKey(l), issue: `Dòng mức ${l.level} chỉ dựa trên ${roots.size || 0} nguồn độc lập (${[...new Set(tiers)].join(', ') || 'không có nguồn'}), không có nguồn chính thức`, suggestion: 'Bổ sung nguồn thứ hai khác miền hoặc nguồn chính thức, hoặc hạ mức xuống ±1' })
   }
   return out
 }

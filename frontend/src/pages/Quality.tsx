@@ -109,6 +109,18 @@ function Ops({ d, role, act }: { d: any; role: string; act: (fn: () => Promise<u
         <table className="t"><thead><tr><th>Lịch</th><th>Trạng thái</th><th>Hạn báo</th><th>Lượt gần nhất</th></tr></thead>
           <tbody>{d.schedules.map((s: any) => <tr key={s.id}><td>{s.label}</td><td><Badge tone={HB[s.status][0]}>{HB[s.status][1]}</Badge>{s.message && <div className="text-xs text-fgm">{s.message}</div>}</td><td className="text-xs">{ts(s.due)}</td><td className="text-xs">{s.last ? `${ts(s.last.created_at)} · ${s.last.status}${s.last.notes ? ` · ${s.last.notes}` : ''}` : '—'}</td></tr>)}</tbody></table>
       </Card>
+      <Card title="Lịch sự kiện đã biết trước">
+        <table className="t"><thead><tr><th>Ngày</th><th>Sự kiện</th><th>Trạng thái</th></tr></thead>
+          <tbody>{d.calendar.map((c: any) => <tr key={c.id}><td className="text-xs">{c.date}</td><td>{c.title}{c.source_url && <> <a className="text-primary hover:underline text-xs" href={c.source_url} target="_blank" rel="noreferrer">nguồn</a></>}</td><td>{c.status === 'COVERED' ? <Badge tone="green">Đã có sự kiện {c.event_id}</Badge> : c.status === 'MISSED' ? <Badge tone="red">Đã qua, chưa có sự kiện</Badge> : c.status === 'UPCOMING' ? <Badge tone="amber">Sắp tới</Badge> : <Badge>{c.status === 'PAST' ? 'Đã qua' : 'Theo lịch'}</Badge>}</td></tr>)}</tbody></table>
+        <p className="text-fgm text-xs mt-2">CIO bổ sung lịch trong Cấu hình (loại CALENDAR). Mục đã qua 2 ngày mà chưa có sự kiện khớp từ khoá thì báo trên Tổng quan.</p>
+      </Card>
+      <Card title="Nhật ký quét tin gần nhất (độ phủ và tin bị bỏ)">
+        {d.scans.length === 0 ? <p className="text-fgm text-[13px]">Chưa có nhật ký quét tin.</p> : d.scans.slice(0, 1).map((sc: any) => <div key={sc.id} className="text-[13px]">
+          <div className="text-fgm text-xs mb-1">{sc.id} · ngày {sc.date} · {ts(sc.created_at)}</div>
+          <table className="t"><thead><tr><th>Nhóm</th><th>Đã tìm</th><th className="num">Thấy</th><th className="num">Dùng</th></tr></thead><tbody>{sc.groups.map((g: any) => <tr key={g.group}><td>{g.group}{g.note && <div className="text-fgm text-xs">{g.note}</div>}</td><td>{g.searched ? 'Có' : <Badge tone="red">Không</Badge>}</td><td className="num">{g.found}</td><td className="num">{g.used}</td></tr>)}</tbody></table>
+          {sc.dropped.length > 0 && <details className="mt-2"><summary className="cursor-pointer text-primary">{sc.dropped.length} tin đã thấy nhưng không dùng</summary><ul className="list-disc pl-5 mt-1">{sc.dropped.map((x: any, i: number) => <li key={i}>{x.url ? <a className="text-primary hover:underline" href={x.url} target="_blank" rel="noreferrer">{x.title}</a> : x.title} <span className="text-fgm">: {x.reason}</span></li>)}</ul></details>}
+        </div>)}
+      </Card>
       <Card title="Trạng thái agent">
         <table className="t"><thead><tr><th>Agent</th><th>Trạng thái</th><th></th></tr></thead>
           <tbody>{Object.entries(d.agents).map(([id, label]: any) => { const c = d.controls[id]; return <tr key={id}><td>{label} <span className="mono text-fgm">{id}</span></td><td>{c?.paused ? <><Badge tone="red">Tạm dừng</Badge> <span className="text-xs">{c.reason} ({c.by}, {ts(c.at)})</span></> : <Badge tone="green">Đang chạy</Badge>}</td>

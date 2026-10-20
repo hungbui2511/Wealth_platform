@@ -3,6 +3,8 @@ import { POLICY_TOPICS, type PolicyTopic } from '../../shared/catalog'
 import type { Family, PolicyChange, PolicyPrivateBrief } from '../../shared/types'
 import { validatePolicySummary } from '../../shared/schemas'
 import { checkPublicSource } from '../../compliance/controls'
+import { sha256 } from '../../engine/hash'
+import { sourceTier } from '../../news/sources'
 import { matchFamily } from '../../engine/policyMatch'
 import { buildPositions, netWorth, liabilityExposure } from '../../engine/positions'
 import { sum } from '../../engine/dec'
@@ -25,6 +27,9 @@ export interface PolicyDoc {
   summary?: { changes: PolicyChange[]; private_brief?: PolicyPrivateBrief; run_id: string; model: string }; event_id?: string; errors?: string[]
   // Agent Rà soát pháp luật (AI, ngoài TCB) tìm và chấm điểm văn bản; chỉ là gợi ý ưu tiên, người quyết định có phân tích tiếp hay không
   origin?: 'manual' | 'ai_scan'; ai_assessment?: PolicyAssessment
+  // Đợt 3: mã băm nội dung đã lưu (Tuân thủ xác nhận đúng bản này), văn bản bị cắt, phiên bản mới của cùng đường dẫn, nguồn thứ cấp
+  content_hash?: string; truncated?: boolean; original_length?: number; version?: number; previous_id?: string; superseded_by?: string; secondary_source?: boolean
+  source_confirm_hash?: string
 }
 
 export const DOC_TYPES = ['luat', 'nghi_quyet', 'nghi_dinh', 'thong_tu', 'quyet_dinh', 'khac'] as const
@@ -59,7 +64,7 @@ export function assessmentErrors(a: Partial<PolicyAssessment> | undefined): stri
   return e
 }
 
-export async function addPolicy(ctx: AppCtx, input: Omit<PolicyDoc, 'state' | 'ingested_at' | 'id'> & { id?: string }) {
+export async function addPolicy(ctx: AppCtx, input: Omit<PolicyDoc, 'state' | 'ingested_at' | 'id'> & { id?: string; original_length?: number }) {
   requireRole(ctx, 'ADMIN')
   const cfg = await loadConfigs(ctx)
   const now = ctx.now()
@@ -68,7 +73,11 @@ export async function addPolicy(ctx: AppCtx, input: Omit<PolicyDoc, 'state' | 'i
     errs.push(...assessmentErrors(input.ai_assessment))
     for (const u of input.ai_assessment.sources ?? []) errs.push(...checkPublicSource({ url: u, published_at: input.published_at }, cfg.whitelist, now).filter(x => x.startsWith('Miền')).map(x => `Nguồn đánh giá: ${x}`))
   }
-  if (input.url && (await ctx.repo.list<PolicyDoc>('policy_documents', "json_extract(data, '$.url') = ?", [input.url])).length) errs.push('Văn bản cùng đường dẫn đã có trên radar')
+  // Cùng đường dẫn: nội dung giống hệt thì là trùng; nội dung khác (dự thảo vòng mới, bản sửa) thì nhận là phiên bản mới
+  const hash = await sha256(String(input.content ?? ''))
+  const sameUrl = input.url ? await ctx.repo.list<PolicyDoc>('policy_documents', "json_extract(data, '$.url') = ?", [input.url], 'id') : []
+  const prevDoc = sameUrl.filter(d => !d.superseded_by).at(-1)
+  if (sameUrl.some(d => (d.content_hash ?? '') === hash)) errs.push('Văn bản cùng đường dẫn và cùng nội dung đã có trên radar')
   if (!input.title || !input.content) errs.push('Thiếu tiêu đề hoặc nội dung')
   if (!['draft', 'final'].includes(input.kind)) errs.push('Loại văn bản phải là dự thảo (draft) hoặc đã ban hành (final)')
   const topics = (input.topics ?? []).filter(t => POLICY_TOPICS.includes(t))
@@ -79,8 +88,12 @@ export async function addPolicy(ctx: AppCtx, input: Omit<PolicyDoc, 'state' | 'i
   const year = now.slice(0, 4)
   const id = input.id ?? await ctx.repo.nextId('policy_documents', `PD-${year}-`, 3)
   if (await ctx.repo.get('policy_documents', id)) throw new HttpError(409, `Văn bản ${id} đã tồn tại`)
-  const doc: PolicyDoc = { id, title: input.title, agency: input.agency, kind: input.kind, status: input.status, published_at: input.published_at, effective_expected: input.effective_expected, url: input.url, topics, content: input.content, simulated: !!input.simulated, state: 'PENDING_SOURCE_CONFIRM', ingested_at: now, origin: input.ai_assessment ? 'ai_scan' : 'manual', ...(input.ai_assessment ? { ai_assessment: input.ai_assessment } : {}) }
-  const u = ctx.uow(); u.insert('policy_documents', doc as never); u.audit({ actor: actor(ctx), action: 'policy.added', object: id, data: { title: doc.title, url: doc.url, published_at: doc.published_at, origin: doc.origin, ...(doc.ai_assessment ? { importance: doc.ai_assessment.importance, score: doc.ai_assessment.score, recommended_action: doc.ai_assessment.recommended_action } : {}) } }); await u.commit()
+  const orig = Number(input.original_length ?? input.content.length)
+  const meta = { content_hash: hash, ...(orig > input.content.length ? { truncated: true, original_length: orig } : {}), version: (prevDoc?.version ?? (prevDoc ? 1 : 0)) + 1, ...(prevDoc ? { previous_id: prevDoc.id } : {}), ...(sourceTier(input.url) === 'T4' ? { secondary_source: true } : {}) }
+  const doc: PolicyDoc = { ...meta, id, title: input.title, agency: input.agency, kind: input.kind, status: input.status, published_at: input.published_at, effective_expected: input.effective_expected, url: input.url, topics, content: input.content, simulated: !!input.simulated, state: 'PENDING_SOURCE_CONFIRM', ingested_at: now, origin: input.ai_assessment ? 'ai_scan' : 'manual', ...(input.ai_assessment ? { ai_assessment: input.ai_assessment } : {}) }
+  const u = ctx.uow(); u.insert('policy_documents', doc as never)
+  if (prevDoc) { u.update('policy_documents', { ...prevDoc, superseded_by: id } as never); u.audit({ actor: actor(ctx), action: 'policy.new_version', object: id, data: { previous_id: prevDoc.id, version: doc.version } }) }
+  u.audit({ actor: actor(ctx), action: 'policy.added', object: id, data: { content_hash: hash, truncated: !!doc.truncated, version: doc.version, title: doc.title, url: doc.url, published_at: doc.published_at, origin: doc.origin, ...(doc.ai_assessment ? { importance: doc.ai_assessment.importance, score: doc.ai_assessment.score, recommended_action: doc.ai_assessment.recommended_action } : {}) } }); await u.commit()
   return doc
 }
 
@@ -104,12 +117,20 @@ async function getDoc(ctx: AppCtx, id: string): Promise<PolicyDoc> {
 }
 const save = (u: ReturnType<AppCtx['uow']>, d: PolicyDoc) => u.update('policy_documents', d as never)
 
-export async function confirmSource(ctx: AppCtx, id: string, note: string) {
+// Tuân thủ xác nhận cả nguồn và nội dung: đã đối chiếu nội dung lưu trên radar với bản gốc tại đường dẫn, gửi kèm mã băm của
+// đúng bản đã xem (nội dung đổi sau đó thì mã băm không khớp). Trích dẫn của Agent Chính sách chỉ được kiểm trên nội dung này.
+export async function confirmSource(ctx: AppCtx, id: string, body: { note?: string; content_checked?: boolean; content_hash?: string }) {
   requireRole(ctx, 'COMPLIANCE')
   const d = await getDoc(ctx, id)
   if (d.state !== 'PENDING_SOURCE_CONFIRM') throw new HttpError(409, 'Văn bản không ở trạng thái chờ xác nhận nguồn')
-  const nd: PolicyDoc = { ...d, state: 'SOURCE_CONFIRMED', source_confirmed_by: actor(ctx), source_confirmed_at: ctx.now() }
-  const u = ctx.uow(); save(u, nd); u.audit({ actor: actor(ctx), action: 'policy.source_confirmed', object: id, data: { url: d.url, note } }); await u.commit()
+  if (d.superseded_by) throw new HttpError(409, `Đã có phiên bản mới ${d.superseded_by}: xác nhận phiên bản mới`)
+  const note = String(body.note ?? '')
+  const hash = d.content_hash ?? await sha256(d.content)
+  if (body.content_checked !== true) throw new HttpError(422, 'Cần xác nhận đã đối chiếu nội dung lưu trên radar với bản gốc tại đường dẫn (content_checked)')
+  if (body.content_hash !== hash) throw new HttpError(409, 'Mã băm nội dung không khớp bản đang lưu: tải lại văn bản và đối chiếu lại')
+  if (d.secondary_source && note.trim().length < 20) throw new HttpError(422, 'Nguồn là trang tra cứu thứ cấp: ghi rõ đã đối chiếu với bản gốc nào (tối thiểu 20 ký tự)')
+  const nd: PolicyDoc = { ...d, content_hash: hash, source_confirm_hash: hash, state: 'SOURCE_CONFIRMED', source_confirmed_by: actor(ctx), source_confirmed_at: ctx.now() }
+  const u = ctx.uow(); save(u, nd); u.audit({ actor: actor(ctx), action: 'policy.source_confirmed', object: id, data: { url: d.url, note, content_hash: hash, truncated: !!d.truncated } }); await u.commit()
   return nd
 }
 
@@ -164,7 +185,7 @@ export async function radar(ctx: AppCtx) {
   return {
     documents: docs.map(d => {
       const ev = events.find(e => e.id === d.event_id)
-      return { id: d.id, title: d.title, agency: d.agency, kind: d.kind, status: d.status, state: d.state, origin: d.origin ?? 'manual', ai_assessment: d.ai_assessment ?? null, published_at: d.published_at, effective_expected: d.effective_expected, url: d.url, topics: d.topics, simulated: d.simulated, changes: d.summary?.changes ?? [], private_brief: d.summary?.private_brief ?? null, event_id: d.event_id, matched_total: matches.filter(m => m.doc_id === d.id).length, matched_mine: matches.filter(m => m.doc_id === d.id && own(m.family_id)).length, reaction_ms: ev ? reactionMs(ev.timestamps) : null, timestamps: ev?.timestamps ?? null }
+      return { id: d.id, title: d.title, agency: d.agency, kind: d.kind, status: d.status, state: d.state, origin: d.origin ?? 'manual', content_hash: d.content_hash ?? null, truncated: !!d.truncated, original_length: d.original_length ?? null, version: d.version ?? 1, previous_id: d.previous_id ?? null, superseded_by: d.superseded_by ?? null, secondary_source: !!d.secondary_source, content_length: d.content.length, ai_assessment: d.ai_assessment ?? null, published_at: d.published_at, effective_expected: d.effective_expected, url: d.url, topics: d.topics, simulated: d.simulated, changes: d.summary?.changes ?? [], private_brief: d.summary?.private_brief ?? null, event_id: d.event_id, matched_total: matches.filter(m => m.doc_id === d.id).length, matched_mine: matches.filter(m => m.doc_id === d.id && own(m.family_id)).length, reaction_ms: ev ? reactionMs(ev.timestamps) : null, timestamps: ev?.timestamps ?? null }
     }),
     events: allEvents,
   }
