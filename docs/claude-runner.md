@@ -127,3 +127,43 @@ Tin có thời điểm công bố ở tương lai (lệch quá 10 phút so với
 Khóa giá: mã công cụ (MBB, VHM12613, VEOF, SJC, BTC, AAPL…) hoặc `FX:USD`, `FX:SGD`, `FX:AUD`. Giá theo đơn vị của công cụ
 (cổ phiếu VND/cổ phiếu, vàng VND/lượng, AAPL và VT USD/chứng chỉ). Mã không có trong lần đẩy giữ giá và nhãn nguồn của ảnh chụp
 trước. Cổ phiếu niêm yết lấy từ kết nối TCBS (MCP) khi đã bật; không lấy giá bằng cách sao chép trang web của sở giao dịch.
+
+## Bổ sung sau hai vòng phản biện độc lập (20/10/2026)
+
+**Đổi cách xử lý loại cũ**
+- `prices`: ảnh chụp giá do Claude lấy **chưa được dùng** cho tới khi CIO hoặc Tuân thủ xác nhận (ghi chú ≥ 20 ký tự) ở trang Giá.
+  Trước khi xác nhận, mọi tính toán vẫn dùng ảnh chụp đã xác nhận gần nhất.
+- `policy_doc`: hệ thống lưu mã băm nội dung, cờ `truncated` khi nội dung bị cắt ở 20.000 ký tự. Cùng đường dẫn mà nội dung khác
+  thì thành **phiên bản mới** (`version`, `previous_id`), bản cũ được đánh dấu `superseded_by`; cùng nội dung bị từ chối. Tuân thủ
+  xác nhận nguồn phải tick đã đối chiếu nội dung và gửi đúng mã băm; trang tra cứu thứ cấp (thuvienphapluat, luatvietnam…) phải ghi
+  đã đối chiếu với bản gốc nào.
+- `challenge`: phản biện **phải rà cả nhánh kịch bản** (check `scenario_consistency`: mức dòng ngược hướng với kịch bản;
+  `scenario_balance`: một nhánh ≥ 80%, mọi nhánh cùng chiều, không có nhánh căng thẳng). Hệ thống cũng tự chạy các kiểm tra này.
+- Tin dùng cho dòng mức ±2 trở lên cần nguồn chính thức (hạng T1) hoặc ít nhất hai báo khác nhau; trang tra cứu (T4) không tính.
+
+**Loại mới**
+
+`market_data` (subject để trống): số liệu thị trường để chấm điểm dự báo sau 7, 91, 365 ngày.
+`{"points":[{"key":"VNINDEX","date":"YYYY-MM-DD","value":1666.2,"url":"đường dẫn thuộc danh sách nguồn","source":"HOSE","note":"(tùy chọn)"}]}`.
+Khoá: VNINDEX, SPX, BRENT, GOLD_SPOT_USD, BTC, DXY, USDVND_CENTRAL, USDVND_VCB_SELL, US10Y, VN_INTERBANK_ON, VN_INTERBANK_1M,
+VN_POLICY_RATE, VN_GOV10Y, VN_CPI_YOY, SJC_SELL. SJC_PREM do hệ thống tự tính. Giá trị ngoài khoảng hợp lý hoặc ngày tương lai bị
+từ chối cả lô. Số liệu từ trang chính thức không bị số liệu báo chí ghi đè.
+
+`scan_log` (subject để trống): nhật ký quét tin của mỗi lượt chạy, để biết nhóm nào chưa quét và tin nào bị bỏ vì sao.
+`{"date":"YYYY-MM-DD","groups":[{"group":"Vĩ mô Mỹ","searched":true,"found":6,"used":2,"note":"(tùy chọn)"}],"dropped":[{"title","url","reason"}],"model","session"}`.
+
+`run_log` (subject để trống): mỗi lượt chạy theo lịch đẩy đúng một bản ghi khi kết thúc, kể cả khi không có gì mới.
+`{"schedule":"daily_news|legal_scan|golden_monthly|manual","status":"ok|partial|failed","started_at","finished_at","counts":{"news":12,"events":2},"notes","model","session"}`.
+Lượt hằng ngày phải có `run_log` trước 18:30 (giờ Việt Nam), lượt rà soát pháp luật trước 09:30 thứ Hai và thứ Năm; thiếu thì trang
+Tổng quan báo.
+
+`golden_view` (hằng tháng, và mỗi lần đổi mô hình hoặc prompt): chạy lại Agent CIO trên bộ sự kiện chuẩn `data/golden/events.json`
+(G01–G10) để đo độ trôi. `{"golden_id":"G01","view":{"impacts":[đủ 11 dòng loại tài sản],"scenarios":{…}},"meta":{"model","session","prompt_note"}}`.
+`source_ids` trong nhánh kịch bản là mã tin của sự kiện chuẩn (ví dụ `G01-N1`). Lượt đầu tiên của mỗi sự kiện là tham chiếu; CIO có
+thể đổi tham chiếu kèm lý do.
+
+**Tạm dừng agent**: khi CIO, Tuân thủ hoặc Quản trị tạm dừng một agent ở trang Chất lượng, bản ghi của agent đó bị từ chối khi nhập
+cho tới khi Tuân thủ hoặc Quản trị (người khác người tạm dừng) cho chạy lại.
+
+**Không đổi**: Claude không đọc dữ liệu gia đình (BR-28). Cấu trúc gia đình, đòn bẩy, thang thanh khoản, kế thừa và bản tin RM
+đều do hệ thống tính bằng quy tắc xác định trên dữ liệu trong ngân hàng.
