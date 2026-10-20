@@ -280,6 +280,9 @@ export interface FamilyScenarioResult {
   // BĐS và cổ phần tư nhân chiếm bao nhiêu tài sản ròng; trên 40% thì phần lớn dải đến từ tham số giả định
   re_pe_share: number | null; assumption_flag: string | null
   credit_jump: { exposure: number; lgd: number; q: number[] } | null
+  // Đợt 5: tổn thất nếu lặp lại giai đoạn lịch sử, so với mốc nặng nhất của mô hình
+  analog_bands?: { analog_id: string; label: string; total: number; pct: number | null; beyond_model: boolean }[]
+  tail_note?: string | null
 }
 
 const round = (x: number) => Math.round(x)

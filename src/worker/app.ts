@@ -15,6 +15,9 @@ import { authenticate, authMode, verifiedEmail, roleMap } from './auth'
 import { CONFIG_KINDS, decideConfig, defaultProposal, loadConfigs, loadFactorModel, proposeConfig, redactConfig, activeConfig, type ConfigKind, type ConfigVersion } from './services/config'
 import { createEvent, createEventFromNews, loadSampleEvents, allowEvent, getEvent, eventNews, setTimestamp, type EventRec } from './services/events'
 import { dismissNews, ingestNews, newsInbox } from './services/ingest'
+import { viewsMateriality } from './services/fastlane'
+import { bookNetting, familyNetting } from './services/netting'
+import { rmDigest } from './services/digest'
 import { createPriceSnapshot, currentSnapshot, familyCashflow, familyGoals, familyOverview, familyPnl, familyStructure, PRICE_DATE } from './services/portfolio'
 import { approvalConditions, createManualView, decide, editScenarios, editView, getView, respondFinding, retryPreChallenge, runCioAgent, runReChallenge, viewChallenges, viewResponses, type ViewRec } from './services/views'
 import { confirmRun, createApplication, getRun, recompute, withdrawRun, withdrawView, type RunRec } from './services/apply'
@@ -166,6 +169,10 @@ export function createApp(opts: AppOptions = {}) {
   })
 
   // ----- M3/M4/M5: nhận định, phản biện, bàn duyệt -----
+  app.get('/api/views/materiality', async c => c.json(await viewsMateriality(X(c))))
+  app.get('/api/book/netting', async c => c.json(await bookNetting(X(c))))
+  app.get('/api/families/:id/netting', async c => c.json(await familyNetting(X(c), c.req.param('id'))))
+  app.get('/api/rm/digest', async c => c.json(await rmDigest(X(c), Number(c.req.query('days') ?? 7))))
   app.get('/api/views', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'COMPLIANCE', 'ADMIN'); return c.json(await ctx.repo.list<ViewRec>('views', '', [], 'id')) })
   app.get('/api/views/:id', async c => {
     const ctx = X(c); requireRole(ctx, 'CIO', 'COMPLIANCE', 'ADMIN')

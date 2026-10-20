@@ -13,6 +13,7 @@ import { wrapData, type ModelSet, type PromptSet } from '../../agents/prompts'
 import { actor, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
 import type { UnitOfWork } from '../db'
 import { activeConfig, loadConfigs, loadFactorModel, type Configs } from './config'
+import { analogBands } from '../../engine/structure'
 import { familyScenario, scenarioPreview, type FactorModel, type FamilyScenarioResult, type ScenarioSet } from '../../engine/scenario'
 import { getEvent, withTimestamp, type EventRec } from './events'
 import { currentSnapshot, loadGoals, loadInstruments, snapshotById, type SnapshotRecord } from './portfolio'
@@ -57,6 +58,13 @@ export function computeAll(ps: PortfolioSnapshot, snap: SnapshotRecord, view: Vi
     const unit = computeFamilyImpact(f.id, pos, nw, view, ps.configs.unit, ps.configs.thresholds.alert)
     const scenario: FamilyScenarioResult | undefined = view.scenarios && ps.configs.factor_model
       ? familyScenario(f, pos, book, ps.instruments, ps.configs.factor_model, view.scenarios as ScenarioSet, nw.toNumber()) : undefined
+    if (scenario && ps.configs.factor_model) {
+      const worst = Math.min(...scenario.ranges.map(r => r.severe))
+      const bands = analogBands(pos, ps.instruments, ps.configs.factor_model, book, nw.toNumber(), worst)
+      scenario.analog_bands = bands
+      const beyond = bands.filter(b => b.beyond_model)
+      scenario.tail_note = beyond.length ? `Nếu lặp lại ${beyond.map(b => b.label).join('; ')}, tổn thất lớn hơn mốc nặng nhất của mô hình: đuôi phân phối của mô hình mỏng hơn lịch sử, xem cả hai con số` : null
+    }
     // Một bộ máy: có kịch bản thì mọi con số lấy từ lớp kịch bản; không có (chỉ còn ở áp dụng nhập tay khi kiểm thử) thì ghi rõ bộ máy cũ
     const result: EngineResult = scenario ? { ...fromScenario(unit, scenario, nw, ps.configs.thresholds.alert), scenario } as EngineResult : { ...unit, engine: 'unit_legacy' }
     return { family: f, positions: pos, result }

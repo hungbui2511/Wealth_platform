@@ -55,6 +55,15 @@ export function worstAnalog(positions: Position[], instruments: Record<string, I
   return all.sort((a, b) => a.total - b.total)[0] ?? null
 }
 
+// Dải căng thẳng lịch sử đặt cạnh dải của mô hình (đợt 5): nếu lặp lại giai đoạn cũ mà tổn thất vượt mốc nặng nhất của mô hình
+// thì đuôi phân phối của mô hình đang mỏng hơn thực tế đã xảy ra.
+export interface AnalogBand { analog_id: string; label: string; total: number; pct: number | null; beyond_model: boolean }
+export function analogBands(positions: Position[], instruments: Record<string, Instrument>, model: FactorModel, book: PriceBook, netWorth: number, modelSevere: number): AnalogBand[] {
+  return ((model.analogs ?? []) as { id: string }[]).map(a => analogStress(positions, instruments, model, book, a.id, netWorth))
+    .filter((x): x is AnalogStress => !!x)
+    .map(x => ({ analog_id: x.analog_id, label: x.label, total: x.total, pct: x.pct, beyond_model: x.total < modelSevere }))
+}
+
 // ---------- (1) Đòn bẩy và gọi ký quỹ ----------
 export interface LeverageRow {
   liability_id: string; name: string; balance_vnd: string

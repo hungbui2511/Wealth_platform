@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { api } from '../api'
 import { useUser } from '../App'
-import { Badge, Btn, Card, ErrorBox, Note, StatusBadge, useApi } from '../ui'
+import { Badge, Btn, Card, ErrorBox, fmtVndShort, Note, StatusBadge, useApi } from '../ui'
 import { PURPOSE_LABEL, TIER_LABEL } from '../../../src/engine/procedural'
 
 const SCRIPT = [
@@ -29,6 +29,9 @@ export default function Home() {
   const events = useApi<any[]>(user.role === 'RM' ? null : '/api/events')
   const proc = useApi<any>(user.role === 'RM' ? '/api/procedural' : null)
   const alerts = useApi<any>(user.role === 'RM' ? null : '/api/ops/alerts')
+  const digest = useApi<any>(user.role === 'RM' ? '/api/rm/digest' : null)
+  const netting = useApi<any>(user.role === 'CIO' || user.role === 'COMPLIANCE' ? '/api/book/netting' : null)
+  const mat = useApi<any[]>(user.role === 'CIO' || user.role === 'COMPLIANCE' ? '/api/views/materiality' : null)
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<unknown>(null)
   const run = (path: string, label: string) => async () => { setErr(null); try { const r = await api(path, { method: 'POST' }); setMsg(`${label}: ${JSON.stringify(r).slice(0, 240)}`); events.reload() } catch (e) { setErr(e) } }
@@ -63,16 +66,53 @@ export default function Home() {
       {user.role === 'RM' && proc.data?.alerts?.length > 0 && <Card title="Lưu ý thủ tục cho mục tiêu của khách">
         <ul className="text-[13px] divide-y divide-border">{proc.data.alerts.map((a: any) => <li key={a.note_id + a.goal_id} className="py-1.5 flex flex-wrap gap-1.5 items-center"><Badge tone={a.tier === 'contact' ? 'red' : a.tier === 'remind' ? 'amber' : a.tier === 'confirm' ? 'primary' : undefined}>{TIER_LABEL[a.tier as keyof typeof TIER_LABEL]}</Badge><Link className="text-primary hover:underline mono" to={`/families/${a.family_id}`}>{a.family_id}</Link><span>{a.goal_name}</span><span className="text-fgm">· {PURPOSE_LABEL[a.purpose as keyof typeof PURPOSE_LABEL]} · cần tiền {a.goal_month} · chuẩn bị trước {a.prepare_by}</span></li>)}</ul>
       </Card>}
+      {user.role === 'RM' && digest.data && <RmDigest d={digest.data} />}
       {user.role === 'RM' && <Card title="Gia đình phụ trách"><p className="text-fgm mb-2">{user.families.join(', ')}</p><Link className="text-primary hover:underline" to="/families">Mở danh sách gia đình</Link></Card>}
       {(user.role === 'CIO' || user.role === 'COMPLIANCE') && (
         <Card title={`Nhận định chờ xử lý (${pending.length})`}>
           {pending.length === 0 ? <p className="text-fgm">Không có nhận định nào chờ duyệt.</p> :
-            <ul className="space-y-1">{pending.map(v => <li key={v.id} className="flex gap-2 items-center"><Link className="text-primary hover:underline mono" to={`/views/${v.id}`}>{v.id}</Link><StatusBadge s={v.status} /><span className="text-fgm">{v.event.title}</span></li>)}</ul>}
+            <ul className="space-y-1">{[...pending].sort((a, b) => laneRank(mat.data, a.id) - laneRank(mat.data, b.id)).map(v => { const m = mat.data?.find(x => x.view_id === v.id); return <li key={v.id} className="flex flex-wrap gap-2 items-center"><Link className="text-primary hover:underline mono" to={`/views/${v.id}`}>{v.id}</Link><StatusBadge s={v.status} />{m && <LaneBadge m={m} />}<span className="text-fgm">{v.event.title}</span></li> })}</ul>}
         </Card>
       )}
+      {(user.role === 'CIO' || user.role === 'COMPLIANCE') && netting.data && netting.data.runs.length > 0 && <NettingCard d={netting.data} />}
       <Card title="Kịch bản demo khoảng 12 phút (BRD Mục 9.2)">
         <ol className="list-decimal ml-5 space-y-1 text-[13px]">{SCRIPT.map(([who, what], i) => <li key={i}><span className="text-primary">{who}:</span> {what}</li>)}</ol>
       </Card>
     </>
+  )
+}
+
+const laneRank = (m: any[] | null | undefined, id: string) => { const x = m?.find(y => y.view_id === id); return x?.lane === 'FAST' ? 0 : x?.lane === 'NORMAL' ? 1 : 2 }
+export function LaneBadge({ m }: { m: any }) {
+  if (m.lane === 'NA') return <span title={m.reasons.join('; ')} className="text-fgm text-xs">chưa chạy thử</span>
+  const due = m.due_by ? new Date(m.due_by).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' }) : ''
+  return <span title={m.reasons.join('; ')}><Badge tone={m.lane === 'FAST' ? 'red' : 'low'}>{m.lane === 'FAST' ? 'Làn ưu tiên' : 'Làn thường'}</Badge> <span className="text-fgm text-xs">xử lý trước {due}{m.worst_p10_3m_pct !== null ? ` · P10 xấu nhất ${(m.worst_p10_3m_pct * 100).toFixed(1).replace('.', ',')}%` : ''}</span></span>
+}
+
+function NettingCard({ d }: { d: any }) {
+  const rows = Object.entries(d.factors as Record<string, any>).sort((a, b) => Math.abs(b[1].net) - Math.abs(a[1].net))
+  return (
+    <Card title={`Gộp các sự kiện đang hiệu lực theo yếu tố (bán rã ${d.half_life_days} ngày)`}>
+      <div className="text-[13px] mb-2">{d.runs.length} lần áp dụng đang hiệu lực. Tác động kỳ vọng 3 tháng của cả sổ sau khi giảm theo thời gian: <b>{fmtVndShort(String(d.book.base_3m))}</b> (chưa giảm: {fmtVndShort(String(d.book.base_3m_undecayed))}).</div>
+      {d.warnings.length > 0 && <Note tone="warn">{d.warnings.map((w: any, i: number) => <div key={i}>{w.text}</div>)}</Note>}
+      <div className="overflow-x-auto"><table className="t"><thead><tr><th>Yếu tố</th><th className="num">Ròng</th><th className="num">Tuyệt đối</th><th>Sự kiện đóng góp</th></tr></thead>
+        <tbody>{rows.map(([k, f]) => <tr key={k}><td className="mono">{k}</td><td className="num">{String(f.net).replace('.', ',')}</td><td className="num">{String(f.gross).replace('.', ',')}</td><td className="text-xs">{f.contributors.map((c: any) => `${c.title} (${String(c.weighted).replace('.', ',')})`).join('; ')}</td></tr>)}</tbody></table></div>
+      <p className="text-fgm text-xs mt-2">{d.note}</p>
+    </Card>
+  )
+}
+
+function RmDigest({ d }: { d: any }) {
+  const tone = (l: string) => l === 'RED' ? 'red' : l === 'YELLOW' ? 'amber' : 'low'
+  const fams = d.families.filter((f: any) => f.items.length > 0)
+  return (
+    <Card title={`Bản tin tuần: ${d.counts.red} Đỏ, ${d.counts.yellow} Vàng, ${d.counts.unseen} chưa xem`}>
+      {fams.length === 0 ? <p className="text-fgm">Không có việc cần làm trong 7 ngày qua.</p> :
+        <div className="space-y-3">{fams.map((f: any) => <div key={f.family_id}>
+          <div className="font-semibold text-[13px]"><Link className="text-primary hover:underline" to={`/families/${f.family_id}`}>{f.family_id}</Link> {f.name}{f.net_active && <span className="text-fgm font-normal"> · {f.net_active.events} sự kiện đang hiệu lực, gộp sau giảm theo thời gian {fmtVndShort(String(f.net_active.impact_net))}</span>}</div>
+          <ul className="text-[13px] space-y-0.5 mt-1">{f.items.map((x: any, i: number) => <li key={i}><Badge tone={tone(x.level)}>{x.level === 'RED' ? 'Đỏ' : x.level === 'YELLOW' ? 'Vàng' : 'Lưu ý'}</Badge> {x.text}</li>)}</ul>
+        </div>)}</div>}
+      <p className="text-fgm text-xs mt-2">Từ {new Date(d.period.from).toLocaleDateString('vi-VN')} đến {new Date(d.period.to).toLocaleDateString('vi-VN')}. Gồm tác động sự kiện mức Đỏ/Vàng, mục tiêu đổi mức, văn bản pháp luật mới khớp, gọi ký quỹ, thanh khoản khi căng thẳng, vấn đề kế thừa.</p>
+    </Card>
   )
 }

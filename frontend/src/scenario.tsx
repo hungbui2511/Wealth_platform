@@ -134,6 +134,8 @@ export function FamilyScenarioCard({ s }: { s: any }) {
         </div>
       </div>
       {s.assumption_flag && <Note tone="warn">{s.assumption_flag}</Note>}
+      {s.analog_bands?.length > 0 && <div className="text-[13px]"><span className="text-fgm">Nếu lặp lại giai đoạn lịch sử:</span> {s.analog_bands.map((b: any, i: number) => <span key={b.analog_id}>{i > 0 && ' · '}{b.label} <span className={b.beyond_model ? 'text-red font-semibold' : ''}><Money v={String(b.total)} short />{b.pct !== null && ` (${(b.pct * 100).toFixed(1).replace('.', ',')}%)`}</span></span>)}</div>}
+      {s.tail_note && <Note tone="warn">{s.tail_note}</Note>}
       {s.variance_share_3m && <p className="text-fgm text-xs mt-2">Độ bất định 3 tháng gồm: tương quan còn lại {Math.round(s.variance_share_3m.residual * 100)}% · cỡ cú sốc lõi {Math.round(s.variance_share_3m.core * 100)}% · rủi ro riêng từng mã {Math.round(s.variance_share_3m.idio * 100)}%.</p>}
       <p className="text-fgm text-xs mt-1">Dải phản ánh xác suất các nhánh, độ bất định của cỡ cú sốc, cách cú sốc lan truyền theo độ dài kỳ hạn và rủi ro riêng từng mã ({s.model_version}). Trong mỗi nhánh giả định phân phối chuẩn nên đuôi có thể mỏng hơn thực tế: P5 là mốc tham khảo, không phải tổn thất tối đa. Tính tất định, không dùng AI, tính lại được từ ảnh chụp. Nội bộ – không phải dự báo hay khuyến nghị.</p>
     </Card>
