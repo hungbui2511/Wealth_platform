@@ -3,11 +3,21 @@ import type { AssetClass, Currency, PolicyTopic, Sector } from './catalog'
 
 export type Dec = string
 
-export interface Member { id: string; name: string; generation: 1 | 2 | 3; role: string }
-export interface Entity { id: string; name: string; type: string }
-export interface EntityOwnership { entity_id: string; member_id: string; pct: Dec }
+// Trường cấu trúc liên thế hệ (đợt 4 sau phản biện độc lập): đều tuỳ chọn để dữ liệu cũ vẫn hợp lệ
+export interface Member {
+  id: string; name: string; generation: 1 | 2 | 3; role: string
+  birth_year?: number
+  tax_residency?: string   // mã quốc gia cư trú thuế, ví dụ 'VN', 'SG', 'US'
+  nationality?: string[]
+  marital_status?: 'single' | 'married' | 'divorced' | 'widowed'
+  spouse_id?: string; parent_ids?: string[]
+  has_will?: boolean
+}
+export interface Entity { id: string; name: string; type: string; jurisdiction?: string; legal_form?: 'llc' | 'jsc' | 'trust' | 'foundation' | 'holdco_offshore' | 'other' }
+// Sở hữu pháp nhân: chủ sở hữu là thành viên (member_id) hoặc pháp nhân khác (owner_entity_id) để mô tả nhiều tầng
+export interface EntityOwnership { entity_id: string; member_id?: string; owner_entity_id?: string; pct: Dec }
 export interface Owner { kind: 'member' | 'entity'; id: string; pct: Dec }
-export interface Account { id: string; custodian: string; currency: Currency; owners: Owner[] }
+export interface Account { id: string; custodian: string; currency: Currency; owners: Owner[]; legal_layer?: 'personal' | 'joint' | 'entity' | 'trust' | 'nominee' }
 
 export interface PropertyDetail {
   type: 'apartment' | 'townhouse' | 'villa' | 'residential_land' | 'commercial'
@@ -24,12 +34,18 @@ export interface Holding {
   deposit?: { rate: Dec; start: string; maturity: string }
   // Giá nhập tay kèm ngày định giá (bất động sản không được hỗ trợ, cổ phần tư nhân, bảo hiểm)
   manual?: { price: Dec; valuation_date: string }
+  // Cam kết góp vốn còn lại (quỹ tư nhân): số tiền và lịch gọi vốn dự kiến
+  commitment?: { total: Dec; called: Dec; currency: Currency; schedule?: { date: string; amount: Dec }[] }
+  // Người thụ hưởng chỉ định (bảo hiểm, tài khoản có chỉ định)
+  beneficiaries?: { member_id: string; pct: Dec }[]
 }
 
 export interface Liability {
   id: string; name: string; borrower: { kind: 'member' | 'entity'; id: string }
   balance: Dec; currency: Currency; rate: Dec; rate_type: 'fixed' | 'floating'
   repayment: 'amortizing' | 'bullet'; principal_per_month: Dec; maturity: string; collateral?: string
+  // Cầm cố tài sản: tỷ lệ dư nợ/tài sản bảo đảm tối đa và ngưỡng gọi ký quỹ, danh sách vị thế bảo đảm
+  ltv_max?: Dec; margin_call_ltv?: Dec; collateral_holdings?: string[]
 }
 
 export type TxType = 'BUY' | 'SELL' | 'DIVIDEND_CASH' | 'DIVIDEND_STOCK' | 'COUPON' | 'RENT' | 'INTEREST' | 'FEE' | 'CAPITAL_CALL' | 'DISTRIBUTION'

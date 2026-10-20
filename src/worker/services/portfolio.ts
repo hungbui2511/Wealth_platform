@@ -10,7 +10,9 @@ import { shortTerm, longTerm } from '../../engine/cashflow'
 import { goalCoverage } from '../../engine/goals'
 import { vnd } from '../../engine/dec'
 import { actor, assertFamily, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
-import { activeConfig, loadConfigs } from './config'
+import { activeConfig, loadConfigs, loadFactorModel, loadSuccessionRules } from './config'
+import { analogStress, leverageCheck, liquidityLadder, succession, worstAnalog } from '../../engine/structure'
+import { ownershipIssues } from '../../engine/positions'
 
 export { PRICE_DATE }
 
@@ -121,6 +123,28 @@ export async function familyOverview(ctx: AppCtx, id: string) {
     by_asset_class: s(o.by_asset_class), by_currency: s(o.by_currency), by_member: s(o.by_member), by_entity: s(o.by_entity),
     positions: pos.map(ser),
     liabilities: liabilityExposure(f, book).map(l => ({ id: l.id, name: l.name, currency: l.currency, balance_vnd: vnd(l.balance_vnd), eff_own: l.eff.toString(), exposure: vnd(l.exposure), detail: f.liabilities.find(x => x.id === l.id) })),
+  }
+}
+
+// Cấu trúc liên thế hệ (đợt 4): đòn bẩy khi căng thẳng, thang thanh khoản, kế thừa, lỗi cấu trúc sở hữu
+export async function familyStructure(ctx: AppCtx, id: string) {
+  const [f, instruments, snap, cfg, fm, sr] = await Promise.all([loadFamily(ctx, id), loadInstruments(ctx), currentSnapshot(ctx), loadConfigs(ctx), loadFactorModel(ctx), loadSuccessionRules(ctx)])
+  const book = bookFromSnapshot(snap)
+  const pos = buildPositions(f, instruments, book)
+  const nw = netWorth(f, pos, book).toNumber()
+  const analogs = ((fm.model.analogs ?? []) as { id: string }[]).map(a => analogStress(pos, instruments, fm.model, book, a.id, nw)).filter(x => !!x).map(x => ({ analog_id: x!.analog_id, label: x!.label, total: x!.total, pct: x!.pct, note: x!.note }))
+  const stress = worstAnalog(pos, instruments, fm.model, book, nw)
+  const leverage = leverageCheck(f, pos, book, stress)
+  const ladder = liquidityLadder(f, instruments, book, pos, cfg.assumptions.inflation, stress, leverage)
+  const succ = succession(f, pos, book, sr.rules)
+  const missing: string[] = []
+  if (!f.members.some(m => m.birth_year || m.tax_residency || m.marital_status)) missing.push('Chưa nhập thông tin thành viên (năm sinh, cư trú thuế, hôn nhân, quan hệ cha mẹ – con, di chúc)')
+  if (f.liabilities.some(l => !l.collateral_holdings?.length && l.collateral)) missing.push('Khoản vay có tài sản bảo đảm chưa gắn vị thế cụ thể')
+  return {
+    price_date: book.price_date, factor_model: fm.id, rules_config: sr.id, rules_version: sr.rules.version, legal_confirmed: sr.rules.legal_confirmed,
+    ownership_issues: ownershipIssues(f), multi_layer: f.ownerships.some(o => o.owner_entity_id),
+    analog_stress: analogs, stress_used: stress ? { analog_id: stress.analog_id, label: stress.label, total: stress.total, pct: stress.pct } : null,
+    leverage, ladder, succession: succ, missing,
   }
 }
 

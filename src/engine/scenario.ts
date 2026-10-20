@@ -160,6 +160,20 @@ export function propagate(model: FactorModel, b: Branch, pricedIn: ScenarioSet['
   return { id: b.id, name: b.name, probability: b.probability, regime: b.regime, shocks, core, cond_cov: cond, core_grad }
 }
 
+// Cú sốc đầy đủ khi chỉ biết một số yếu tố (giai đoạn lịch sử tương tự): yếu tố đã biết giữ nguyên, yếu tố còn lại lấy kỳ vọng có điều kiện
+export function conditionalShocks(model: FactorModel, regime: Regime, known: Record<string, number>): Record<string, number> {
+  const ids = model.factors.map(f => f.id)
+  const S = covariance(model, regime)
+  const ci = ids.map((id, i) => [id, i] as const).filter(([id]) => id in known).map(([, i]) => i)
+  const ni = ids.map((_, i) => i).filter(i => !ci.includes(i))
+  const out: Record<string, number> = {}
+  ci.forEach(i => { out[ids[i]] = known[ids[i]] })
+  if (!ci.length) { ni.forEach(i => { out[ids[i]] = 0 }); return out }
+  const W = ni.length ? solve(ci.map(i => ci.map(j => S[i][j])), ci.map(i => ni.map(j => S[i][j]))) : []
+  ni.forEach((i, r) => { out[ids[i]] = ci.reduce((a, _, k) => a + W[k][r] * known[ids[ci[k]]], 0) })
+  return out
+}
+
 // ---------- độ nhạy của từng vị thế: VND thay đổi trên 1 đơn vị yếu tố ----------
 export function bondDuration(inst: Instrument, priceDate: string): number {
   if (!inst.bond) return 0

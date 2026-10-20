@@ -1,5 +1,6 @@
 // Sinh dữ liệu giả lập xác định (BRD Mục 7.4). Chạy: npm run seed:gen
 // Mọi tên người, doanh nghiệp, mã công cụ, tổ chức lưu ký, cơ quan và chỉ số đều hư cấu (BR-16).
+import { enrichStructure } from './seed-structure'
 import { mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 import { PUBLIC_DOMAINS } from '../src/news/sources'
@@ -521,7 +522,7 @@ out('data/seed/users.json', [
   { id: 'ADM1', name: 'Quản trị hệ thống (demo)', role: 'ADMIN', families: [] },
 ])
 out('data/seed/instruments.json', Object.values(I))
-out('data/seed/families.json', allFamilies)
+out('data/seed/families.json', enrichStructure(allFamilies))
 out('data/seed/goals.json', GOALS)
 
 // ---------- Tin và sự kiện mẫu ----------

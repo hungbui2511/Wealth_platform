@@ -10,26 +10,55 @@
         "id": "M-F01-1",
         "name": "Nguyễn Văn An",
         "generation": 1,
-        "role": "Nhà sáng lập"
+        "role": "Nhà sáng lập",
+        "birth_year": 1963,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F01-2",
+        "has_will": true
       },
       {
         "id": "M-F01-2",
         "name": "Lê Thị Bình",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1964,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F01-1",
+        "has_will": false
       },
       {
         "id": "M-F01-3",
         "name": "Nguyễn Minh Châu",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1991,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F01-1",
+          "M-F01-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [
       {
         "id": "E-F01-1",
         "name": "Công ty Holding An Gia",
-        "type": "Công ty holding"
+        "type": "Công ty holding",
+        "jurisdiction": "VN",
+        "legal_form": "jsc"
       }
     ],
     "ownerships": [
@@ -50,7 +79,8 @@
             "id": "M-F01-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F01-EFX",
@@ -62,7 +92,8 @@
             "id": "E-F01-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "entity"
       }
     ],
     "holdings": [
@@ -145,7 +176,13 @@
         "manual": {
           "price": "2000000000",
           "valuation_date": "2026-09-30"
-        }
+        },
+        "beneficiaries": [
+          {
+            "member_id": "M-F01-3",
+            "pct": "1"
+          }
+        ]
       }
     ],
     "liabilities": [
@@ -163,7 +200,11 @@
         "principal_per_month": "50000000",
         "maturity": "2036-10-31",
         "collateral": "Căn hộ Tòa S2",
-        "id": "L-F01-1"
+        "id": "L-F01-1",
+        "collateral_holdings": [
+          "H-F01-06"
+        ],
+        "ltv_max": "0.7"
       }
     ],
     "transactions": [
@@ -423,32 +464,72 @@
         "id": "M-F02-1",
         "name": "Trần Quốc Bảo",
         "generation": 1,
-        "role": "Nhà sáng lập"
+        "role": "Nhà sáng lập",
+        "birth_year": 1966,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F02-2",
+        "has_will": false
       },
       {
         "id": "M-F02-2",
         "name": "Phạm Thu Cúc",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1967,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F02-1",
+        "has_will": false
       },
       {
         "id": "M-F02-3",
         "name": "Trần Đức Duy",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1992,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F02-1",
+          "M-F02-2"
+        ],
+        "has_will": false
       },
       {
         "id": "M-F02-4",
         "name": "Trần Mai Em",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1993,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F02-1",
+          "M-F02-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [
       {
         "id": "E-F02-1",
         "name": "Công ty Holding Bảo Tín",
-        "type": "Công ty holding"
+        "type": "Công ty holding",
+        "jurisdiction": "VN",
+        "legal_form": "jsc"
       }
     ],
     "ownerships": [
@@ -474,7 +555,8 @@
             "id": "E-F02-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "entity"
       },
       {
         "id": "A-F02-M1",
@@ -486,7 +568,8 @@
             "id": "M-F02-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -759,19 +842,46 @@
         "id": "M-F03-1",
         "name": "Lê Hoàng Cường",
         "generation": 1,
-        "role": "Chủ hộ"
+        "role": "Chủ hộ",
+        "birth_year": 1969,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F03-2",
+        "has_will": false
       },
       {
         "id": "M-F03-2",
         "name": "Vũ Thị Dung",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1970,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F03-1",
+        "has_will": false
       },
       {
         "id": "M-F03-3",
         "name": "Lê Hoàng Giang",
         "generation": 2,
-        "role": "Con, đồng quản lý tài sản"
+        "role": "Con, đồng quản lý tài sản",
+        "birth_year": 1993,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "parent_ids": [
+          "M-F03-1",
+          "M-F03-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [],
@@ -792,7 +902,8 @@
             "id": "M-F03-2",
             "pct": "0.5"
           }
-        ]
+        ],
+        "legal_layer": "joint"
       },
       {
         "id": "A-F03-M1",
@@ -804,7 +915,8 @@
             "id": "M-F03-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -876,7 +988,13 @@
         "manual": {
           "price": "4000000000",
           "valuation_date": "2026-09-30"
-        }
+        },
+        "beneficiaries": [
+          {
+            "member_id": "M-F03-3",
+            "pct": "1"
+          }
+        ]
       },
       {
         "id": "H-F03-09",
@@ -1115,19 +1233,47 @@
         "id": "M-F04-1",
         "name": "Phạm Minh Đức",
         "generation": 1,
-        "role": "Chủ hộ"
+        "role": "Chủ hộ",
+        "birth_year": 1960,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F04-2",
+        "has_will": false
       },
       {
         "id": "M-F04-2",
         "name": "Hoàng Thu Hà",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1961,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F04-1",
+        "has_will": false
       },
       {
         "id": "M-F04-3",
         "name": "Phạm Gia Huy",
         "generation": 2,
-        "role": "Con, sống ở nước ngoài"
+        "role": "Con, sống ở nước ngoài",
+        "birth_year": 1994,
+        "tax_residency": "SG",
+        "nationality": [
+          "VN",
+          "SG"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F04-1",
+          "M-F04-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [],
@@ -1143,7 +1289,8 @@
             "id": "M-F04-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F04-SG",
@@ -1155,7 +1302,8 @@
             "id": "M-F04-3",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F04-AU",
@@ -1167,7 +1315,8 @@
             "id": "M-F04-3",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F04-M1",
@@ -1179,7 +1328,8 @@
             "id": "M-F04-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -1235,7 +1385,13 @@
         "manual": {
           "price": "6000000000",
           "valuation_date": "2026-09-30"
-        }
+        },
+        "beneficiaries": [
+          {
+            "member_id": "M-F04-3",
+            "pct": "1"
+          }
+        ]
       },
       {
         "id": "H-F04-07",
@@ -1424,26 +1580,55 @@
         "id": "M-F05-1",
         "name": "Võ Thành Phát",
         "generation": 1,
-        "role": "Nhà sáng lập"
+        "role": "Nhà sáng lập",
+        "birth_year": 1963,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F05-2",
+        "has_will": false
       },
       {
         "id": "M-F05-2",
         "name": "Đặng Thị Lan",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1964,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F05-1",
+        "has_will": false
       },
       {
         "id": "M-F05-3",
         "name": "Võ Thành Long",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1995,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F05-1",
+          "M-F05-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [
       {
         "id": "E-F05-1",
         "name": "Công ty TNHH Thành Phát",
-        "type": "Doanh nghiệp gia đình"
+        "type": "Doanh nghiệp gia đình",
+        "jurisdiction": "VN",
+        "legal_form": "llc"
       }
     ],
     "ownerships": [
@@ -1464,7 +1649,8 @@
             "id": "M-F05-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F05-E1",
@@ -1476,7 +1662,8 @@
             "id": "E-F05-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "entity"
       }
     ],
     "holdings": [
@@ -1640,19 +1827,46 @@
         "id": "M-F06-1",
         "name": "Đỗ Hữu Nghĩa",
         "generation": 1,
-        "role": "Chủ hộ"
+        "role": "Chủ hộ",
+        "birth_year": 1966,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F06-2",
+        "has_will": false
       },
       {
         "id": "M-F06-2",
         "name": "Bùi Thị Oanh",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1967,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F06-1",
+        "has_will": false
       },
       {
         "id": "M-F06-3",
         "name": "Đỗ Hữu Phúc",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1996,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "parent_ids": [
+          "M-F06-1",
+          "M-F06-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [],
@@ -1668,7 +1882,8 @@
             "id": "M-F06-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -1742,7 +1957,13 @@
         "manual": {
           "price": "4000000000",
           "valuation_date": "2026-09-30"
-        }
+        },
+        "beneficiaries": [
+          {
+            "member_id": "M-F06-3",
+            "pct": "1"
+          }
+        ]
       }
     ],
     "liabilities": [],
@@ -1927,13 +2148,29 @@
         "id": "M-F07-1",
         "name": "Ngô Thanh Quân",
         "generation": 1,
-        "role": "Doanh nhân"
+        "role": "Doanh nhân",
+        "birth_year": 1969,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F07-2",
+        "has_will": false
       },
       {
         "id": "M-F07-2",
         "name": "Trịnh Mỹ Linh",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1970,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F07-1",
+        "has_will": false
       }
     ],
     "entities": [],
@@ -1949,7 +2186,8 @@
             "id": "M-F07-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F07-FX1",
@@ -1961,7 +2199,8 @@
             "id": "M-F07-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -2192,19 +2431,46 @@
         "id": "M-F08-1",
         "name": "Hồ Văn Sơn",
         "generation": 1,
-        "role": "Chủ hộ"
+        "role": "Chủ hộ",
+        "birth_year": 1960,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F08-2",
+        "has_will": false
       },
       {
         "id": "M-F08-2",
         "name": "Lý Thị Tâm",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1961,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F08-1",
+        "has_will": false
       },
       {
         "id": "M-F08-3",
         "name": "Hồ Văn Tùng",
         "generation": 2,
-        "role": "Con, đồng quản lý tài sản"
+        "role": "Con, đồng quản lý tài sản",
+        "birth_year": 1988,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F08-1",
+          "M-F08-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [],
@@ -2220,7 +2486,8 @@
             "id": "M-F08-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -2311,7 +2578,13 @@
         "manual": {
           "price": "4000000000",
           "valuation_date": "2026-09-30"
-        }
+        },
+        "beneficiaries": [
+          {
+            "member_id": "M-F08-3",
+            "pct": "1"
+          }
+        ]
       }
     ],
     "liabilities": [],
@@ -2517,26 +2790,55 @@
         "id": "M-F09-1",
         "name": "Mai Xuân Uy",
         "generation": 1,
-        "role": "Nhà sáng lập"
+        "role": "Nhà sáng lập",
+        "birth_year": 1963,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F09-2",
+        "has_will": false
       },
       {
         "id": "M-F09-2",
         "name": "Cao Thị Vân",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1964,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F09-1",
+        "has_will": false
       },
       {
         "id": "M-F09-3",
         "name": "Mai Xuân Vinh",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1989,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "parent_ids": [
+          "M-F09-1",
+          "M-F09-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [
       {
         "id": "E-F09-1",
         "name": "Công ty Cổ phần Mai Uy",
-        "type": "Doanh nghiệp gia đình"
+        "type": "Doanh nghiệp gia đình",
+        "jurisdiction": "VN",
+        "legal_form": "jsc"
       }
     ],
     "ownerships": [
@@ -2557,7 +2859,8 @@
             "id": "E-F09-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "entity"
       },
       {
         "id": "A-F09-M1",
@@ -2569,7 +2872,8 @@
             "id": "M-F09-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -2636,7 +2940,14 @@
         "repayment": "amortizing",
         "principal_per_month": "100000000",
         "maturity": "2033-06-30",
-        "id": "L-F09-1"
+        "id": "L-F09-1",
+        "collateral": "Cổ phiếu HPG và nhà phố",
+        "collateral_holdings": [
+          "H-F09-05",
+          "H-F09-02"
+        ],
+        "ltv_max": "0.6",
+        "margin_call_ltv": "0.75"
       }
     ],
     "transactions": [
@@ -2730,19 +3041,46 @@
         "id": "M-F10-1",
         "name": "Châu Minh Xuyên",
         "generation": 1,
-        "role": "Chủ hộ"
+        "role": "Chủ hộ",
+        "birth_year": 1966,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F10-2",
+        "has_will": false
       },
       {
         "id": "M-F10-2",
         "name": "Tạ Thị Yến",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1967,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F10-1",
+        "has_will": false
       },
       {
         "id": "M-F10-3",
         "name": "Châu Minh Khoa",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1990,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F10-1",
+          "M-F10-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [],
@@ -2758,7 +3096,8 @@
             "id": "M-F10-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -2843,7 +3182,13 @@
         "manual": {
           "price": "6000000000",
           "valuation_date": "2026-09-30"
-        }
+        },
+        "beneficiaries": [
+          {
+            "member_id": "M-F10-3",
+            "pct": "1"
+          }
+        ]
       }
     ],
     "liabilities": [],
@@ -3085,13 +3430,29 @@
         "id": "M-F11-1",
         "name": "Kiều Anh Tuấn",
         "generation": 1,
-        "role": "Doanh nhân"
+        "role": "Doanh nhân",
+        "birth_year": 1969,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F11-2",
+        "has_will": false
       },
       {
         "id": "M-F11-2",
         "name": "Lâm Ngọc Diệp",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1970,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F11-1",
+        "has_will": false
       }
     ],
     "entities": [],
@@ -3107,7 +3468,8 @@
             "id": "M-F11-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F11-FX1",
@@ -3119,7 +3481,8 @@
             "id": "M-F11-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -3279,19 +3642,46 @@
         "id": "M-F12-1",
         "name": "Quách Bảo Ngọc",
         "generation": 1,
-        "role": "Doanh nhân"
+        "role": "Doanh nhân",
+        "birth_year": 1960,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F12-2",
+        "has_will": false
       },
       {
         "id": "M-F12-2",
         "name": "Hà Minh Trí",
         "generation": 1,
-        "role": "Chồng"
+        "role": "Chồng",
+        "birth_year": 1961,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F12-1",
+        "has_will": false
       },
       {
         "id": "M-F12-3",
         "name": "Quách Hà My",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1992,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "parent_ids": [
+          "M-F12-1",
+          "M-F12-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [],
@@ -3307,7 +3697,8 @@
             "id": "M-F12-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F12-FX1",
@@ -3319,7 +3710,8 @@
             "id": "M-F12-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -3511,44 +3903,95 @@
         "id": "M-F13-1",
         "name": "Đinh Công Hiển",
         "generation": 1,
-        "role": "Nhà sáng lập"
+        "role": "Nhà sáng lập",
+        "birth_year": 1963,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F13-2",
+        "has_will": true
       },
       {
         "id": "M-F13-2",
         "name": "Phan Thị Hoa",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1964,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F13-1",
+        "has_will": false
       },
       {
         "id": "M-F13-3",
         "name": "Đinh Công Khải",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1993,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F13-1",
+          "M-F13-2"
+        ],
+        "has_will": false
       },
       {
         "id": "M-F13-4",
         "name": "Đinh Bảo An",
         "generation": 3,
-        "role": "Cháu"
+        "role": "Cháu",
+        "birth_year": 2019,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F13-3"
+        ],
+        "has_will": false
       }
     ],
     "entities": [
       {
         "id": "E-F13-1",
         "name": "Tập đoàn Hiển Vinh",
-        "type": "Công ty holding"
+        "type": "Công ty holding",
+        "jurisdiction": "VN",
+        "legal_form": "jsc"
+      },
+      {
+        "id": "E-F13-2",
+        "name": "Hien Vinh Holdings Pte. Ltd. (giả lập)",
+        "type": "Công ty holding nước ngoài",
+        "jurisdiction": "SG",
+        "legal_form": "holdco_offshore"
       }
     ],
     "ownerships": [
       {
         "entity_id": "E-F13-1",
-        "member_id": "M-F13-1",
+        "owner_entity_id": "E-F13-2",
         "pct": "0.4"
       },
       {
         "entity_id": "E-F13-1",
         "member_id": "M-F13-3",
         "pct": "0.3"
+      },
+      {
+        "entity_id": "E-F13-2",
+        "member_id": "M-F13-1",
+        "pct": "1"
       }
     ],
     "accounts": [
@@ -3562,7 +4005,8 @@
             "id": "E-F13-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "entity"
       },
       {
         "id": "A-F13-M1",
@@ -3574,7 +4018,8 @@
             "id": "M-F13-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -3803,19 +4248,46 @@
         "id": "M-F14-1",
         "name": "Lương Thế Vinh",
         "generation": 1,
-        "role": "Chủ hộ"
+        "role": "Chủ hộ",
+        "birth_year": 1966,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F14-2",
+        "has_will": false
       },
       {
         "id": "M-F14-2",
         "name": "Mạc Thị Xoan",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1967,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F14-1",
+        "has_will": false
       },
       {
         "id": "M-F14-3",
         "name": "Lương Thế Bách",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1994,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F14-1",
+          "M-F14-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [],
@@ -3831,7 +4303,8 @@
             "id": "M-F14-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -3909,7 +4382,13 @@
         "manual": {
           "price": "5000000000",
           "valuation_date": "2026-09-30"
-        }
+        },
+        "beneficiaries": [
+          {
+            "member_id": "M-F14-3",
+            "pct": "1"
+          }
+        ]
       }
     ],
     "liabilities": [],
@@ -4085,19 +4564,46 @@
         "id": "M-F15-1",
         "name": "Tôn Nữ Thảo",
         "generation": 1,
-        "role": "Chủ hộ"
+        "role": "Chủ hộ",
+        "birth_year": 1969,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F15-2",
+        "has_will": false
       },
       {
         "id": "M-F15-2",
         "name": "James Tôn (giả lập)",
         "generation": 1,
-        "role": "Chồng"
+        "role": "Chồng",
+        "birth_year": 1970,
+        "tax_residency": "US",
+        "nationality": [
+          "US"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F15-1",
+        "has_will": false
       },
       {
         "id": "M-F15-3",
         "name": "Tôn Minh Anh",
         "generation": 2,
-        "role": "Con, du học"
+        "role": "Con, du học",
+        "birth_year": 1995,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "parent_ids": [
+          "M-F15-1",
+          "M-F15-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [],
@@ -4113,7 +4619,8 @@
             "id": "M-F15-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F15-SG",
@@ -4125,7 +4632,8 @@
             "id": "M-F15-3",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F15-AU",
@@ -4137,7 +4645,8 @@
             "id": "M-F15-3",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F15-M1",
@@ -4149,7 +4658,8 @@
             "id": "M-F15-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -4215,7 +4725,13 @@
         "manual": {
           "price": "12000000000",
           "valuation_date": "2026-09-30"
-        }
+        },
+        "beneficiaries": [
+          {
+            "member_id": "M-F15-3",
+            "pct": "1"
+          }
+        ]
       },
       {
         "id": "H-F15-08",
@@ -4409,13 +4925,29 @@
         "id": "M-F16-1",
         "name": "Văn Khánh Linh",
         "generation": 1,
-        "role": "Doanh nhân"
+        "role": "Doanh nhân",
+        "birth_year": 1960,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F16-2",
+        "has_will": false
       },
       {
         "id": "M-F16-2",
         "name": "Âu Đức Mạnh",
         "generation": 1,
-        "role": "Chồng"
+        "role": "Chồng",
+        "birth_year": 1961,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F16-1",
+        "has_will": false
       }
     ],
     "entities": [],
@@ -4431,7 +4963,8 @@
             "id": "M-F16-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F16-FX1",
@@ -4443,7 +4976,8 @@
             "id": "M-F16-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -4630,19 +5164,47 @@
         "id": "M-F17-1",
         "name": "Lục Gia Bảo",
         "generation": 1,
-        "role": "Chủ hộ"
+        "role": "Chủ hộ",
+        "birth_year": 1963,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F17-2",
+        "has_will": false
       },
       {
         "id": "M-F17-2",
         "name": "Ông Thị Ngân",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1964,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F17-1",
+        "has_will": false
       },
       {
         "id": "M-F17-3",
         "name": "Lục Gia Phong",
         "generation": 2,
-        "role": "Con, sống ở nước ngoài"
+        "role": "Con, sống ở nước ngoài",
+        "birth_year": 1997,
+        "tax_residency": "AU",
+        "nationality": [
+          "VN",
+          "AU"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F17-1",
+          "M-F17-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [],
@@ -4658,7 +5220,8 @@
             "id": "M-F17-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F17-AU",
@@ -4670,7 +5233,8 @@
             "id": "M-F17-3",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F17-M1",
@@ -4682,7 +5246,8 @@
             "id": "M-F17-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -4742,7 +5307,13 @@
         "manual": {
           "price": "8000000000",
           "valuation_date": "2026-09-30"
-        }
+        },
+        "beneficiaries": [
+          {
+            "member_id": "M-F17-3",
+            "pct": "1"
+          }
+        ]
       },
       {
         "id": "H-F17-07",
@@ -4921,32 +5492,73 @@
         "id": "M-F18-1",
         "name": "Thái Hoàng Long",
         "generation": 1,
-        "role": "Chủ hộ"
+        "role": "Chủ hộ",
+        "birth_year": 1966,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F18-2",
+        "has_will": false
       },
       {
         "id": "M-F18-2",
         "name": "Diệp Thị Quyên",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1967,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F18-1",
+        "has_will": false
       },
       {
         "id": "M-F18-3",
         "name": "Thái Hoàng Nam",
         "generation": 2,
-        "role": "Con, sống ở nước ngoài"
+        "role": "Con, sống ở nước ngoài",
+        "birth_year": 1988,
+        "tax_residency": "SG",
+        "nationality": [
+          "VN",
+          "SG"
+        ],
+        "marital_status": "married",
+        "parent_ids": [
+          "M-F18-1",
+          "M-F18-2"
+        ],
+        "has_will": false
       },
       {
         "id": "M-F18-4",
         "name": "Thái Hoàng Mi",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1989,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "parent_ids": [
+          "M-F18-1",
+          "M-F18-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [
       {
         "id": "E-F18-1",
         "name": "Công ty Đầu tư Long Hải",
-        "type": "Công ty holding"
+        "type": "Công ty holding",
+        "jurisdiction": "VN",
+        "legal_form": "jsc"
       }
     ],
     "ownerships": [
@@ -4972,7 +5584,8 @@
             "id": "E-F18-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "entity"
       },
       {
         "id": "A-F18-FX1",
@@ -4984,7 +5597,8 @@
             "id": "M-F18-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F18-SG",
@@ -4996,7 +5610,8 @@
             "id": "M-F18-3",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F18-M1",
@@ -5008,7 +5623,8 @@
             "id": "M-F18-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -5064,7 +5680,13 @@
         "manual": {
           "price": "150000000000",
           "valuation_date": "2026-09-30"
-        }
+        },
+        "beneficiaries": [
+          {
+            "member_id": "M-F18-3",
+            "pct": "1"
+          }
+        ]
       },
       {
         "id": "H-F18-07",
@@ -5232,19 +5854,46 @@
         "id": "M-F19-1",
         "name": "Bạch Văn Thịnh",
         "generation": 1,
-        "role": "Nhà sáng lập"
+        "role": "Nhà sáng lập",
+        "birth_year": 1969,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F19-2",
+        "has_will": false
       },
       {
         "id": "M-F19-2",
         "name": "Chu Thị Uyên",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1970,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F19-1",
+        "has_will": false
       },
       {
         "id": "M-F19-3",
         "name": "Bạch Văn Vũ",
         "generation": 2,
-        "role": "Con"
+        "role": "Con",
+        "birth_year": 1989,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "single",
+        "parent_ids": [
+          "M-F19-1",
+          "M-F19-2"
+        ],
+        "has_will": false
       }
     ],
     "entities": [],
@@ -5260,7 +5909,8 @@
             "id": "M-F19-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [
@@ -5273,6 +5923,21 @@
         "manual": {
           "price": "50000000000",
           "valuation_date": "2026-06-30"
+        },
+        "commitment": {
+          "total": "6000000000",
+          "called": "2000000000",
+          "currency": "VND",
+          "schedule": [
+            {
+              "date": "2027-01-15",
+              "amount": "2000000000"
+            },
+            {
+              "date": "2027-07-15",
+              "amount": "2000000000"
+            }
+          ]
         }
       },
       {
@@ -5327,7 +5992,12 @@
         "repayment": "amortizing",
         "principal_per_month": "80000000",
         "maturity": "2037-06-30",
-        "id": "L-F19-1"
+        "id": "L-F19-1",
+        "collateral": "Biệt thự",
+        "collateral_holdings": [
+          "H-F19-02"
+        ],
+        "ltv_max": "0.7"
       }
     ],
     "transactions": [
@@ -5426,13 +6096,29 @@
         "id": "M-F20-1",
         "name": "Từ Minh Khang",
         "generation": 1,
-        "role": "Doanh nhân trẻ"
+        "role": "Doanh nhân trẻ",
+        "birth_year": 1960,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F20-2",
+        "has_will": false
       },
       {
         "id": "M-F20-2",
         "name": "La Thị Hằng",
         "generation": 1,
-        "role": "Vợ"
+        "role": "Vợ",
+        "birth_year": 1961,
+        "tax_residency": "VN",
+        "nationality": [
+          "VN"
+        ],
+        "marital_status": "married",
+        "spouse_id": "M-F20-1",
+        "has_will": false
       }
     ],
     "entities": [],
@@ -5448,7 +6134,8 @@
             "id": "M-F20-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       },
       {
         "id": "A-F20-FX1",
@@ -5460,7 +6147,8 @@
             "id": "M-F20-1",
             "pct": "1"
           }
-        ]
+        ],
+        "legal_layer": "personal"
       }
     ],
     "holdings": [

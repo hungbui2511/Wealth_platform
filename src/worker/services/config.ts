@@ -5,6 +5,7 @@ import { DEFAULT_MODELS, DEFAULT_PROMPTS } from '../../agents/prompts'
 import { DEFAULT_NEWS_SOURCES, PUBLIC_DOMAINS } from '../../news/sources'
 import { DEFAULT_FACTOR_MODEL } from '../../data/factorModel'
 import DEFAULT_CALENDAR from '../../../data/calendar.json'
+import { DEFAULT_SUCCESSION_RULES, successionRulesErrors, type SuccessionRules } from '../../engine/structure'
 import type { FactorModel } from '../../engine/scenario'
 import { actor, HttpError, minReason, requireRole, samePerson, type AppCtx, type Role } from '../ctx'
 import { factorModelErrors } from '../../engine/scenario'
@@ -29,6 +30,7 @@ export const CONFIG_KINDS = {
   FACTOR_MODEL: { label: 'Mô hình yếu tố rủi ro: thư viện cú sốc, tương quan, độ nhạy', owner: 'CIO', twoPerson: true, confirmer: 'COMPLIANCE' },
   // Lịch sự kiện đã biết trước (họp Fed, công bố CPI, biểu quyết luật): đến ngày mà chưa có sự kiện, nhận định thì báo
   CALENDAR: { label: 'Lịch sự kiện đã biết trước', owner: 'CIO', twoPerson: false },
+  SUCCESSION_RULES: { label: 'Bảng quy tắc thuế thừa kế, tài sản chung vợ chồng (Pháp chế xác nhận)', owner: 'COMPLIANCE', twoPerson: true, confirmer: 'COMPLIANCE' },
 } as const satisfies Record<string, { label: string; owner: Role; twoPerson: boolean; confirmer?: Role }>
 export type ConfigKind = keyof typeof CONFIG_KINDS
 
@@ -52,7 +54,7 @@ export function initialConfigs(now: string): ConfigVersion[] {
     base('PROMPT', DEFAULT_PROMPTS), base('MODEL', DEFAULT_MODELS),
     base('PRICE_SOURCE', { agreements: { TCBS_STOCK: null, TCBS_BOND: null, ONEMOUNT: null } }),
     base('ONEMOUNT_CONFIRM', { confirmed: false }),
-    base('SYMBOL_MAP', {}), base('NEWS_SOURCES', DEFAULT_NEWS_SOURCES), base('CALENDAR', DEFAULT_CALENDAR),
+    base('SYMBOL_MAP', {}), base('NEWS_SOURCES', DEFAULT_NEWS_SOURCES), base('CALENDAR', DEFAULT_CALENDAR), base('SUCCESSION_RULES', DEFAULT_SUCCESSION_RULES),
     { ...base('FACTOR_MODEL', DEFAULT_FACTOR_MODEL), reason: 'Mô hình yếu tố mặc định: beta cổ phiếu ước lượng từ giá tuần TCBS 2022–2026; các yếu tố khác là giả định minh họa chờ CIO hiệu chỉnh' },
   ]
 }
@@ -122,6 +124,7 @@ function validateContent(kind: ConfigKind, content: unknown) {
     if (errs.length) throw new HttpError(422, `Nội dung cấu hình ${kind} không hợp lệ`, errs)
   }
   if (kind === 'CALENDAR' && !(Array.isArray(content) && content.every(x => { const e = x as { id?: unknown; date?: unknown; title?: unknown; keywords?: unknown }; return typeof e.id === 'string' && typeof e.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && typeof e.title === 'string' && Array.isArray(e.keywords) && e.keywords.length > 0 }))) bad('mỗi mục cần id, date (YYYY-MM-DD), title và ít nhất một từ khoá')
+  if (kind === 'SUCCESSION_RULES') { const errs = successionRulesErrors(content as SuccessionRules); if (errs.length) throw new HttpError(422, `Nội dung cấu hình ${kind} không hợp lệ`, errs) }
   if (kind === 'BANNED' && !(Array.isArray(content) && content.every(x => typeof x === 'string'))) bad('cần danh sách chuỗi')
   if (kind === 'WHITELIST' && !(Array.isArray(content) && content.every(x => typeof (x as { domain?: unknown }).domain === 'string'))) bad('mỗi mục cần domain')
   if (kind === 'RESTRICTED' && !(Array.isArray(content) && content.every(x => Array.isArray((x as { instruments?: unknown }).instruments)))) bad('mỗi mục cần danh sách mã công cụ')
@@ -196,7 +199,14 @@ export async function defaultProposal(ctx: AppCtx, kind: ConfigKind): Promise<un
     return list
   }
   if (kind === 'FACTOR_MODEL') return DEFAULT_FACTOR_MODEL
+  if (kind === 'SUCCESSION_RULES') return DEFAULT_SUCCESSION_RULES
   throw new HttpError(422, `Không có bản mặc định đề xuất cho ${kind}`)
+}
+
+// Cơ sở dữ liệu nạp trước khi có loại cấu hình này thì dùng bảng mặc định (cờ legal_confirmed = false)
+export async function loadSuccessionRules(ctx: AppCtx): Promise<{ id: string | null; rules: SuccessionRules }> {
+  const rows = await ctx.repo.list<ConfigVersion>('config_versions', "kind = 'SUCCESSION_RULES' AND status = 'ACTIVE'", [], 'seq DESC')
+  return rows[0] ? { id: rows[0].id, rules: rows[0].content as SuccessionRules } : { id: null, rules: DEFAULT_SUCCESSION_RULES }
 }
 
 export interface CalendarEntry { id: string; date: string; title: string; keywords: string[]; origin?: string; source_url?: string }

@@ -15,7 +15,7 @@ import { authenticate, authMode, verifiedEmail, roleMap } from './auth'
 import { CONFIG_KINDS, decideConfig, defaultProposal, loadConfigs, loadFactorModel, proposeConfig, redactConfig, activeConfig, type ConfigKind, type ConfigVersion } from './services/config'
 import { createEvent, createEventFromNews, loadSampleEvents, allowEvent, getEvent, eventNews, setTimestamp, type EventRec } from './services/events'
 import { dismissNews, ingestNews, newsInbox } from './services/ingest'
-import { createPriceSnapshot, currentSnapshot, familyCashflow, familyGoals, familyOverview, familyPnl, PRICE_DATE } from './services/portfolio'
+import { createPriceSnapshot, currentSnapshot, familyCashflow, familyGoals, familyOverview, familyPnl, familyStructure, PRICE_DATE } from './services/portfolio'
 import { approvalConditions, createManualView, decide, editScenarios, editView, getView, respondFinding, retryPreChallenge, runCioAgent, runReChallenge, viewChallenges, viewResponses, type ViewRec } from './services/views'
 import { confirmRun, createApplication, getRun, recompute, withdrawRun, withdrawView, type RunRec } from './services/apply'
 import { addNote, familyImpacts, familyList, interpretation } from './services/rm'
@@ -102,6 +102,7 @@ export function createApp(opts: AppOptions = {}) {
   // ----- M1: bản đồ tài sản -----
   app.get('/api/families', async c => c.json(await familyList(X(c), { event: c.req.query('event'), alert: c.req.query('alert') })))
   app.get('/api/families/:id', async c => c.json(await familyOverview(X(c), c.req.param('id'))))
+  app.get('/api/families/:id/structure', async c => c.json(await familyStructure(X(c), c.req.param('id'))))
   app.get('/api/families/:id/pnl', async c => c.json(await familyPnl(X(c), c.req.param('id'))))
   app.get('/api/families/:id/cashflow', async c => c.json(await familyCashflow(X(c), c.req.param('id'), { member: c.req.query('member'), entity: c.req.query('entity') })))
   app.get('/api/families/:id/goals', async c => c.json(await familyGoals(X(c), c.req.param('id'))))

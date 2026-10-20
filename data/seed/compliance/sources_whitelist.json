@@ -85,6 +85,11 @@
     "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
   },
   {
+    "domain": "federalreserve.gov",
+    "name": "Federal Reserve (Mỹ)",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
     "domain": "hnx.vn",
     "name": "Sở GDCK Hà Nội",
     "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
@@ -92,6 +97,191 @@
   {
     "domain": "hsx.vn",
     "name": "Sở GDCK TP.HCM",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "moj.gov.vn",
+    "name": "Bộ Tư pháp",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "moit.gov.vn",
+    "name": "Bộ Công Thương",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "moc.gov.vn",
+    "name": "Bộ Xây dựng",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "mae.gov.vn",
+    "name": "Bộ Nông nghiệp và Môi trường",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "mps.gov.vn",
+    "name": "Bộ Công an",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "thuvienphapluat.vn",
+    "name": "Thư viện Pháp luật (tra cứu văn bản)",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "luatvietnam.vn",
+    "name": "LuatVietnam (tra cứu văn bản)",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "reuters.com",
+    "name": "Reuters",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "apnews.com",
+    "name": "Associated Press",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "bloomberg.com",
+    "name": "Bloomberg",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "cnbc.com",
+    "name": "CNBC",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "ft.com",
+    "name": "Financial Times",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "wsj.com",
+    "name": "The Wall Street Journal",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "bbc.com",
+    "name": "BBC",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "euronews.com",
+    "name": "Euronews",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "aljazeera.com",
+    "name": "Al Jazeera",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "scmp.com",
+    "name": "South China Morning Post",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "asia.nikkei.com",
+    "name": "Nikkei Asia",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "finance.yahoo.com",
+    "name": "Yahoo Finance (đăng lại Reuters, AP)",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "bls.gov",
+    "name": "Cục Thống kê Lao động Mỹ (CPI, PPI, việc làm)",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "bea.gov",
+    "name": "Cục Phân tích Kinh tế Mỹ (GDP, PCE)",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "census.gov",
+    "name": "Cục Điều tra Dân số Mỹ (bán lẻ)",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "treasury.gov",
+    "name": "Bộ Tài chính Mỹ",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "eia.gov",
+    "name": "Cơ quan Thông tin Năng lượng Mỹ",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "ecb.europa.eu",
+    "name": "Ngân hàng Trung ương châu Âu",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "ec.europa.eu",
+    "name": "Ủy ban châu Âu, Eurostat",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "bankofengland.co.uk",
+    "name": "Ngân hàng Trung ương Anh",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "boj.or.jp",
+    "name": "Ngân hàng Trung ương Nhật Bản",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "imf.org",
+    "name": "IMF",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "worldbank.org",
+    "name": "Ngân hàng Thế giới",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "oecd.org",
+    "name": "OECD",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "bis.org",
+    "name": "Ngân hàng Thanh toán Quốc tế",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "opec.org",
+    "name": "OPEC",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "gso.gov.vn",
+    "name": "Tổng cục Thống kê",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "nso.gov.vn",
+    "name": "Cục Thống kê",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "sjc.com.vn",
+    "name": "Công ty Vàng bạc Đá quý Sài Gòn (SJC)",
+    "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
+  },
+  {
+    "domain": "vietcombank.com.vn",
+    "name": "Vietcombank (tỷ giá niêm yết)",
     "note": "Nguồn công khai thật (báo chính thống, cơ quan nhà nước, sở giao dịch)"
   }
 ]

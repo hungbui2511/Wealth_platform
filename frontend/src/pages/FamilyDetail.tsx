@@ -24,12 +24,13 @@ export default function FamilyDetail() {
   return (
     <>
       <div className="flex flex-wrap items-baseline gap-3"><h1 className="text-xl font-semibold"><span className="mono text-base text-fgm">{f.id}</span> {f.name}</h1><Badge>Chân dung {f.persona}</Badge><Badge>RM {f.rm_id}</Badge></div>
-      <Tabs active={tab} onChange={setTab} tabs={[{ id: 'overview', label: 'Bản đồ tài sản' }, { id: 'impacts', label: 'Tác động sự kiện' }, { id: 'pnl', label: 'Lãi/lỗ' }, { id: 'cashflow', label: 'Dòng tiền' }, { id: 'goals', label: 'Mục tiêu' }]} />
+      <Tabs active={tab} onChange={setTab} tabs={[{ id: 'overview', label: 'Bản đồ tài sản' }, { id: 'impacts', label: 'Tác động sự kiện' }, { id: 'pnl', label: 'Lãi/lỗ' }, { id: 'cashflow', label: 'Dòng tiền' }, { id: 'goals', label: 'Mục tiêu' }, { id: 'structure', label: 'Cấu trúc, kế thừa' }]} />
       {tab === 'overview' && <Overview d={ov.data} />}
       {tab === 'impacts' && <Impacts familyId={id!} />}
       {tab === 'pnl' && <Pnl familyId={id!} />}
       {tab === 'cashflow' && <Cashflow familyId={id!} members={f.members} entities={f.entities} />}
       {tab === 'goals' && <Goals familyId={id!} />}
+      {tab === 'structure' && <Structure familyId={id!} family={f} />}
     </>
   )
 }
@@ -57,7 +58,7 @@ function Overview({ d }: { d: any }) {
             <div>{Object.entries(d.by_currency).map(([k, v]) => <Kv key={k} k={k} v={<Money v={v as string} short />} />)}</div>
             <div>{Object.entries(d.by_member).map(([k, v]) => <Kv key={k} k={name(k)} v={<Money v={v as string} short />} />)}{Object.entries(d.by_entity).map(([k, v]) => <Kv key={k} k={<span>{name(k)} <Badge>pháp nhân</Badge></span>} v={<Money v={v as string} short />} />)}</div>
           </div>
-          <div className="mt-3 text-[13px] text-fgm">Sở hữu pháp nhân: {d.family.ownerships.length ? d.family.ownerships.map((o: any) => `${name(o.member_id)} ${fmtPct(o.pct, 0)} ${name(o.entity_id)}`).join('; ') : 'không có'}</div>
+          <div className="mt-3 text-[13px] text-fgm">Sở hữu pháp nhân: {d.family.ownerships.length ? d.family.ownerships.map((o: any) => `${name(o.owner_entity_id ?? o.member_id)} ${fmtPct(o.pct, 0)} ${name(o.entity_id)}`).join('; ') : 'không có'}</div>
         </Card>
       </div>
       <Card title="Vị thế (tới từng mã, ngành, tài khoản, chủ sở hữu)">
@@ -320,6 +321,64 @@ function Goals({ familyId }: { familyId: string }) {
           <div className="flex gap-2 mt-3"><Btn onClick={save}>Lưu</Btn><Btn kind="secondary" onClick={() => setEdit(null)}>Hủy</Btn></div>
         </Card>
       )}
+    </div>
+  )
+}
+
+const REL: Record<string, string> = { OK: 'Trong ngưỡng', MARGIN_CALL_NOW: 'Đang chạm ngưỡng gọi ký quỹ', MARGIN_CALL_STRESS: 'Gọi ký quỹ khi căng thẳng', ABOVE_MAX: 'Vượt tỷ lệ tối đa', NOT_LINKED: 'Chưa gắn tài sản bảo đảm' }
+const EV: Record<string, string> = { g1_death: 'Thế hệ 1 qua đời', g2_emigration: 'Thế hệ 2 ra nước ngoài', divorce: 'Ly hôn' }
+const lvTone = (s: string) => s === 'RED' || s === 'MARGIN_CALL_NOW' ? 'red' : s === 'YELLOW' || s === 'MARGIN_CALL_STRESS' || s === 'ABOVE_MAX' ? 'amber' : s === 'NOT_LINKED' || s === 'INFO' ? 'gray' : 'green'
+
+// Đợt 4: cấu trúc liên thế hệ — đòn bẩy khi căng thẳng, thang thanh khoản, kế thừa
+function Structure({ familyId, family }: { familyId: string; family: any }) {
+  const r = useApi(`/api/families/${familyId}/structure`)
+  if (r.error) return <ErrorBox error={r.error} />
+  if (!r.data) return <Loading />
+  const d = r.data
+  const name = (id: string) => family.members.find((m: any) => m.id === id)?.name ?? family.entities.find((e: any) => e.id === id)?.name ?? id
+  return (
+    <div className="space-y-4">
+      {d.missing.length > 0 && <Note tone="warn">{d.missing.join('. ')}. Các phần dưới chỉ đầy đủ khi có thông tin này.</Note>}
+      {d.ownership_issues.length > 0 && <ErrorBox error={new Error(`Lỗi cấu trúc sở hữu: ${d.ownership_issues.join('; ')}`)} />}
+      <Card title="Thành viên và cấu trúc pháp lý">
+        <div className="overflow-x-auto"><table className="t"><thead><tr><th>Thành viên</th><th>Thế hệ</th><th>Năm sinh</th><th>Cư trú thuế</th><th>Quốc tịch</th><th>Hôn nhân</th><th>Di chúc</th></tr></thead>
+          <tbody>{family.members.map((m: any) => <tr key={m.id}><td>{m.name} <span className="text-fgm text-xs">{m.role}</span></td><td>{m.generation}</td><td>{m.birth_year ?? '—'}</td><td>{m.tax_residency ?? '—'}</td><td>{(m.nationality ?? []).join(', ') || '—'}</td><td>{({ single: 'độc thân', married: 'đã kết hôn', divorced: 'đã ly hôn', widowed: 'goá' } as any)[m.marital_status] ?? '—'}{m.spouse_id ? ` với ${name(m.spouse_id)}` : ''}</td><td>{m.has_will === undefined ? '—' : m.has_will ? 'Có' : 'Không'}</td></tr>)}</tbody></table></div>
+        {family.ownerships.length > 0 && <div className="mt-3 text-[13px]">Chuỗi sở hữu{d.multi_layer && <Badge tone="amber">nhiều tầng</Badge>}: {family.ownerships.map((o: any) => `${name(o.owner_entity_id ?? o.member_id)} → ${fmtPct(o.pct, 0)} ${name(o.entity_id)}`).join('; ')}. {family.entities.filter((e: any) => e.jurisdiction && e.jurisdiction !== 'VN').map((e: any) => `${e.name} đăng ký tại ${e.jurisdiction}`).join('; ')}</div>}
+      </Card>
+
+      <Card title="Căng thẳng theo giai đoạn lịch sử">
+        <table className="t"><thead><tr><th>Giai đoạn</th><th className="num">Thay đổi tài sản ròng</th><th className="num">%</th></tr></thead>
+          <tbody>{d.analog_stress.map((a: any) => <tr key={a.analog_id} className={d.stress_used?.analog_id === a.analog_id ? 'font-semibold' : ''}><td>{a.label}{d.stress_used?.analog_id === a.analog_id && <Badge>dùng cho kiểm tra dưới</Badge>}</td><td className="num"><Money v={String(a.total)} short /></td><td className="num">{a.pct === null ? '—' : fmtPct(a.pct, 1)}</td></tr>)}</tbody></table>
+        <p className="text-fgm text-xs mt-2">Áp biến động thực tế của giai đoạn cho các yếu tố đã biết, yếu tố còn lại suy ra theo tương quan khi căng thẳng; trái phiếu DN bất động sản cộng thêm tổn thất vỡ nợ giả định. Đây là mốc tham khảo, không phải mức tệ nhất.</p>
+      </Card>
+
+      <Card title="Đòn bẩy và gọi ký quỹ">
+        {d.leverage.length === 0 ? <p className="text-fgm">Không có khoản vay.</p> :
+          <div className="overflow-x-auto"><table className="t"><thead><tr><th>Khoản vay</th><th className="num">Dư nợ</th><th className="num">Tài sản bảo đảm</th><th className="num">Tỷ lệ cho vay hiện tại</th><th className="num">Khi căng thẳng</th><th className="num">Ngưỡng gọi ký quỹ</th><th>Trạng thái</th><th className="num">Cần nộp thêm</th></tr></thead>
+            <tbody>{d.leverage.map((l: any) => <tr key={l.liability_id}><td>{l.name}<div className="text-fgm text-xs">{l.message}</div></td><td className="num"><Money v={l.balance_vnd} short /></td><td className="num">{l.collateral_vnd ? <Money v={l.collateral_vnd} short /> : '—'}</td><td className="num">{l.ltv_now === null ? '—' : fmtPct(l.ltv_now, 1)}</td><td className="num">{l.ltv_stress === null ? '—' : fmtPct(l.ltv_stress, 1)}</td><td className="num">{l.margin_call_ltv === null ? '—' : fmtPct(l.margin_call_ltv, 0)}</td><td><Badge tone={lvTone(l.status)}>{REL[l.status]}</Badge></td><td className="num">{l.top_up_vnd ? <Money v={l.top_up_vnd} short /> : '—'}</td></tr>)}</tbody></table></div>}
+      </Card>
+
+      <Card title={`Thang thanh khoản khi căng thẳng${d.ladder.stress_label ? ` (${d.ladder.stress_label})` : ''}`}>
+        <table className="t"><thead><tr><th>Mốc</th><th className="num">Tài sản bán được (lũy kế)</th><th className="num">Nghĩa vụ chi (lũy kế)</th><th className="num">Chênh lệch</th><th className="num">Hệ số bao phủ</th><th>Mức</th></tr></thead>
+          <tbody>{d.ladder.rows.map((x: any) => <tr key={x.id}><td>{x.label}</td><td className="num"><Money v={x.assets} short /></td><td className="num"><Money v={x.outflow} short /></td><td className={`num ${Number(x.gap) < 0 ? 'text-red' : ''}`}><Money v={x.gap} short /></td><td className="num">{x.coverage === null ? '—' : x.coverage.toFixed(2).replace('.', ',')}</td><td><Badge tone={lvTone(x.status)}>{x.status === 'OK' ? 'Đủ' : x.status === 'RED' ? 'Thiếu' : 'Mỏng'}</Badge></td></tr>)}</tbody></table>
+        <div className="text-[13px] mt-2">Tài sản cần trên 12 tháng mới bán được hoặc đang cầm cố: <Money v={d.ladder.illiquid_after_12m} short /></div>
+        {d.ladder.outflows.length > 0 && <div className="text-[13px] mt-2">Khoản chi lớn: {d.ladder.outflows.map((o: any, i: number) => <span key={i}>{i > 0 && '; '}{o.label} (tháng {o.k}) {fmtVndShort(o.amount)}</span>)}</div>}
+        <ul className="text-fgm text-xs mt-2 list-disc pl-5">{d.ladder.assumptions.map((a: string) => <li key={a}>{a}</li>)}</ul>
+      </Card>
+
+      <Card title="Kế thừa và sự kiện gia đình">
+        <div className="flex flex-wrap gap-2 items-center mb-2 text-[13px]">Bảng quy tắc phiên bản <span className="mono">{d.rules_version}</span> {d.legal_confirmed ? <Badge tone="green">Pháp chế đã xác nhận</Badge> : <Badge tone="amber">Chờ Pháp chế xác nhận</Badge>}</div>
+        {d.succession.data_gaps.length > 0 && <Note>Thiếu dữ liệu: {d.succession.data_gaps.join('; ')}.</Note>}
+        <div className="space-y-3">{d.succession.events.map((e: any) => <div key={e.event + e.member_id} className="border border-border rounded p-3">
+          <div className="flex flex-wrap gap-2 items-baseline"><Badge>{EV[e.event]}</Badge><span className="font-semibold">{e.title}</span>{e.estate && <span className="text-fgm text-[13px]">{e.event === 'g1_death' ? 'Di sản ước tính' : e.event === 'divorce' ? 'Giá trị có thể bị chia' : 'Giá trị thừa kế dự kiến'}: {fmtVndShort(e.estate)}</span>}</div>
+          {e.heirs.length > 0 && <div className="overflow-x-auto mt-2"><table className="t"><thead><tr><th>Người thừa kế (theo pháp luật)</th><th className="num">Nhận</th><th className="num">Phần chịu thuế</th><th className="num">Thuế ước tính</th></tr></thead>
+            <tbody>{e.heirs.map((h: any) => <tr key={h.member_id}><td>{h.name} <span className="text-fgm text-xs">{h.relation}{h.non_resident ? ', không cư trú' : ''}</span></td><td className="num"><Money v={h.receives} short /></td><td className="num"><Money v={h.taxable} short /></td><td className="num"><Money v={h.tax} short /></td></tr>)}</tbody></table>
+            <div className="text-[13px] mt-1">Tổng thuế ước tính {fmtVndShort(e.tax_total)}; tài sản thanh khoản trong di sản {e.liquid_for_tax ? fmtVndShort(e.liquid_for_tax) : '—'}</div></div>}
+          <ul className="mt-2 space-y-1 text-[13px]">{e.findings.map((x: any, i: number) => <li key={i}><Badge tone={lvTone(x.level)}>{x.level === 'RED' ? 'Đỏ' : x.level === 'YELLOW' ? 'Vàng' : 'Lưu ý'}</Badge> {x.text}</li>)}</ul>
+        </div>)}</div>
+        <ul className="text-fgm text-xs mt-3 list-disc pl-5">{d.succession.notes.map((n: string) => <li key={n}>{n}</li>)}</ul>
+        <p className="text-fgm text-xs mt-2">Ước tính để RM chuẩn bị trao đổi, không phải tư vấn pháp lý hay thuế. Căn cứ: Luật Thuế TNCN 109/2025/QH15, Luật Hôn nhân và gia đình 2014, Bộ luật Dân sự 2015 (xem cấu hình SUCCESSION_RULES).</p>
+      </Card>
     </div>
   )
 }

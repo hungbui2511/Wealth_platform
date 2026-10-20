@@ -14,7 +14,7 @@ import { wrapData, type ModelSet, type PromptSet } from '../../agents/prompts'
 import { MOCK } from '../../data/mock'
 import { SEED, PROVIDED_POLICIES } from '../../data/seed'
 import { actor, HttpError, requireRole, type AppCtx } from '../ctx'
-import { activeConfig, loadConfigs } from './config'
+import { activeConfig, loadConfigs, loadSuccessionRules } from './config'
 import { createEvent, type EventRec } from './events'
 import { currentSnapshot, loadInstruments } from './portfolio'
 import { reactionMs } from '../../compliance/controls'
@@ -157,13 +157,13 @@ export async function analyzePolicy(ctx: AppCtx, id: string, opts: { external?: 
   u.audit({ actor: 'AGENT:policy', action: 'agent.policy_run', object: d.id, data: { run_id: runId, model, ok: val.ok, errors: val.errors } })
   if (!val.ok) { const nd = { ...d, state: 'ERROR' as const, errors: val.errors }; save(u, nd); await u.commit(); throw new HttpError(422, 'Tóm tắt chính sách không đúng schema hoặc trích dẫn sai', val.errors) }
   // Khớp đối tượng xác định (BR-30)
-  const [fams, instruments, snap] = await Promise.all([ctx.repo.list<Family>('families', '', [], 'id'), loadInstruments(ctx), currentSnapshot(ctx)])
+  const [fams, instruments, snap, sr] = await Promise.all([ctx.repo.list<Family>('families', '', [], 'id'), loadInstruments(ctx), currentSnapshot(ctx), loadSuccessionRules(ctx)])
   const book = bookFromSnapshot(snap)
   const topics = [...new Set(val.changes.flatMap(c => c.topics))] as PolicyTopic[]
   let matched = 0
   for (const f of fams) {
     const pos = buildPositions(f, instruments, book)
-    const m = matchFamily(f, pos, netWorth(f, pos, book), sum(liabilityExposure(f, book).map(l => l.exposure)), topics)
+    const m = matchFamily(f, pos, netWorth(f, pos, book), sum(liabilityExposure(f, book).map(l => l.exposure)), topics, sr.rules)
     if (m) { matched++; u.put('policy_matches', { ...m, id: `${d.id}|${f.id}`, doc_id: d.id, rm_id: f.rm_id } as never) }
   }
   await u.commit()

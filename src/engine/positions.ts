@@ -21,8 +21,35 @@ export interface Position {
   listed: boolean; missing_price: boolean
 }
 
-export function entityFamilyShare(f: Family, entityId: string): Decimal {
-  return sum(f.ownerships.filter(o => o.entity_id === entityId).map(o => D(o.pct)))
+// Tỷ lệ gia đình sở hữu một pháp nhân, nhìn xuyên nhiều tầng: phần do thành viên giữ trực tiếp cộng phần qua pháp nhân mẹ.
+// Chặn vòng sở hữu chéo và độ sâu quá 6 tầng (trả về phần đã tính được, không lặp vô hạn).
+export const MAX_OWNERSHIP_DEPTH = 6
+export function entityFamilyShare(f: Family, entityId: string, seen: ReadonlySet<string> = new Set(), depth = 0): Decimal {
+  if (seen.has(entityId) || depth > MAX_OWNERSHIP_DEPTH) return ZERO
+  const next = new Set(seen); next.add(entityId)
+  return sum(f.ownerships.filter(o => o.entity_id === entityId).map(o => {
+    if (o.owner_entity_id) return D(o.pct).times(entityFamilyShare(f, o.owner_entity_id, next, depth + 1))
+    return o.member_id && f.members.some(m => m.id === o.member_id) ? D(o.pct) : ZERO
+  }))
+}
+
+// Lỗi cấu trúc sở hữu: vòng sở hữu chéo, vượt độ sâu, tổng tỷ lệ một pháp nhân vượt 100%
+export function ownershipIssues(f: Family): string[] {
+  const out: string[] = []
+  const parents = (id: string) => f.ownerships.filter(o => o.entity_id === id && o.owner_entity_id).map(o => o.owner_entity_id!)
+  for (const e of f.entities) {
+    const tot = sum(f.ownerships.filter(o => o.entity_id === e.id).map(o => D(o.pct)))
+    if (tot.gt(1)) out.push(`${e.name}: tổng tỷ lệ sở hữu ${tot.times(100).toFixed(1)}% vượt 100%`)
+    const stack: { id: string; path: string[] }[] = parents(e.id).map(p => ({ id: p, path: [e.id] }))
+    while (stack.length) {
+      const { id, path } = stack.pop()!
+      if (id === e.id) { out.push(`${e.name}: sở hữu vòng tròn qua ${path.join(' → ')}`); break }
+      if (path.length > MAX_OWNERSHIP_DEPTH) { out.push(`${e.name}: chuỗi sở hữu vượt ${MAX_OWNERSHIP_DEPTH} tầng`); break }
+      if (path.includes(id)) continue
+      for (const p of parents(id)) stack.push({ id: p, path: [...path, id] })
+    }
+  }
+  return [...new Set(out)]
 }
 
 export function ownerShare(f: Family, kind: 'member' | 'entity' | 'account', id: string): Decimal {
