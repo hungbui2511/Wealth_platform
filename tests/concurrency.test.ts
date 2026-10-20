@@ -3,7 +3,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import { harness } from './support/harness'
 
 const h = harness()
-const mk = (t: string) => ({ type: 'global_macro', items: [{ title: t, url: 'https://tintuc-gialap.example/x', published_at: '2026-10-09T01:00:00Z', summary: 'Tóm tắt ' + t }, { title: t + ' (2)', url: 'https://tintuc-gialap.example/y', published_at: '2026-10-09T01:00:00Z', summary: 'Tóm tắt thêm ' + t }] })
+const mk = (t: string) => ({ type: 'global_macro', items: [{ title: t, url: 'https://tintuc-gialap.example/x', published_at: '2026-10-09T01:00:00Z', summary: 'Tóm tắt ' + t, simulated: true }, { title: t + ' (2)', url: 'https://tintuc-gialap.example/y', published_at: '2026-10-09T01:00:00Z', summary: 'Tóm tắt thêm ' + t, simulated: true }] })
 
 beforeAll(async () => {
   const r = await h.call(null, 'POST', '/api/bootstrap')

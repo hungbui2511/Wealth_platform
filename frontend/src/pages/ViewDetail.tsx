@@ -44,6 +44,7 @@ export default function ViewDetail() {
       </div>
       <ErrorBox error={err} />
       {v.status === 'AGENT_ERROR' && <ErrorBox error={{ message: 'Đầu ra sai schema sau 2 lần thử lại', details: v.errors }} />}
+      {v.analysts_derived && <Note tone="warn">Nhận định được lập trong một bước: bản ghi không gửi kèm đầu ra riêng của 4 nhà phân tích, nên các nút phân tích trong vết chạy chỉ là phần cắt từ nhận định cuối và vòng tranh luận để trống.</Note>}
       {v.removed_restricted.length > 0 && <Note tone="warn">Dòng cấp mã {v.removed_restricted.map((l: any) => l.target).join(', ')} thuộc danh sách hạn chế đã bị loại ở bước kiểm tra schema (BR-27).</Note>}
       <div className="grid xl:grid-cols-[1.4fr_1fr] gap-4">
         <Card title={`Nhận định – ${v.body.summary}`} actions={editable && <><Btn small kind="secondary" onClick={() => setLines([...lines, { scope: 'sector', asset_class: 'EQ_VN', target: 'BANK', level: 0, direction: 'neutral', rationale: '', source_ids: [] }])}>+ Dòng ngành</Btn><Btn small kind="secondary" onClick={() => setLines([...lines, { scope: 'instrument', asset_class: 'EQ_VN', target: '', level: 0, direction: 'neutral', rationale: '', source_ids: [] }])}>+ Dòng mã</Btn></>}>
@@ -92,8 +93,8 @@ export default function ViewDetail() {
                     {r ? <div className="mt-1 text-green">Phản hồi: {RESP[r.response]}{r.fixed_line ? ` (${r.fixed_line})` : ''} – {r.comment}</div> : isCio && f.severity === 'critical' && ['PENDING_APPROVAL', 'PENDING_CHALLENGE'].includes(v.status) && (
                       <div className="mt-2 flex flex-col gap-1">
                         <select value={form.response} onChange={e => setResp({ ...resp, [f.finding_id]: { ...form, response: e.target.value } })}>{Object.entries(RESP).map(([k, x]) => <option key={k} value={k}>{x}</option>)}</select>
-                        {form.response === 'accepted_fixed' && <select value={form.fixed_line} onChange={e => setResp({ ...resp, [f.finding_id]: { ...form, fixed_line: e.target.value } })}><option value="">Chọn dòng đã sửa</option>{v.body.impacts.map((l: any) => <option key={key(l)} value={key(l)}>{key(l)}</option>)}</select>}
-                        <input placeholder="Ghi chú tối thiểu 20 ký tự" value={form.comment} onChange={e => setResp({ ...resp, [f.finding_id]: { ...form, comment: e.target.value } })} />
+                        {form.response === 'accepted_fixed' && <select value={form.fixed_line} onChange={e => setResp({ ...resp, [f.finding_id]: { ...form, fixed_line: e.target.value } })}><option value="">Chọn dòng đã sửa</option>{v.body.scenarios && <option value="scenarios">Nhánh kịch bản (scenarios)</option>}{v.body.impacts.map((l: any) => <option key={key(l)} value={key(l)}>{key(l)}</option>)}</select>}
+                        <input placeholder={form.response === 'accepted_fixed' ? 'Ghi chú tối thiểu 20 ký tự' : 'Căn cứ không đồng ý, tối thiểu 60 ký tự'} value={form.comment} onChange={e => setResp({ ...resp, [f.finding_id]: { ...form, comment: e.target.value } })} />
                         <Btn small onClick={act(() => api(`/api/views/${v.id}/findings/${f.finding_id}/response`, { method: 'POST', body: form }))}>Gửi phản hồi</Btn>
                       </div>
                     )}
@@ -101,6 +102,7 @@ export default function ViewDetail() {
                 )
               })}</ul>
               {c.counter_scenario && <p className="text-[13px] mt-3"><b>Kịch bản phản đề:</b> {c.counter_scenario}</p>}
+              {c.independence && <p className="text-[12px] mt-2 text-fgm"><Badge tone={c.independence.independent ? (c.independence.self_declared ? 'amber' : 'green') : 'red'}>{c.independence.independent ? (c.independence.self_declared ? 'Độc lập (tự khai)' : 'Độc lập') : 'Chưa độc lập'}</Badge> {c.independence.reason}</p>}
             </Card>
           ))}
           {isCio && ['PENDING_APPROVAL', 'PENDING_CHALLENGE'].includes(v.status) && (

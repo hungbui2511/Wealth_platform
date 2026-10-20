@@ -4,7 +4,7 @@ export interface WhitelistEntry { domain: string }
 export interface RestrictedEntry { id: string; issuer: string; instruments: string[]; keywords: string[] }
 
 // BR-26: đường dẫn công khai thuộc danh sách nguồn công khai, thời điểm công bố không muộn hơn thời điểm nạp
-export function checkPublicSource(item: { url?: string; published_at?: string }, whitelist: WhitelistEntry[], ingestedAt: string): string[] {
+export function checkPublicSource(item: { url?: string; published_at?: string; simulated?: boolean }, whitelist: WhitelistEntry[], ingestedAt: string): string[] {
   const errs: string[] = []
   let host = ''
   if (!item.url || !item.url.trim()) errs.push('Thiếu đường dẫn công khai')
@@ -15,6 +15,8 @@ export function checkPublicSource(item: { url?: string; published_at?: string },
       host = u.hostname.toLowerCase()
     } catch { errs.push('Đường dẫn không hợp lệ') }
     if (host && !whitelist.some(w => host === w.domain.toLowerCase() || host.endsWith('.' + w.domain.toLowerCase()))) errs.push(`Miền ${host} không thuộc danh sách nguồn công khai`)
+    // Miền .example chỉ dành cho tin, văn bản giả lập của gói demo; tin thật không được trỏ tới
+    else if (host.endsWith('.example') && !item.simulated) errs.push(`Miền giả lập ${host} chỉ dùng cho tin hoặc văn bản giả lập`)
   }
   if (!item.published_at) errs.push('Thiếu thời điểm công bố')
   else if (Number.isNaN(Date.parse(item.published_at))) errs.push('Thời điểm công bố không hợp lệ')
@@ -28,9 +30,17 @@ export function isWhitelistedUrl(url: string, whitelist: WhitelistEntry[]): bool
 }
 
 // BR-27 (1): tin nhắc tới tổ chức trong danh sách hạn chế
+// Khớp theo ranh giới từ (chữ hoặc số liền trước/sau thì không tính): mã ngắn như "VIB" không khớp nhầm trong "VIBE",
+// "DMXYZ" vẫn khớp trong "(DMXYZ)" hay "DMXYZ," . So sau khi chuẩn hoá NFC và chữ thường.
+const esc = (x: string) => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+export function termHit(text: string, term: string): boolean {
+  const k = term.normalize('NFC').toLowerCase().trim()
+  if (!k) return false
+  return new RegExp(`(?<![\\p{L}\\p{N}])${esc(k)}(?![\\p{L}\\p{N}])`, 'u').test(text)
+}
 export function restrictedHits(texts: string[], entries: RestrictedEntry[]): RestrictedEntry[] {
   const t = texts.join('\n').normalize('NFC').toLowerCase()
-  return entries.filter(e => [e.issuer, ...e.keywords, ...e.instruments].some(k => k && t.includes(k.normalize('NFC').toLowerCase())))
+  return entries.filter(e => [e.issuer, ...e.keywords, ...e.instruments].some(k => k && termHit(t, k)))
 }
 
 // BR-27 (3)(4): nội dung nhắc mã hoặc tổ chức hạn chế

@@ -62,7 +62,7 @@ describe('M3/M4/M5 – Agent CIO, phản biện, bàn duyệt (EV-2026-0002)', (
   it('AC-04: duyệt khi chưa phản hồi phát hiện Nghiêm trọng bị từ chối, liệt kê điều kiện thiếu', async () => {
     const r = await call('CIO1', 'POST', `/api/views/${v1.id}/decision`, { action: 'APPROVE', reason: 'Duyệt thử khi chưa phản hồi phát hiện' })
     expect(r.status).toBe(409)
-    expect(r.data.details.join(' ')).toMatch(/\(c\).*CH-0002-v1-pre-1-F1/)
+    expect(r.data.details.join(' ')).toMatch(/\(c\).*CH-0002-v1-pre-1-F\d+/)
   })
   it('AC-14: CIO đổi dòng → về PENDING_CHALLENGE, chỉ dòng đổi được phản biện lại, nút Duyệt khóa', async () => {
     const impacts = [...v1.body.impacts, { scope: 'sector', asset_class: 'CORP_BOND', target: 'REAL_ESTATE', level: -1, direction: 'negative', horizon: '3-6 tháng', confidence: 'medium', rationale: 'Trái phiếu doanh nghiệp bất động sản chịu rủi ro tái tài trợ', source_ids: ['NW-0004', 'NW-0006'] }]
@@ -87,7 +87,8 @@ describe('M3/M4/M5 – Agent CIO, phản biện, bàn duyệt (EV-2026-0002)', (
     expect(e.view.status).toBe('PENDING_APPROVAL')
   })
   it('AC-05: duyệt → 20 gia đình có kết quả dưới 10 giây, xếp theo độ lớn, có mức cảnh báo', async () => {
-    await ok('CIO1', 'POST', `/api/views/${v1.id}/findings/CH-0002-v1-pre-1-F1/response`, { response: 'accepted_fixed', fixed_line: 'sector:CORP_BOND:REAL_ESTATE', comment: 'Đã thêm dòng ngành trái phiếu bất động sản mức −1' })
+    const crit = (await ok('CIO1', 'GET', `/api/views/${v1.id}`)).challenges.find((c: any) => c.stage === 'pre_approval').findings.find((f: any) => f.severity === 'critical')
+    await ok('CIO1', 'POST', `/api/views/${v1.id}/findings/${crit.finding_id}/response`, { response: 'accepted_fixed', fixed_line: 'sector:CORP_BOND:REAL_ESTATE', comment: 'Đã thêm dòng ngành trái phiếu bất động sản mức −1' })
     const t0 = Date.now()
     const r = await ok('CIO1', 'POST', `/api/views/${v1.id}/decision`, { action: 'APPROVE', reason: 'Đồng ý nhận định sau khi đã xử lý phản biện' })
     expect(Date.now() - t0).toBeLessThan(10000)
@@ -95,8 +96,10 @@ describe('M3/M4/M5 – Agent CIO, phản biện, bàn duyệt (EV-2026-0002)', (
     const run = await ok('CIO1', 'GET', `/api/runs/${r.run_id}`)
     expect(run.run.status).toBe('EFFECTIVE')
     expect(run.impacts).toHaveLength(20)
-    const abs = run.run.ranking.map((x: any) => D(x.impact).abs())
-    for (let i = 1; i < abs.length; i++) expect(abs[i - 1].gte(abs[i])).toBe(true)
+    // Có kịch bản: xếp theo mốc P10 3 tháng, gia đình chịu thiệt nặng nhất ở kịch bản xấu lên đầu
+    const p10 = run.run.ranking.map((x: any) => D(x.p10_3m))
+    for (let i = 1; i < p10.length; i++) expect(p10[i - 1].lte(p10[i])).toBe(true)
+    expect(run.run.ranking.every((x: any) => ['P10_3M', 'MEAN_3M'].includes(x.alert_basis))).toBe(true)
     for (const x of run.run.ranking) expect(['RED', 'YELLOW', 'GREEN', 'POSITIVE']).toContain(x.alert)
     expect(run.run.config_version_id).toBe('CFG-UNIT-1')
     expect(run.run.engine_version).toBeTruthy()

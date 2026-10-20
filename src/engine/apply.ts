@@ -107,8 +107,10 @@ export function computeFamilyImpact(familyId: string, positions: Position[], net
   }
 }
 
+// Có kịch bản: xếp theo mốc P10 (xấu) 3 tháng, gia đình chịu thiệt nặng nhất ở kịch bản xấu lên đầu; không có thì theo độ lớn tác động
 export function rankFamilies(results: FamilyImpactResult[]): FamilyImpactResult[] {
-  return [...results].sort((a, b) => D(b.impact).abs().comparedTo(D(a.impact).abs()) || a.family_id.localeCompare(b.family_id))
+  const key = (r: FamilyImpactResult) => { const p = (r as EngineResult).p10_3m; return p !== undefined ? D(p).neg() : D(r.impact).abs() }
+  return [...results].sort((a, b) => key(b).comparedTo(key(a)) || D(b.impact).abs().comparedTo(D(a.impact).abs()) || a.family_id.localeCompare(b.family_id))
 }
 
 // Một bộ máy duy nhất (thiết kế v2): khi nhận định có nhánh kịch bản, mọi con số dùng cho xếp hạng, cảnh báo, mục tiêu
@@ -119,9 +121,13 @@ export interface ScenarioLike {
   ranges: { horizon: string; bad: number; base: number; good: number; bad_pct: number | null; base_pct: number | null }[]
   branches: { probability: number; mean: number[] }[]
   by_factor: Record<string, number>; by_asset_class: Record<string, number>
-  positions: { holding_id: string; part: string | null; instrument_id: string; name: string; asset_class: string; mean_3m: number }[]
+  positions: { holding_id: string; part: string | null; instrument_id: string; name: string; asset_class: string; mean_3m: number; mean_12m?: number; exposure?: number }[]
 }
-export type EngineResult = FamilyImpactResult & { engine: 'scenario' | 'unit_legacy'; unit_check?: { impact: string; pct: string | null; alert: AlertLevel } }
+export type EngineResult = FamilyImpactResult & {
+  engine: 'scenario' | 'unit_legacy'; unit_check?: { impact: string; pct: string | null; alert: AlertLevel }
+  // Cảnh báo theo đuôi rủi ro: màu Đỏ/Vàng theo mốc P10 3 tháng (kịch bản xấu); Tích cực theo tác động kỳ vọng
+  alert_basis?: 'P10_3M' | 'MEAN_3M'; alert_mean?: AlertLevel; p10_3m?: string; p10_3m_pct?: string | null
+}
 
 export function fromScenario(unit: FamilyImpactResult, sc: ScenarioLike, netWorth: Decimal, thresholds: AlertThresholds): EngineResult {
   // Tổng theo vị thế (đã làm tròn từng dòng) để con số chính khớp tuyệt đối với phần phân rã
@@ -140,9 +146,16 @@ export function fromScenario(unit: FamilyImpactResult, sc: ScenarioLike, netWort
     .map(([id, v]) => ({ instrument_id: id, name: names[id], impact: vnd(v) }))
   const illiquid = sum(sc.positions.filter(p => ILLIQUID.has(p.asset_class as never)).map(p => D(p.mean_3m)))
   const num = (m: Record<string, number>) => Object.fromEntries(Object.entries(m).map(([k, v]) => [k, vnd(D(v))]))
+  // Một nhánh căng thẳng xác suất 0,3 bị nhánh cơ sở làm loãng nếu tô màu theo trung bình: Đỏ/Vàng xét theo P10
+  const bad = sc.ranges[1]?.bad ?? 0, badPct = sc.ranges[1]?.bad_pct ?? null
+  const meanAlert = alertLevel(D(vnd(total)), pct, thresholds)
+  const tailAlert = alertLevel(D(bad), badPct === null ? null : D(badPct), thresholds)
+  const useTail = tailAlert === 'RED' || tailAlert === 'YELLOW'
+  const alert: AlertLevel = useTail ? tailAlert : meanAlert
+  const basis: 'P10_3M' | 'MEAN_3M' = useTail ? 'P10_3M' : 'MEAN_3M'
   return {
     family_id: unit.family_id, impact: vnd(total), net_worth: vnd(netWorth), pct: pct ? s(pct, 12) : null,
-    alert: alertLevel(D(vnd(total)), pct, thresholds), illiquid_impact: vnd(illiquid),
+    alert, alert_basis: basis, alert_mean: meanAlert, p10_3m: vnd(D(bad)), p10_3m_pct: badPct === null ? null : s(D(badPct), 12), illiquid_impact: vnd(illiquid),
     by_asset_class: num(sc.by_asset_class), by_fx: sc.by_factor.USDVND ? { USD: vnd(D(sc.by_factor.USDVND)) } : {},
     by_instrument: Object.fromEntries(Object.entries(byInst).map(([k, v]) => [k, vnd(v)])), top_instruments: top, positions,
     engine: 'scenario', unit_check: { impact: unit.impact, pct: unit.pct, alert: unit.alert },

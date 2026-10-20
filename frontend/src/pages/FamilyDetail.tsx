@@ -147,9 +147,9 @@ function Impacts({ familyId }: { familyId: string }) {
 export function GoalImpactTable({ rows }: { rows: any[] }) {
   return (
     <>
-      <table className="t"><thead><tr><th>Mục tiêu</th><th className="num">Trước</th><th className="num">Sau</th><th className="num">Chênh lệch (điểm %)</th><th>Mức</th><th>Cảnh báo</th></tr></thead>
-        <tbody>{rows.map((g: any) => <tr key={g.id}><td>{g.goal_name} <span className="mono text-fgm">{g.goal_id}</span></td><td className="num">{fmtPct(g.ratio_before, 2)}</td><td className="num">{fmtPct(g.ratio_after, 2)}</td><td className="num">{Number(g.delta_pts).toFixed(2).replace('.', ',')}</td><td><GoalBadge level={g.level_before} /> → <GoalBadge level={g.level_after} /></td><td>{g.alert ? <Badge tone="amber">Đổi mức hoặc giảm ≥ 5 điểm</Badge> : <span className="text-fgm">—</span>}</td></tr>)}</tbody></table>
-      <p className="text-fgm text-xs mt-2">{GOAL_DISCLAIMER}. Chỉ tài sản dành riêng ảnh hưởng tới tỷ lệ đáp ứng; cú sốc coi là vĩnh viễn.</p>
+      <div className="overflow-x-auto"><table className="t"><thead><tr><th>Mục tiêu</th><th className="num">Trước</th><th className="num">Sau (kỳ vọng)</th><th className="num">Chênh lệch (điểm %)</th><th className="num">Sau (kịch bản xấu)</th><th>Mức</th><th>Cảnh báo</th></tr></thead>
+        <tbody>{rows.map((g: any) => <tr key={g.id}><td>{g.goal_name} <span className="mono text-fgm">{g.goal_id}</span>{g.basis && <div className="text-fgm text-xs">dùng tác động {g.basis === '12M' ? '12 tháng' : '3 tháng'}</div>}</td><td className="num">{fmtPct(g.ratio_before, 2)}</td><td className="num">{fmtPct(g.ratio_after, 2)}</td><td className="num">{Number(g.delta_pts).toFixed(2).replace('.', ',')}</td><td className="num">{g.stress ? <>{fmtPct(g.stress.ratio_after, 2)}<div className="text-fgm text-xs">{Number(g.stress.delta_pts).toFixed(2).replace('.', ',')} điểm</div></> : '—'}</td><td><GoalBadge level={g.level_before} /> → <GoalBadge level={g.level_after} />{g.stress && g.stress.level_after !== g.level_after && <div className="text-xs">xấu: <GoalBadge level={g.stress.level_after} /></div>}</td><td>{g.alert ? <Badge tone="amber">Đổi mức hoặc giảm ≥ 5 điểm</Badge> : <span className="text-fgm">—</span>}</td></tr>)}</tbody></table></div>
+      <p className="text-fgm text-xs mt-2">{GOAL_DISCLAIMER}. Chỉ tài sản dành riêng ảnh hưởng tới tỷ lệ đáp ứng. {rows[0]?.assumption ?? 'Cú sốc coi là vĩnh viễn.'}</p>
     </>
   )
 }

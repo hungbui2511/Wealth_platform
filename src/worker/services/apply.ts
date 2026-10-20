@@ -3,7 +3,7 @@ import { ENGINE_VERSION } from '../../shared/catalog'
 import type { Family, Finding, Goal, Instrument, ViewBody } from '../../shared/types'
 import { computeFamilyImpact, fromScenario, rankFamilies, type EngineResult, type FamilyImpactResult } from '../../engine/apply'
 import { runPostcheck, postcheckSummaryTemplate } from '../../engine/postcheck'
-import { goalImpact } from '../../engine/goals'
+import { goalImpact, goalImpactScenario } from '../../engine/goals'
 import { buildPositions, netWorth } from '../../engine/positions'
 import { hashOf } from '../../engine/hash'
 import { assertRunTransition } from '../../engine/states'
@@ -24,7 +24,7 @@ export interface RunRec {
   config_version_id: string; config_version_ids: Record<string, string>
   price_date: string; price_snapshot_id: string; price_snapshot_hash: string
   engine_version: string; portfolio_snapshot_id: string; portfolio_snapshot_hash: string
-  view_body: ViewBody; ranking: { family_id: string; impact: string; pct: string | null; alert: string; scen_bad_3m_pct?: number | null; lane2?: string }[]
+  view_body: ViewBody; ranking: { family_id: string; impact: string; pct: string | null; alert: string; alert_basis?: string; alert_mean?: string; p10_3m?: string; scen_bad_3m_pct?: number | null; lane2?: string }[]
   scenario_summary?: ScenarioSummary
   post_check?: { challenge_id: string; critical: number; medium: number; low: number }
   history: { at: string; from: string; to: string; by: string; note?: string }[]
@@ -106,7 +106,7 @@ export async function createApplication(ctx: AppCtx, view: ViewRec, uow: UnitOfW
   const ranked = rankFamilies(computed.map(c => c.result))
   const scOf = (r: FamilyImpactResult) => (r as { scenario?: FamilyScenarioResult }).scenario
   const scenSum = scenarioSummary(ps, view.body, computed)
-  run = runTransition(ctx, { ...run, ranking: ranked.map(r => ({ family_id: r.family_id, impact: r.impact, pct: r.pct, alert: r.alert, ...(scOf(r) ? { scen_bad_3m_pct: scOf(r)!.ranges[1].bad_pct, lane2: scOf(r)!.lane2.route } : {}) })), ...(scenSum ? { scenario_summary: scenSum } : {}) }, 'POST_CHECKING')
+  run = runTransition(ctx, { ...run, ranking: ranked.map(r => ({ family_id: r.family_id, impact: r.impact, pct: r.pct, alert: r.alert, ...((r as EngineResult).alert_basis ? { alert_basis: (r as EngineResult).alert_basis, alert_mean: (r as EngineResult).alert_mean, p10_3m: (r as EngineResult).p10_3m } : {}), ...(scOf(r) ? { scen_bad_3m_pct: scOf(r)!.ranges[1].bad_pct, lane2: scOf(r)!.lane2.route } : {}) })), ...(scenSum ? { scenario_summary: scenSum } : {}) }, 'POST_CHECKING')
   uow.put('run_snapshots', { id: run.portfolio_snapshot_id, hash: psHash, ...ps } as never)
   for (const c of computed) uow.put('family_impacts', { ...c.result, id: familyImpactId(id, c.family.id), run_id: id } as never)
 
@@ -150,7 +150,9 @@ async function makeEffective(ctx: AppCtx, run: RunRec, view: ViewRec, computed: 
   for (const c of computed) {
     const goals = ps.goals.filter(g => g.family_id === c.family.id && g.status === 'active')
     for (const g of goals) {
-      const gi = goalImpact(g, c.positions, goals, ps.configs.assumptions, run.price_date, ps.configs.thresholds.goals, c.result.positions)
+      const sc = (c.result as { scenario?: FamilyScenarioResult }).scenario
+      const gi = sc ? goalImpactScenario(g, c.positions, goals, ps.configs.assumptions, run.price_date, ps.configs.thresholds.goals, sc)
+        : goalImpact(g, c.positions, goals, ps.configs.assumptions, run.price_date, ps.configs.thresholds.goals, c.result.positions)
       uow.put('goal_impacts', { ...gi, id: `${run.id}|${g.id}`, run_id: run.id, event_id: run.event_id, goal_name: g.name } as never)
     }
   }

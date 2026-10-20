@@ -4,7 +4,7 @@ import type { Finding, ImpactLine, ViewBody } from '../../shared/types'
 import { lineKey, validateView, type ViewContext } from '../../shared/schemas'
 import { buildCioGraph, ANALYSTS, type NodeRun } from '../../agents/cioGraph'
 import { keywordView } from '../../agents/keywordView'
-import { citationChecks, diffLines, normalizeLlmFindings, ruleChecks, type RawFinding } from '../../agents/challenger'
+import { citationChecks, diffLines, normalizeLlmFindings, ruleChecks, scenarioRuleChecks, type RawFinding } from '../../agents/challenger'
 import { callJson } from '../../agents/llm'
 import { wrapData, type ModelSet, type PromptSet } from '../../agents/prompts'
 import { MOCK } from '../../data/mock'
@@ -22,7 +22,7 @@ export interface ViewRec {
   id: string; event_id: string; version: number; status: string; origin: 'agent' | 'manual'
   body: ViewBody; ai_body: ViewBody | null; agent_run_id?: string; challenge_error?: string
   unchallenged: string[]; cio_edits: { at: string; by: string; key: string; kind: string; before?: ImpactLine; after?: ImpactLine; note?: string }[]
-  removed_restricted: ImpactLine[]; errors?: string[]; instructions?: string; manual_bypass?: boolean
+  removed_restricted: ImpactLine[]; errors?: string[]; instructions?: string; manual_bypass?: boolean; analysts_derived?: boolean
   created_at: string; view_ready_at?: string; approved_at?: string
   history: { at: string; from: string; to: string; by: string; note?: string }[]
 }
@@ -32,19 +32,27 @@ export interface ChallengeRec {
   findings: Finding[]; counter_scenario?: string; summary?: string; lines?: string[]; run_id?: string
   input_package: unknown; model: string; prompt_version: string | null; dropped?: string[]
   // Phản biện có độc lập với bên soạn nhận định không: khác mô hình VÀ khác phiên/lượt gọi. Thiếu trường này (bản ghi cũ) coi như chưa độc lập.
-  independence?: { independent: boolean; reason: string }
+  independence?: { independent: boolean; reason: string; self_declared?: boolean }
 }
 
 // Đánh giá độc lập của phản biện
-export function independenceOf(mode: 'mock' | 'live' | 'external' | 'external_challenge' | 'external_same', cioModel: string, challengerModel: string, sessions?: { cio?: string; challenger?: string }): { independent: boolean; reason: string } {
+// Mã mô hình chuẩn hoá từ chuỗi bất kỳ (mã API, tên hiển thị, nhãn bọc): "Claude Opus 5.5", "claude-opus-5-5", "Claude – phiên … (claude-sonnet-5-5)"
+export function modelId(x: string | undefined | null): string | null {
+  const m = String(x ?? '').toLowerCase().match(/claude[\s_-]*(opus|sonnet|haiku|fable|mythos)[\s_-]*(\d+)(?:[.\s_-]+(\d+))?/)
+  return m ? `claude-${m[1]}-${m[2]}${m[3] ? `-${m[3]}` : ''}` : null
+}
+
+export function independenceOf(mode: 'mock' | 'live' | 'external' | 'external_challenge' | 'external_same', cioModel: string, challengerModel: string, sessions?: { cio?: string; challenger?: string }): { independent: boolean; reason: string; self_declared?: boolean } {
   if (mode === 'external_same') return { independent: false, reason: 'Phản biện nằm trong cùng bản ghi với nhận định (cùng phiên Claude vừa soạn vừa phản biện): cần bản ghi phản biện riêng từ phiên khác, mô hình khác' }
   if (mode === 'external') return { independent: false, reason: 'Chế độ hộp chờ: chưa có phản biện từ phiên độc lập' }
   if (mode === 'mock') return { independent: true, reason: 'Chế độ mô phỏng (demo, kiểm thử): coi như độc lập' }
-  const sameModel = cioModel.trim().toLowerCase() === challengerModel.trim().toLowerCase()
-  if (sameModel) return { independent: false, reason: `Agent Phản biện dùng cùng mô hình với Agent CIO (${cioModel})` }
+  // So trên mã mô hình đã chuẩn hoá (claude-opus-5-5), không so nhãn hiển thị: nhãn bọc tên mô hình khiến phép so luôn khác
+  const a = modelId(cioModel), b = modelId(challengerModel)
+  if (!a || !b) return { independent: false, reason: `Không xác định được mã mô hình (soạn: "${cioModel}", phản biện: "${challengerModel}"): không coi là độc lập` }
+  if (a === b) return { independent: false, reason: `Agent Phản biện dùng cùng mô hình với Agent CIO (${a})` }
   if (mode === 'external_challenge') {
     if (!sessions?.challenger || !sessions.cio || sessions.challenger === sessions.cio) return { independent: false, reason: 'Bản ghi phản biện không ghi phiên làm việc, hoặc trùng phiên với bên soạn nhận định' }
-    return { independent: true, reason: `Phiên phản biện ${sessions.challenger} khác phiên soạn ${sessions.cio}; mô hình ${challengerModel} khác ${cioModel}` }
+    return { independent: true, reason: `Độc lập theo khai báo của bản ghi (tự khai, hệ thống không xác minh được): phiên phản biện ${sessions.challenger} khác phiên soạn ${sessions.cio}; mô hình ${b} khác ${a}`, self_declared: true }
   }
   return { independent: true, reason: `Lượt gọi riêng, mô hình ${challengerModel} khác ${cioModel}; chỉ nhận đầu ra cuối (BR-05)` }
 }
@@ -173,6 +181,8 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
     id: viewId, event_id: e.id, version, status: 'DRAFTING', origin: 'agent', body: final.result?.view ?? { event_id: e.id, view_id: viewId, event_type: e.type, summary: e.title, impacts: [] },
     ai_body: final.result?.view ?? null, agent_run_id: runId, unchallenged: [], cio_edits: [], removed_restricted: final.result?.removed_restricted ?? [],
     created_at: now, history: [{ at: now, from: '', to: 'DRAFTING', by: actor(ctx) }], ...(opts.instructions ? { instructions: opts.instructions } : {}),
+    // Bản ghi ngoài không gửi kèm đầu ra riêng của 4 nhà phân tích: các nút này chỉ là phần cắt từ nhận định cuối, tranh luận rỗng
+    ...(opts.external && !opts.external.nodes ? { analysts_derived: true } : {}),
   }
   const uow = ctx.uow()
   uow.insert('agent_runs', { id: runId, agent: 'cio', subject_id: viewId, created_at: now, event_id: e.id, mode: opts.external ? 'external' : ctx.agentMode, ...(opts.external?.meta ? { external_meta: opts.external.meta } : {}), model: models.content.cio, prompt_version: pv, input_package: input, ok: !!final.result?.ok, errors: final.result?.errors ?? (fatal ? [fatal] : []), params: { max_retries: 2 } } as never)
@@ -247,6 +257,7 @@ export async function runPreChallenge(ctx: AppCtx, viewId: string, external?: { 
   const rule = ruleChecks(v.body, vctx)
   for (const l of v.removed_restricted) rule.push({ check: 'restricted_instrument', severity: 'medium', target: lineKey(l), issue: `Dòng cấp mã ${l.target} thuộc danh sách hạn chế đã bị loại ở bước kiểm tra schema (BR-27)`, suggestion: 'Không đưa nhận định cấp mã cho mã hạn chế; dòng loại tài sản và dòng ngành vẫn áp dụng bình thường' })
   rule.push(...await policyCitationFindings(ctx, e, news))
+  rule.push(...scenarioRuleChecks(v.body, v.body.scenarios ? (await loadFactorModel(ctx)).model as never : null))
   const recent = await recentApproved(ctx, e.id)
   // BR-05: chỉ đầu ra cuối, tiêu đề và tóm tắt tin, danh mục, ≤ 5 nhận định đã duyệt, kết quả quy tắc
   const pkg = { view: v.body, news: news.map(n => ({ id: n.id, title: n.title, summary: n.summary })), catalog: { asset_classes: ASSET_CLASSES, sectors: SECTORS, fx: FX_CURRENCIES }, recent_approved: recent, rule_results: rule }
@@ -352,6 +363,7 @@ export async function runReChallenge(ctx: AppCtx, viewId: string, external?: { f
   const vctx = await viewContext(ctx, e, news)
   const keys = new Set(v.unchallenged)
   const rule = ruleChecks(v.body, vctx, keys)
+  rule.push(...scenarioRuleChecks(v.body, v.body.scenarios ? (await loadFactorModel(ctx)).model as never : null, keys))
   const recent = await recentApproved(ctx, e.id)
   const edits = v.cio_edits.filter(x => keys.has(x.key))
   const pkg = { view: v.body, changed_lines: [...keys], diff: edits.map(x => ({ key: x.key, kind: x.kind, before: x.before, after: x.after })), cio_notes: edits.map(x => x.note).filter(Boolean), news: news.map(n => ({ id: n.id, title: n.title, summary: n.summary })), catalog: { asset_classes: ASSET_CLASSES, sectors: SECTORS, fx: FX_CURRENCIES }, recent_approved: recent, rule_results: rule }
@@ -391,9 +403,12 @@ export async function respondFinding(ctx: AppCtx, viewId: string, findingId: str
   if (!f) throw new HttpError(404, `Không có phát hiện ${findingId} trong nhận định này`)
   if (!['accepted_fixed', 'disagree', 'out_of_scope'].includes(body.response)) throw new HttpError(422, 'Lựa chọn phản hồi không hợp lệ')
   const comment = minReason(body.comment, 'Ghi chú')
+  // Không đồng ý hoặc coi là ngoài phạm vi với phát hiện Nghiêm trọng phải nêu căn cứ cụ thể, tránh cổng duyệt thành con dấu
+  if (f.severity === 'critical' && body.response !== 'accepted_fixed' && comment.length < 60) throw new HttpError(422, 'Không đồng ý với phát hiện Nghiêm trọng phải nêu căn cứ cụ thể (tối thiểu 60 ký tự): nguồn nào, vì sao phát hiện không đúng')
   if (body.response === 'accepted_fixed') {
     if (!body.fixed_line) throw new HttpError(422, 'Chấp nhận – đã sửa phải chỉ rõ dòng đã sửa')
-    if (!v.body.impacts.some(l => lineKey(l) === body.fixed_line)) throw new HttpError(422, `Dòng ${body.fixed_line} không có trong nhận định`)
+    const scenarioFix = body.fixed_line === 'scenarios' && !!v.body.scenarios
+    if (!scenarioFix && !v.body.impacts.some(l => lineKey(l) === body.fixed_line)) throw new HttpError(422, `Dòng ${body.fixed_line} không có trong nhận định`)
   }
   const r: FindingResponse = { id: `${findingId}-R`, view_id: viewId, finding_id: findingId, response: body.response as FindingResponse['response'], ...(body.fixed_line ? { fixed_line: body.fixed_line } : {}), comment, by: actor(ctx), at: ctx.now() }
   const uow = ctx.uow()

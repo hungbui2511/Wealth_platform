@@ -31,7 +31,7 @@ export const FindingSchema = z.object({
   origin: z.enum(['rule', 'llm']),
   check: z.enum(['schema', 'source_exists', 'missing_line', 'sign_mismatch', 'duplicate_line', 'restricted_instrument',
     'source_support', 'opposite_direction', 'overconfidence', 'inconsistency_with_past_view', 'second_order_effect', 'citation_check',
-    'missing_price', 'non_positive_net_worth', 'stale_valuation', 'outlier_family', 'concentration', 'price_fallback', 'price_external_ai']),
+    'missing_price', 'non_positive_net_worth', 'stale_valuation', 'outlier_family', 'concentration', 'price_fallback', 'price_external_ai', 'scenario_consistency', 'scenario_balance']),
   severity: z.enum(['critical', 'medium', 'low']),
   target: z.string().min(1),
   issue: z.string().min(20),

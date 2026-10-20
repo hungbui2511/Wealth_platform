@@ -241,7 +241,7 @@ export interface FamilyScenarioResult {
   branches: { id: string; name: string; probability: number; regime: Regime; mean: number[]; sd: number[] }[]
   by_factor: Record<string, number>          // đóng góp trung bình theo xác suất, kỳ hạn 3 tháng
   by_asset_class: Record<string, number>     // như trên, theo loại tài sản
-  positions: { holding_id: string; part: string | null; instrument_id: string; name: string; asset_class: string; exposure: number; mean_3m: number; model_based: boolean; loadings: Record<string, number> }[]
+  positions: { holding_id: string; part: string | null; instrument_id: string; name: string; asset_class: string; exposure: number; mean_3m: number; mean_12m: number; model_based: boolean; loadings: Record<string, number> }[]
   loan_cost_annual: number                   // chi phí lãi vay VND thả nổi thay đổi/năm (trung bình theo xác suất)
   model_based_share: number                  // phần tác động đến từ tài sản định giá theo mô hình (BĐS, CP chưa niêm yết)
   lane2: { route: 'AUTO' | 'RM_REVIEW'; reason: string }
@@ -262,7 +262,7 @@ export function familyScenario(f: Family, positions: Position[], book: PriceBook
   const liab = liabilityExposure(f, book)
   const bOut: FamilyScenarioResult['branches'] = []
   const byFactor: Record<string, number> = {}, byClass: Record<string, number> = {}
-  const posMean = new Map<string, { row: PosLoad; v: number }>()
+  const posMean = new Map<string, { row: PosLoad; v: number; v12: number }>()
   let loanCost = 0, modelBased = 0, totalAbs = 0
   for (const pb of branches) {
     const loads = positions.map(p => positionLoadings(p, instruments[p.instrument_id], model, pb.regime, book.price_date))
@@ -294,9 +294,10 @@ export function familyScenario(f: Family, positions: Position[], book: PriceBook
     for (const k of ids) { const c = (fam[k] ?? 0) * pb.shocks[k] * prof(k, 1) * pb.probability; if (c) byFactor[k] = (byFactor[k] ?? 0) + c }
     for (const r of loads) {
       const v = Object.entries(r.loadings).reduce((a, [k, x]) => a + x * pb.shocks[k] * prof(k, 1), 0) * pb.probability
+      const v12 = Object.entries(r.loadings).reduce((a, [k, x]) => a + x * pb.shocks[k] * prof(k, H - 1), 0) * pb.probability
       byClass[r.asset_class] = (byClass[r.asset_class] ?? 0) + v
       const key = `${r.holding_id}|${r.part ?? ''}`
-      const cur = posMean.get(key); posMean.set(key, { row: cur?.row ?? r, v: (cur?.v ?? 0) + v })
+      const cur = posMean.get(key); posMean.set(key, { row: cur?.row ?? r, v: (cur?.v ?? 0) + v, v12: (cur?.v12 ?? 0) + v12 })
       if (r.model_based) modelBased += Math.abs(v)
       totalAbs += Math.abs(v)
     }
@@ -324,7 +325,7 @@ export function familyScenario(f: Family, positions: Position[], book: PriceBook
     model_version: model.version, net_worth: round(netWorth), ranges, branches: bOut,
     by_factor: Object.fromEntries(Object.entries(byFactor).map(([k, v]) => [k, round(v)])),
     by_asset_class: Object.fromEntries(Object.entries(byClass).map(([k, v]) => [k, round(v)])),
-    positions: [...posMean.values()].map(({ row, v }) => ({ holding_id: row.holding_id, part: row.part, instrument_id: row.instrument_id, name: row.instrument_name, asset_class: row.asset_class, exposure: round(row.exposure), mean_3m: round(v), model_based: row.model_based, loadings: Object.fromEntries(Object.entries(row.loadings).map(([k, x]) => [k, Math.round(x)])) }))
+    positions: [...posMean.values()].map(({ row, v, v12 }) => ({ holding_id: row.holding_id, part: row.part, instrument_id: row.instrument_id, name: row.instrument_name, asset_class: row.asset_class, exposure: round(row.exposure), mean_3m: round(v), mean_12m: round(v12), model_based: row.model_based, loadings: Object.fromEntries(Object.entries(row.loadings).map(([k, x]) => [k, Math.round(x)])) }))
       .sort((a, b) => Math.abs(b.mean_3m) - Math.abs(a.mean_3m)),
     loan_cost_annual: round(loanCost), model_based_share: totalAbs > 0 ? modelBased / totalAbs : 0, lane2,
     variance_share_3m: (() => { const t = vs.residual + vs.core + vs.idio; return t > 0 ? { residual: vs.residual / t, core: vs.core / t, idio: vs.idio / t } : { residual: 0, core: 0, idio: 0 } })(),

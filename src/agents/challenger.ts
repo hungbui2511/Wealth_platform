@@ -1,6 +1,8 @@
 // Agent Phản biện (M4): kiểm tra theo quy tắc trước (origin = rule), sau đó kiểm tra nội dung (origin = llm).
 import type { Finding, ImpactLine, ViewBody } from '../shared/types'
 import { coverageErrors, lineErrors, lineKey, validateFindings, articleRefExists, type ViewContext } from '../shared/schemas'
+import { branchIssues, levelScenarioConflicts } from '../engine/consistency'
+import type { FactorModel, ScenarioSet } from '../engine/scenario'
 
 export type RawFinding = Omit<Finding, 'finding_id' | 'stage' | 'origin'>
 
@@ -15,6 +17,25 @@ export function ruleChecks(view: ViewBody, ctx: ViewContext, onlyKeys?: Set<stri
     }
   }
   if (!onlyKeys) for (const e of coverageErrors(view.impacts)) out.push({ check: e.check, severity: e.check === 'missing_line' ? 'critical' : 'medium', target: e.target, issue: `${e.msg}; nhận định phải phủ đủ 11 loại tài sản và 3 cặp tiền`, suggestion: 'Bổ sung hoặc gộp dòng để mỗi đối tượng chỉ có đúng một dòng' })
+  return out
+}
+
+// Kiểm tra theo quy tắc trên nhánh kịch bản (nguồn của mọi con số tới gia đình) và đối chiếu dấu với mức −3..+3.
+// onlyKeys: khi phản biện lại, chỉ xét dòng đã đổi; khóa "scenarios" nghĩa là CIO đã sửa nhánh kịch bản.
+export function scenarioRuleChecks(view: ViewBody, model: FactorModel | null, onlyKeys?: Set<string>): RawFinding[] {
+  if (!view.scenarios || !model) return []
+  const set = view.scenarios as unknown as ScenarioSet
+  const out: RawFinding[] = []
+  const all = !onlyKeys || onlyKeys.has('scenarios')
+  try {
+    for (const c of levelScenarioConflicts(view.impacts, model, set)) {
+      if (!all && !onlyKeys!.has(c.line_key)) continue
+      out.push({ check: 'scenario_consistency', severity: Math.abs(c.level) >= 2 ? 'critical' : 'medium', target: c.line_key, issue: `Dòng ${c.key} ghi mức ${c.level} nhưng nhánh kịch bản kỳ vọng đẩy theo hướng ngược lại (${c.move > 0 ? '+' : ''}${c.move}${c.unit === 'bp' ? ' điểm cơ bản' : '%'} với vị thế đại diện). Con số tới gia đình lấy từ kịch bản, bản tin lấy hướng từ kịch bản`, suggestion: 'Sửa mức của dòng cho cùng hướng với kịch bản, hoặc sửa nhánh kịch bản (xác suất, cú sốc lõi) nếu mức mới là nhận định đúng' })
+    }
+    if (all) for (const b of branchIssues(model, set)) out.push({ check: b.check, severity: b.severity, target: b.target, issue: b.issue, suggestion: b.suggestion })
+  } catch (e) {
+    out.push({ check: 'schema', severity: 'medium', target: 'scenarios', issue: `Không tính được kịch bản để đối chiếu: ${String((e as Error).message ?? e).slice(0, 200)}`, suggestion: 'Kiểm tra lại yếu tố lõi và cỡ cú sốc của các nhánh' })
+  }
   return out
 }
 

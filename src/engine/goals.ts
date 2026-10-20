@@ -60,3 +60,35 @@ export function goalImpact(g: Goal, positions: Position[], allGoals: Goal[], a: 
   const alert = before.level !== after.level || delta.lte(D(t.drop_alert_pts).neg())
   return { goal_id: g.id, family_id: g.family_id, before, after, ratio_before: before.ratio, ratio_after: after.ratio, delta_pts: s(delta, 6), level_before: before.level, level_after: after.level, alert }
 }
+
+// Thiết kế v2: tác động lên mục tiêu từ lớp kịch bản. Mục tiêu còn hơn 12 tháng dùng tác động kỳ hạn 12 tháng (không dùng
+// cú sốc 3 tháng như thể vĩnh viễn); mục tiêu gần dùng 3 tháng. Kèm kịch bản xấu (P10 cùng kỳ hạn): phần chênh giữa P10 và kỳ
+// vọng của cả gia đình được phân bổ cho từng vị thế theo độ lớn giá trị chịu tác động (xấp xỉ, ghi rõ trong giả định).
+export interface ScenarioGoalInput {
+  positions: { holding_id: string; part: string | null; mean_3m: number; mean_12m?: number; exposure?: number }[]
+  ranges: { bad: number }[]
+}
+export type GoalScenarioImpact = GoalImpactResult & {
+  basis: '3M' | '12M'; assumption: string
+  stress: { ratio_after: string | null; level_after: GoalLevel; delta_pts: string; alert: boolean }
+}
+
+export function goalImpactScenario(g: Goal, positions: Position[], allGoals: Goal[], a: Assumptions, priceDate: string, t: GoalThresholds, sc: ScenarioGoalInput): GoalScenarioImpact {
+  const long = goalMonthK(g, priceDate) > 12
+  const h = long && sc.ranges.length > 2 ? 2 : 1
+  const meanOf = (p: ScenarioGoalInput['positions'][number]) => long ? (p.mean_12m ?? p.mean_3m) : p.mean_3m
+  const exp = sc.positions.map(p => ({ holding_id: p.holding_id, part: p.part, impact: String(Math.round(meanOf(p))) }))
+  const totalMean = sc.positions.reduce((s, p) => s + meanOf(p), 0)
+  const gap = Math.min(0, (sc.ranges[h]?.bad ?? totalMean) - totalMean)
+  const wSum = sc.positions.reduce((s, p) => s + Math.abs(p.exposure ?? 0), 0)
+  const stressRows = sc.positions.map(p => ({ holding_id: p.holding_id, part: p.part, impact: String(Math.round(meanOf(p) + (wSum > 0 ? gap * Math.abs(p.exposure ?? 0) / wSum : 0))) }))
+  const base = goalImpact(g, positions, allGoals, a, priceDate, t, exp)
+  const st = goalImpact(g, positions, allGoals, a, priceDate, t, stressRows)
+  return {
+    ...base, alert: base.alert || st.alert, basis: long ? '12M' : '3M',
+    assumption: long
+      ? 'Mục tiêu còn hơn 12 tháng: dùng tác động kỳ vọng kỳ hạn 12 tháng và coi là vĩnh viễn (chưa tính hồi phục sau đó). Kịch bản xấu: P10 12 tháng của gia đình, phần chênh so với kỳ vọng phân bổ cho vị thế theo giá trị chịu tác động.'
+      : 'Mục tiêu trong 12 tháng: dùng tác động kỳ vọng kỳ hạn 3 tháng. Kịch bản xấu: P10 3 tháng của gia đình, phần chênh so với kỳ vọng phân bổ cho vị thế theo giá trị chịu tác động.',
+    stress: { ratio_after: st.ratio_after, level_after: st.level_after, delta_pts: st.delta_pts, alert: st.alert },
+  }
+}

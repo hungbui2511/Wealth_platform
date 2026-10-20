@@ -5,7 +5,9 @@ import { ASSET_CLASS_LABELS, SECTOR_LABELS } from '../../shared/catalog'
 import { checkText, extractNumbers } from '../../engine/numbercheck'
 import { mentionsRestricted, redactRestricted, type RestrictedEntry } from '../../compliance/controls'
 import { actor, HttpError, minReason, requireRole, samePerson, type AppCtx } from '../ctx'
-import { activeRestricted, loadConfigs } from './config'
+import { activeRestricted, loadConfigs, loadFactorModel } from './config'
+import { scenarioDirections } from '../../engine/consistency'
+import type { FactorModel, ScenarioSet } from '../../engine/scenario'
 import { getView, type ViewRec } from './views'
 
 export interface ReleaseRec {
@@ -17,7 +19,27 @@ export interface ReleaseRec {
 const label = (t: string) => (ASSET_CLASS_LABELS as Record<string, string>)[t] ?? (SECTOR_LABELS as Record<string, string>)[t] ?? t
 const dirWord = (lv: number) => lv > 0 ? 'tích cực' : 'tiêu cực'
 
-export function draftContent(v: ViewRec, restricted: RestrictedEntry[] = []): string {
+const keyLabel = (k: string) => k.startsWith('fx:') ? `Tỷ giá ${k.slice(3)}/VND` : label(k.split(':')[1])
+const fmt = (x: number) => `${x > 0 ? '+' : ''}${String(x).replace('.', ',')}`
+
+// Khi nhận định có nhánh kịch bản, hướng và độ lớn trong bản tin lấy từ kịch bản (cùng nguồn với con số tới gia đình);
+// mức −3..+3 và lập luận của dòng chỉ là phần giải thích, chỉ dùng khi cùng hướng với kịch bản.
+export function draftContent(v: ViewRec, restricted: RestrictedEntry[] = [], model?: FactorModel | null): string {
+  const set = v.body.scenarios as unknown as ScenarioSet | undefined
+  if (set && model) {
+    const dirs = scenarioDirections(model, set)
+    const lineOf = (k: string) => v.body.impacts.find(l => `${l.scope}:${l.target}` === k)
+    return redactRestricted([
+      `Quan điểm CIO: ${v.body.summary}.`,
+      `Các kịch bản được xem xét: ${set.branches.map(b => `${b.name} (xác suất ${Math.round(b.probability * 100)}%)`).join('; ')}.`,
+      ...dirs.map(d => {
+        const l = lineOf(d.key)
+        const why = l && l.level !== 0 && Math.sign(l.level) === Math.sign(d.move) ? ` ${l.rationale}.` : ''
+        return `- ${keyLabel(d.key)}: theo kịch bản kỳ vọng, tác động ${d.move > 0 ? (d.key === 'asset_class:CASH' ? 'tích cực với tiền gửi (lãi suất tăng)' : 'tích cực') : (d.key === 'asset_class:CASH' ? 'tiêu cực với tiền gửi (lãi suất giảm)' : 'tiêu cực')}, khoảng ${fmt(d.move)}${d.unit === 'bp' ? ' điểm cơ bản' : '%'} với vị thế đại diện.${why}`
+      }),
+      'Con số là kỳ vọng theo xác suất các kịch bản trên vị thế đại diện, không phải dự báo chắc chắn. Nội dung mang tính thông tin chung về thị trường, không phải khuyến nghị đầu tư cho cá nhân.',
+    ].join('\n'), restricted)
+  }
   const lines = v.body.impacts.filter(l => l.level !== 0 && !(l.scope === 'instrument' && restricted.some(r => r.instruments.includes(l.target))))
   return redactRestricted([
     `Quan điểm CIO: ${v.body.summary}.`,
@@ -30,7 +52,11 @@ export function draftContent(v: ViewRec, restricted: RestrictedEntry[] = []): st
 export async function releaseChecks(ctx: AppCtx, v: ViewRec, content: string) {
   const cfg = await loadConfigs(ctx)
   const fromView = extractNumbers([v.body.summary, ...v.body.impacts.map(l => l.rationale)].join('\n'))
-  const allowed = { money: fromView.filter(n => n.kind === 'money').map(n => n.value), pct: fromView.filter(n => n.kind === 'pct').map(n => n.value), plain: [...v.body.impacts.flatMap(l => [l.level, Math.abs(l.level)]), ...fromView.filter(n => n.kind === 'plain').map(n => n.value)] }
+  // Số từ kịch bản (xác suất nhánh, biến động kỳ vọng trên vị thế đại diện) cũng là số của nhận định đã duyệt
+  const set = v.body.scenarios as unknown as ScenarioSet | undefined
+  const fm = set ? (await loadFactorModel(ctx)).model as unknown as FactorModel : null
+  const scen = set && fm ? [...set.branches.map(b => Math.round(b.probability * 100)), ...scenarioDirections(fm, set).flatMap(d => [d.move, Math.abs(d.move)])] : []
+  const allowed = { money: fromView.filter(n => n.kind === 'money').map(n => n.value), pct: [...fromView.filter(n => n.kind === 'pct').map(n => n.value), ...scen], plain: [...v.body.impacts.flatMap(l => [l.level, Math.abs(l.level)]), ...fromView.filter(n => n.kind === 'plain').map(n => n.value), ...scen] }
   const num = checkText(content, allowed, cfg.banned)
   const restricted = mentionsRestricted(content, activeRestricted(cfg, ctx.now()))
   const familyData = /DEMO-F\d{2}|tài sản ròng của gia đình|Gia đình [A-ZĐ]/.test(content)
@@ -50,7 +76,7 @@ export async function createRelease(ctx: AppCtx, body: { view_id: string; releas
   if (!['APPROVED', 'SUPERSEDED'].includes(v.status)) throw new HttpError(409, 'Chỉ tạo bản tin từ nhận định đã duyệt')
   checkTimes(v, body.release_private_at, body.release_public_at, body.early_access_basis)
   const n = await ctx.repo.nextSeq(`release:${v.id}`, 'SELECT count(*) FROM research_releases WHERE view_id = ?', [v.id])
-  const content = body.content ?? draftContent(v, activeRestricted(await loadConfigs(ctx), ctx.now()))
+  const content = body.content ?? draftContent(v, activeRestricted(await loadConfigs(ctx), ctx.now()), v.body.scenarios ? (await loadFactorModel(ctx)).model as unknown as FactorModel : null)
   const r: ReleaseRec = { id: `RR-${v.event_id.slice(-4)}-v${v.version}${n > 1 ? `-${n}` : ''}`, view_id: v.id, status: 'DRAFT', content, release_private_at: new Date(body.release_private_at).toISOString(), release_public_at: new Date(body.release_public_at).toISOString(), created_by: actor(ctx), created_at: ctx.now(), ...(body.early_access_basis && Date.parse(body.release_private_at) < Date.parse(body.release_public_at) ? { early_access_basis: body.early_access_basis.trim().slice(0, 500) } : {}) }
   r.checks = await releaseChecks(ctx, v, content)
   const u = ctx.uow(); u.insert('research_releases', r as never); u.audit({ actor: actor(ctx), action: 'release.created', object: r.id, data: { view_id: v.id, release_private_at: r.release_private_at, release_public_at: r.release_public_at, checks: r.checks } }); await u.commit()
