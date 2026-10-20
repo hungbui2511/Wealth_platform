@@ -29,7 +29,21 @@ export interface FactorModel {
   priced_in: Record<string, number>
   lane2_route_rm_pct: number
   analogs?: readonly unknown[]; sources?: readonly string[]
+  credit_jump?: Record<string, { q: readonly number[]; lgd: number; note?: string }>
 }
+
+// Nguồn gốc tham số (đợt 2 sau phản biện độc lập): ước lượng từ dữ liệu, một phần, hay giả định đặt tay. Mô hình cấu hình cũ chưa có
+// trường này thì dùng bảng mặc định theo ghi chú nguồn của mô hình FM-2026-10.
+export type Provenance = 'estimated' | 'partial' | 'assumption'
+export const DEFAULT_PROVENANCE: Record<string, Provenance> = {
+  US10Y: 'estimated', DXY: 'estimated', GLOBAL_EQ: 'estimated', OIL: 'estimated', GOLD_W: 'estimated', USDVND: 'estimated',
+  VN_RATE: 'estimated', VN_EQ: 'estimated', SJC_PREM: 'estimated', FOREIGN_FLOW: 'partial',
+  CRYPTO: 'assumption', VN_GOV: 'assumption', CREDIT_RE: 'assumption', CREDIT_FIN: 'assumption', VN_RE: 'assumption',
+}
+export const provenanceOf = (m: FactorModel, id: string): Provenance => (m.factors.find(f => f.id === id) as FactorDef & { provenance?: Provenance } | undefined)?.provenance ?? DEFAULT_PROVENANCE[id] ?? 'assumption'
+// Cú sốc nhảy bậc cho trái phiếu doanh nghiệp bất động sản ở nhánh căng thẳng (bài học 2022: giãn nợ, chậm trả, không chỉ chênh lệch
+// lãi suất). q: xác suất sự kiện tín dụng theo kỳ hạn (1 tuần, 3 tháng, 12 tháng); lgd: tỷ lệ tổn thất khi xảy ra. Là giả định.
+export const DEFAULT_CREDIT_JUMP = { CREDIT_RE: { q: [0, 0.04, 0.1], lgd: 0.6, note: 'Giả định, chưa ước lượng: xác suất sự kiện tín dụng của trái phiếu DN bất động sản trong nhánh căng thẳng' } }
 
 export interface CoreShock { factor: string; size: Size; direction: 'up' | 'down' }
 export interface Branch { id: string; name: string; probability: number; regime: Regime; core_shocks: CoreShock[]; rationale: string; source_ids: string[] }
@@ -247,6 +261,11 @@ export interface FamilyScenarioResult {
   lane2: { route: 'AUTO' | 'RM_REVIEW'; reason: string }
   // Phân rã phương sai 3 tháng (trung bình theo xác suất): tương quan còn lại, cỡ cú sốc lõi, rủi ro riêng từng mã
   variance_share_3m: { residual: number; core: number; idio: number }
+  // Phần tác động kỳ vọng 3 tháng đến từ tham số giả định (yếu tố chưa ước lượng, hệ số đại diện BĐS/cổ phần tư nhân, cú sốc nhảy bậc)
+  assumption_share_3m: number
+  // BĐS và cổ phần tư nhân chiếm bao nhiêu tài sản ròng; trên 40% thì phần lớn dải đến từ tham số giả định
+  re_pe_share: number | null; assumption_flag: string | null
+  credit_jump: { exposure: number; lgd: number; q: number[] } | null
 }
 
 const round = (x: number) => Math.round(x)
@@ -263,7 +282,12 @@ export function familyScenario(f: Family, positions: Position[], book: PriceBook
   const bOut: FamilyScenarioResult['branches'] = []
   const byFactor: Record<string, number> = {}, byClass: Record<string, number> = {}
   const posMean = new Map<string, { row: PosLoad; v: number; v12: number }>()
-  let loanCost = 0, modelBased = 0, totalAbs = 0
+  let loanCost = 0, modelBased = 0, totalAbs = 0, assumed = 0
+  const cj = (model.credit_jump ?? DEFAULT_CREDIT_JUMP).CREDIT_RE
+  const isReBond = (p: Position) => p.asset_class === 'CORP_BOND' && p.part === null && (model.credit_factor[p.instrument_id] ?? model.credit_factor[p.sector ?? ''] ?? model.credit_factor.DEFAULT) === 'CREDIT_RE'
+  const reBondExp = positions.filter(isReBond).reduce((a, p) => a + p.exposure.toNumber(), 0)
+  const jumpParts: { w: number; dm: number; bi: number }[][] = model.horizons.map(() => [])
+  const noJump: number[][] = []
   for (const pb of branches) {
     const loads = positions.map(p => positionLoadings(p, instruments[p.instrument_id], model, pb.regime, book.price_date))
     // Nợ ngoại tệ: tỷ giá tăng làm nợ quy đổi tăng (tác động âm lên tài sản ròng)
@@ -289,7 +313,13 @@ export function familyScenario(f: Family, positions: Position[], book: PriceBook
       mean.push(m); sd.push(Math.sqrt(vRes + vCore + vIdio))
       if (h === 1) { vs.residual += pb.probability * vRes; vs.core += pb.probability * vCore; vs.idio += pb.probability * vIdio }
     }
-    bOut.push({ id: pb.id, name: pb.name, probability: pb.probability, regime: pb.regime, mean: mean.map(round), sd: sd.map(round) })
+    // Nhánh căng thẳng: thêm thành phần nhảy bậc cho trái phiếu DN bất động sản (tách nhánh thành hai phần trong hỗn hợp).
+    // Trung bình của nhánh gồm cả kỳ vọng của cú sốc nhảy bậc, để tổng theo yếu tố và vị thế khớp con số chính.
+    const jumpOn = pb.regime === 'stress' && !!cj && reBondExp > 0
+    const jexp = model.horizons.map((_, h) => jumpOn ? -(cj.q[h] ?? 0) * cj.lgd * reBondExp : 0)
+    noJump.push(mean.map(m => m))
+    bOut.push({ id: pb.id, name: pb.name, probability: pb.probability, regime: pb.regime, mean: mean.map((m, h) => round(m + jexp[h])), sd: sd.map(round) })
+    if (jumpOn) for (let h = 0; h < H; h++) { const q = cj.q[h] ?? 0; if (q > 0) jumpParts[h].push({ w: q, dm: -cj.lgd * reBondExp, bi: bOut.length - 1 }) }
     // Đóng góp kỳ hạn 3 tháng (chỉ số 1), trung bình theo xác suất
     for (const k of ids) { const c = (fam[k] ?? 0) * pb.shocks[k] * prof(k, 1) * pb.probability; if (c) byFactor[k] = (byFactor[k] ?? 0) + c }
     for (const r of loads) {
@@ -297,9 +327,16 @@ export function familyScenario(f: Family, positions: Position[], book: PriceBook
       const v12 = Object.entries(r.loadings).reduce((a, [k, x]) => a + x * pb.shocks[k] * prof(k, H - 1), 0) * pb.probability
       byClass[r.asset_class] = (byClass[r.asset_class] ?? 0) + v
       const key = `${r.holding_id}|${r.part ?? ''}`
-      const cur = posMean.get(key); posMean.set(key, { row: cur?.row ?? r, v: (cur?.v ?? 0) + v, v12: (cur?.v12 ?? 0) + v12 })
+      // Kỳ vọng của cú sốc nhảy bậc (nhánh căng thẳng) cộng vào đúng vị thế trái phiếu DN bất động sản
+      const p0 = positions.find(x => x.holding_id === r.holding_id && x.part === r.part)
+      const jv = pb.regime === 'stress' && cj && p0 && isReBond(p0) ? -cj.lgd * r.exposure * pb.probability : 0
+      const jv3 = jv * (cj?.q[1] ?? 0), jv12 = jv * (cj?.q[H - 1] ?? 0)
+      if (jv3) { byClass[r.asset_class] = (byClass[r.asset_class] ?? 0) + jv3; byFactor.CREDIT_RE_JUMP = (byFactor.CREDIT_RE_JUMP ?? 0) + jv3 }
+      const cur = posMean.get(key); posMean.set(key, { row: cur?.row ?? r, v: (cur?.v ?? 0) + v + jv3, v12: (cur?.v12 ?? 0) + v12 + jv12 })
       if (r.model_based) modelBased += Math.abs(v)
-      totalAbs += Math.abs(v)
+      totalAbs += Math.abs(v + jv3)
+      // Phần đến từ tham số giả định: yếu tố chưa ước lượng, hệ số đại diện (BĐS, cổ phần tư nhân), cú sốc nhảy bậc
+      assumed += Math.abs(jv3) + (r.model_based ? Math.abs(v) : Math.abs(Object.entries(r.loadings).reduce((a, [k, x]) => a + (provenanceOf(model, k) === 'assumption' ? x * pb.shocks[k] * prof(k, 1) : 0), 0) * pb.probability))
     }
     const lv = (liabLoad.USDVND ?? 0) * pb.shocks.USDVND * prof('USDVND', 1) * pb.probability
     if (lv) byClass.LIABILITY = (byClass.LIABILITY ?? 0) + lv
@@ -312,7 +349,12 @@ export function familyScenario(f: Family, positions: Position[], book: PriceBook
   }
   const qs = model.quantiles
   const ranges: HorizonRange[] = model.horizons.map((h, i) => {
-    const parts = bOut.map(b => ({ w: b.probability, m: b.mean[i], s: b.sd[i] }))
+    const parts = bOut.flatMap((b, bi) => {
+      const js = jumpParts[i].filter(j => j.bi === bi)
+      const qSum = js.reduce((a, j) => a + j.w, 0)
+      const m0 = noJump[bi][i]
+      return [{ w: b.probability * (1 - qSum), m: m0, s: b.sd[i] }, ...js.map(j => ({ w: b.probability * j.w, m: m0 + j.dm, s: b.sd[i] }))]
+    })
     const [severe, bad, base, good] = [qs.severe ?? 0.05, qs.bad, qs.base, qs.good].map(q => round(mixtureQuantile(parts, q)))
     const pct = (x: number) => netWorth > 0 ? x / netWorth : null
     return { horizon: h, months: months[i], severe, bad, base, good, severe_pct: pct(severe), bad_pct: pct(bad), base_pct: pct(base), good_pct: pct(good) }
@@ -328,6 +370,13 @@ export function familyScenario(f: Family, positions: Position[], book: PriceBook
     positions: [...posMean.values()].map(({ row, v, v12 }) => ({ holding_id: row.holding_id, part: row.part, instrument_id: row.instrument_id, name: row.instrument_name, asset_class: row.asset_class, exposure: round(row.exposure), mean_3m: round(v), mean_12m: round(v12), model_based: row.model_based, loadings: Object.fromEntries(Object.entries(row.loadings).map(([k, x]) => [k, Math.round(x)])) }))
       .sort((a, b) => Math.abs(b.mean_3m) - Math.abs(a.mean_3m)),
     loan_cost_annual: round(loanCost), model_based_share: totalAbs > 0 ? modelBased / totalAbs : 0, lane2,
+    assumption_share_3m: totalAbs > 0 ? Math.min(1, assumed / totalAbs) : 0,
+    ...(() => {
+      const rePe = positions.filter(p => p.asset_class === 'REAL_ESTATE' || p.asset_class === 'PRIVATE_EQ').reduce((a, p) => a + p.exposure.toNumber(), 0)
+      const share = netWorth > 0 ? rePe / netWorth : null
+      return { re_pe_share: share, assumption_flag: share !== null && share > 0.4 ? `BĐS và cổ phần tư nhân chiếm ${(share * 100).toFixed(0)}% tài sản ròng: phần lớn dải tác động đến từ tham số giả định (hệ số đại diện, chưa ước lượng từ giao dịch thật)` : null }
+    })(),
+    credit_jump: cj && reBondExp > 0 ? { exposure: round(reBondExp), lgd: cj.lgd, q: [...cj.q] } : null,
     variance_share_3m: (() => { const t = vs.residual + vs.core + vs.idio; return t > 0 ? { residual: vs.residual / t, core: vs.core / t, idio: vs.idio / t } : { residual: 0, core: 0, idio: 0 } })(),
   }
 }

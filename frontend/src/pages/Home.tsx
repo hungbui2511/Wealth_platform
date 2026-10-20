@@ -28,6 +28,7 @@ export default function Home() {
   const health = useApi('/api/health')
   const events = useApi<any[]>(user.role === 'RM' ? null : '/api/events')
   const proc = useApi<any>(user.role === 'RM' ? '/api/procedural' : null)
+  const alerts = useApi<any>(user.role === 'RM' ? null : '/api/ops/alerts')
   const [msg, setMsg] = useState<string | null>(null)
   const [err, setErr] = useState<unknown>(null)
   const run = (path: string, label: string) => async () => { setErr(null); try { const r = await api(path, { method: 'POST' }); setMsg(`${label}: ${JSON.stringify(r).slice(0, 240)}`); events.reload() } catch (e) { setErr(e) } }
@@ -36,6 +37,15 @@ export default function Home() {
     <>
       <h1 className="text-xl font-semibold">Tổng quan</h1>
       <Note>Chế độ agent: <b>{health.data?.agent_mode}</b> · chế độ giá: <b>{health.data?.price_mode}</b> · ngày giá: <b>{health.data?.price_date}</b>. Mọi tiêu chí chấp nhận chấm ở chế độ mock và giá mẫu.</Note>
+      {alerts.data && (alerts.data.schedules.length > 0 || alerts.data.paused.length > 0 || alerts.data.pending_prices > 0 || alerts.data.open_incidents > 0) && (
+        <Note tone="warn">
+          {alerts.data.schedules.map((s: any) => <div key={s.id}>{s.label}: {s.message ?? 'lượt chạy lỗi'}</div>)}
+          {alerts.data.paused.length > 0 && <div>Agent tạm dừng: {alerts.data.paused.map((p: any) => p.label).join(', ')}</div>}
+          {alerts.data.pending_prices > 0 && <div>{alerts.data.pending_prices} ảnh chụp giá do AI lấy chờ xác nhận</div>}
+          {alerts.data.open_incidents > 0 && <div>{alerts.data.open_incidents} sự cố agent đang mở</div>}
+          <Link className="text-primary hover:underline" to="/quality">Mở trang Chất lượng, vận hành</Link>
+        </Note>
+      )}
       <ErrorBox error={err} />
       {msg && <Note>{msg}</Note>}
       {user.role === 'ADMIN' && (

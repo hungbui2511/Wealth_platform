@@ -13,12 +13,16 @@ import { completeWaiting, type JobRec } from './jobs'
 import { addPolicy, analyzePolicy } from './policy'
 import { runCioAgent, type ExternalCio, type ViewRec } from './views'
 import { currentSnapshot, type SnapshotRecord } from './portfolio'
+import { importMarketData } from './quality'
+import { importGoldenRun } from './golden'
+import { AGENTS, agentControls, importRunLog, KIND_AGENT } from './ops'
+import { scoreCanary } from './canary'
 import { canonical, hashOf } from '../../engine/hash'
 import { runPreChallenge, runReChallenge, getView, viewChallenges } from './views'
 import type { PricePoint } from '../../shared/types'
 
 export interface ExternalRec {
-  id: string; kind: 'news' | 'event' | 'cio_view' | 'challenge' | 'policy_doc' | 'policy_summary' | 'prices'; subject?: string
+  id: string; kind: 'news' | 'event' | 'cio_view' | 'challenge' | 'policy_doc' | 'policy_summary' | 'prices' | 'market_data' | 'golden_view' | 'run_log' | 'scan_log'; subject?: string
   status: 'READY' | 'PROCESSING' | 'IMPORTED' | 'REJECTED'; created_at: string
   data: any; result?: Record<string, unknown>; error?: string; note?: string; rev?: number
 }
@@ -72,7 +76,7 @@ export async function submitExternal(env: Env, body: unknown, now: string) {
   if (typeof env.EXTERNAL_HMAC_KEY !== 'string' || !env.EXTERNAL_HMAC_KEY) throw new HttpError(503, 'Chưa bật EXTERNAL_HMAC_KEY: kênh gửi có chữ ký đang tắt')
   const b = (body ?? {}) as { id?: string; kind?: string; subject?: string; data?: Record<string, unknown> }
   if (!b.id || !/^[A-Za-z0-9._:-]{3,80}$/.test(b.id)) throw new HttpError(422, 'id không hợp lệ')
-  if (!['news', 'event', 'cio_view', 'challenge', 'policy_doc', 'policy_summary', 'prices'].includes(String(b.kind))) throw new HttpError(422, 'kind không hợp lệ')
+  if (!['news', 'event', 'cio_view', 'challenge', 'policy_doc', 'policy_summary', 'prices', 'market_data', 'golden_view', 'run_log', 'scan_log'].includes(String(b.kind))) throw new HttpError(422, 'kind không hợp lệ')
   const sig = await signatureOk(env, b.data)
   if (!sig.ok) throw new HttpError(401, sig.reason ?? 'Chữ ký không hợp lệ')
   await env.DB.prepare('INSERT INTO external_outputs (id, kind, subject, status, created_at, data) VALUES (?, ?, ?, ?, ?, ?)').bind(b.id, b.kind, b.subject ?? null, 'READY', now, JSON.stringify(b.data)).run()
@@ -101,8 +105,16 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     if (!sig.signed) unsigned.push(r.id)
     rows.push(r)
   }
-  const report = { trigger: opts.trigger ?? 'manual', news: { rows: 0, created: 0, duplicate: 0, rejected: 0, too_old: 0, irrelevant: 0 }, events: [] as string[], views: [] as { view_id: string; status: string }[], policies: [] as string[], policy_docs: [] as string[], prices: [] as string[], challenges: [] as { view_id: string; challenge: string }[], unsigned, rejected: [] as { id: string; reason: string }[], waiting: [] as { id: string; reason: string }[] }
+  const report = { trigger: opts.trigger ?? 'manual', news: { rows: 0, created: 0, duplicate: 0, rejected: 0, too_old: 0, irrelevant: 0 }, events: [] as string[], views: [] as { view_id: string; status: string }[], policies: [] as string[], policy_docs: [] as string[], prices: [] as string[], market: [] as string[], golden: [] as string[], run_logs: [] as string[], scan_logs: [] as string[], challenges: [] as { view_id: string; challenge: string }[], unsigned, rejected: [] as { id: string; reason: string }[], waiting: [] as { id: string; reason: string }[] }
   if (!rows.length) return report
+
+  // 0. Agent đang tạm dừng (sổ sự cố): không nhận đầu ra của agent đó, ghi rõ lý do để chạy lại sau khi xử lý xong
+  const controls = await agentControls(ctx)
+  for (const r of [...rows]) {
+    const ag = KIND_AGENT[r.kind]
+    const c = ag ? controls[ag] : undefined
+    if (c?.paused) { await mark(ctx, r, { status: 'REJECTED', error: `${AGENTS[ag]} đang tạm dừng: ${c.reason}${c.incident_id ? ` (sự cố ${c.incident_id})` : ''}` }); report.rejected.push({ id: r.id, reason: `${ag} tạm dừng` }); rows.splice(rows.indexOf(r), 1) }
+  }
 
   // 1. Tin
   for (const r of rows.filter(x => x.kind === 'news')) {
@@ -177,6 +189,8 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
         : await runPreChallenge(ctx, v.id, { findings: r.data.findings ?? [], counter_scenario: r.data.counter_scenario, model: label, separate: sep })
       const chs = await viewChallenges(ctx, v.id)
       const ch = chs[chs.length - 1]
+      // Bài kiểm tra phản biện: chấm ngay, không ghi gì về bài kiểm tra vào kết quả bản ghi (phiên phản biện đọc được bảng này)
+      await scoreCanary(ctx, v.id)
       await mark(ctx, r, { status: 'IMPORTED', result: { view_id: v.id, challenge_id: ch?.id, independence: ch?.independence, view_status: nv.status, added: chs.length - before } })
       report.challenges.push({ view_id: v.id, challenge: ch?.id ?? '' })
     } catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 1000) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
@@ -228,8 +242,25 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     }
   }
 
+  // 6. Số liệu thị trường (nguồn thứ hai để chấm sổ dự báo và xem "đã phản ánh vào giá"), bộ sự kiện chuẩn, nhịp tim lượt chạy
+  for (const r of rows.filter(x => x.kind === 'market_data')) {
+    if (!await claim(ctx, r)) continue
+    try { const out = await importMarketData(ctx, r.data); await mark(ctx, r, { status: 'IMPORTED', result: out }); report.market.push(...out.saved) }
+    catch (e) { const det = (e as HttpError).details; await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 500) + (det ? ': ' + JSON.stringify(det).slice(0, 1200) : '') }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
+  }
+  for (const r of rows.filter(x => x.kind === 'golden_view')) {
+    if (!await claim(ctx, r)) continue
+    try { const g = await importGoldenRun(ctx, r.data); await mark(ctx, r, { status: 'IMPORTED', result: { run_id: g.id, drift: g.drift ?? null, analog: g.analog_check?.agreement ?? null } }); report.golden.push(g.id) }
+    catch (e) { const det = (e as HttpError).details; await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 500) + (det ? ': ' + JSON.stringify(det).slice(0, 1200) : '') }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
+  }
+  for (const r of rows.filter(x => x.kind === 'run_log')) {
+    if (!await claim(ctx, r)) continue
+    try { const l = await importRunLog(ctx, r.data); await mark(ctx, r, { status: 'IMPORTED', result: { run_log_id: l.id } }); report.run_logs.push(l.id) }
+    catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 500) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }
+  }
+
   // Chỉ ghi nhật ký khi có thay đổi (tránh một bản ghi mỗi 10 phút khi các bản ghi chỉ đang chờ)
-  const changed = report.news.created + report.events.length + report.views.length + report.challenges.length + report.policies.length + report.policy_docs.length + report.prices.length + report.rejected.length
+  const changed = report.news.created + report.events.length + report.views.length + report.challenges.length + report.policies.length + report.policy_docs.length + report.prices.length + report.market.length + report.golden.length + report.run_logs.length + report.rejected.length
   if (changed || report.trigger !== 'cron') { const u = ctx.uow(); u.audit({ actor: report.trigger === 'cron' ? 'SYSTEM:cron' : 'ADMIN:CLAUDE', action: 'external.imported', object: 'external_outputs', data: report }); await u.commit() }
   return report
 }
@@ -269,7 +300,7 @@ export async function importPrices(ctx: AppCtx, d: { price_date: string; points:
   const hash = await hashOf({ price_date: d.price_date, points: points.map(({ fetched_at, ...p }) => p), fx, missing, fallbacks })
   const seq = await ctx.repo.nextSeq(`PS-${d.price_date}`)
   const sources = [...new Set([...ov.values()].map(p => p.source))]
-  const rec: SnapshotRecord = { id: `PS-${d.price_date.replace(/-/g, '')}-${seq}`, price_date: d.price_date, points, fx, missing, fallbacks, hash, created_at: now, mode: 'external',
+  const rec: SnapshotRecord = { id: `PS-${d.price_date.replace(/-/g, '')}-${seq}`, price_date: d.price_date, points, fx, missing, fallbacks, hash, created_at: now, mode: 'external', confirmation: { required: true, status: 'PENDING' },
     status: [{ id: 'EXTERNAL', label: `Giá thật do Claude lấy (${sources.join(', ')})`, requested: ov.size, ok: ov.size, fallback: 0, missing: 0, last_fetch: now }] }
   const u = ctx.uow()
   u.put('price_snapshots', rec as never)

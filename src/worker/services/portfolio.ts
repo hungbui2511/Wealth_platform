@@ -9,7 +9,7 @@ import { holdingPnl, summarize, aggregatePnl } from '../../engine/pnl'
 import { shortTerm, longTerm } from '../../engine/cashflow'
 import { goalCoverage } from '../../engine/goals'
 import { vnd } from '../../engine/dec'
-import { actor, assertFamily, HttpError, type AppCtx } from '../ctx'
+import { actor, assertFamily, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
 import { activeConfig, loadConfigs } from './config'
 
 export { PRICE_DATE }
@@ -32,7 +32,12 @@ export async function loadGoals(ctx: AppCtx, familyId?: string): Promise<Goal[]>
   return familyId ? ctx.repo.list<Goal>('goals', 'family_id = ?', [familyId], 'id') : ctx.repo.list<Goal>('goals', '', [], 'id')
 }
 
-export interface SnapshotRecord extends PriceSnapshot { created_at: string; status: AdapterStatus[]; mode: string }
+export interface SnapshotRecord extends PriceSnapshot {
+  created_at: string; status: AdapterStatus[]; mode: string
+  // Giá do AI lấy (external) phải được người xác nhận trước khi dùng cho lần áp dụng và màn hình gia đình
+  confirmation?: { required: boolean; status: 'PENDING' | 'CONFIRMED' | 'REJECTED'; by?: string; at?: string; note?: string }
+}
+export const snapshotUsable = (s: SnapshotRecord) => !s.confirmation?.required || s.confirmation.status === 'CONFIRMED'
 
 // Tải giá qua lớp adapter, chụp ảnh và lưu lịch sử giá để làm dự phòng khi nguồn lỗi
 export async function createPriceSnapshot(ctx: AppCtx, opts: { adapters?: Record<PriceAdapter['id'], PriceAdapter>; priceDate?: string } = {}): Promise<SnapshotRecord> {
@@ -68,9 +73,25 @@ export async function createPriceSnapshot(ctx: AppCtx, opts: { adapters?: Record
 }
 
 // Ảnh chụp giá mới nhất: giá thật do Claude đẩy lên (ngày giá mới) hoặc giá mẫu ngày PRICE_DATE
+// Ảnh chụp mới nhất đã dùng được (không tính ảnh chụp giá AI đang chờ hoặc đã bị từ chối xác nhận)
 export async function currentSnapshot(ctx: AppCtx): Promise<SnapshotRecord> {
   const rows = await ctx.repo.list<SnapshotRecord>('price_snapshots', '', [], 'created_at DESC, id DESC')
-  return rows[0] ?? createPriceSnapshot(ctx)
+  return rows.find(snapshotUsable) ?? createPriceSnapshot(ctx)
+}
+export async function pendingSnapshots(ctx: AppCtx) {
+  const rows = await ctx.repo.list<SnapshotRecord>('price_snapshots', '', [], 'created_at DESC, id DESC')
+  return rows.filter(s => s.confirmation?.required && s.confirmation.status === 'PENDING')
+}
+export async function confirmSnapshot(ctx: AppCtx, id: string, body: { decision?: string; note?: string }) {
+  requireRole(ctx, 'CIO', 'COMPLIANCE')
+  const s = await snapshotById(ctx, id)
+  if (!s.confirmation?.required || s.confirmation.status !== 'PENDING') throw new HttpError(409, 'Ảnh chụp không chờ xác nhận')
+  const ok = body.decision === 'confirm'
+  if (!ok && body.decision !== 'reject') throw new HttpError(422, 'decision phải là confirm hoặc reject')
+  const note = minReason(body.note, ok ? 'Ghi chú đối soát' : 'Lý do từ chối')
+  const ns: SnapshotRecord = { ...s, confirmation: { required: true, status: ok ? 'CONFIRMED' : 'REJECTED', by: actor(ctx), at: ctx.now(), note } }
+  const u = ctx.uow(); u.put('price_snapshots', ns as never); u.audit({ actor: actor(ctx), action: ok ? 'pricing.snapshot_confirmed' : 'pricing.snapshot_rejected', object: id, data: { note, external_points: s.points.filter(p => p.flag === 'external_ai').map(p => ({ key: p.key, price: p.price, date: p.date, source: p.source })) } }); await u.commit()
+  return ns
 }
 export async function snapshotById(ctx: AppCtx, id: string): Promise<SnapshotRecord> {
   const s = await ctx.repo.get<SnapshotRecord>('price_snapshots', id)

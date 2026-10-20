@@ -1,0 +1,26 @@
+{
+  "note": "Bộ sự kiện chuẩn để phát hiện trôi khi đổi mô hình hoặc prompt. Tin là tóm tắt ngắn sự kiện lịch sử đã biết rõ, dùng làm đầu vào cố định; không phải nguồn công bố và không dùng cho nhận định thật. analog_id trỏ tới giai đoạn tương tự trong mô hình yếu tố (có biến động thực tế) khi có.",
+  "events": [
+    { "id": "G01", "date": "2022-06-15", "type": "global_macro", "title": "Fed tăng lãi suất 0,75 điểm phần trăm", "analog_id": "VN-2022",
+      "news": [{ "id": "G01-N1", "title": "Fed tăng lãi suất 0,75 điểm %, mức tăng lớn nhất kể từ năm 1994", "summary": "Cục Dự trữ Liên bang Mỹ tăng lãi suất 0,75 điểm phần trăm để kiềm chế lạm phát cao nhất nhiều thập kỷ, phát tín hiệu tiếp tục tăng trong các kỳ họp tới." }] },
+    { "id": "G02", "date": "2022-10-25", "type": "monetary_policy", "title": "NHNN tăng lãi suất điều hành và nới biên độ tỷ giá", "analog_id": "VN-2022",
+      "news": [{ "id": "G02-N1", "title": "NHNN tăng lãi suất điều hành thêm 1 điểm %", "summary": "Ngân hàng Nhà nước tăng các mức lãi suất điều hành thêm 1 điểm phần trăm, lần tăng thứ hai trong khoảng một tháng, để ổn định tỷ giá và kiểm soát lạm phát." },
+               { "id": "G02-N2", "title": "Biên độ tỷ giá USD/VND được nới lên ±5%", "summary": "Ngân hàng Nhà nước nới biên độ giao dịch tỷ giá USD/VND từ ±3% lên ±5% so với tỷ giá trung tâm." }] },
+    { "id": "G03", "date": "2022-10-08", "type": "credit", "title": "Khủng hoảng niềm tin trái phiếu doanh nghiệp bất động sản",
+      "news": [{ "id": "G03-N1", "title": "Lãnh đạo một tập đoàn bất động sản lớn bị bắt liên quan phát hành trái phiếu", "summary": "Cơ quan điều tra khởi tố, bắt giữ lãnh đạo một tập đoàn bất động sản lớn liên quan đến phát hành trái phiếu; thị trường trái phiếu doanh nghiệp đóng băng, nhiều doanh nghiệp bất động sản chậm trả nợ trái phiếu." }] },
+    { "id": "G04", "date": "2023-03-10", "type": "global_macro", "title": "Ngân hàng Silicon Valley Bank sụp đổ",
+      "news": [{ "id": "G04-N1", "title": "Cơ quan quản lý Mỹ đóng cửa Silicon Valley Bank", "summary": "Silicon Valley Bank bị đóng cửa sau làn sóng rút tiền gửi, vụ đổ vỡ ngân hàng lớn nhất ở Mỹ kể từ năm 2008, gây lo ngại về rủi ro hệ thống ngân hàng." }] },
+    { "id": "G05", "date": "2024-08-05", "type": "global_macro", "title": "Chứng khoán Nhật lao dốc khi giao dịch chênh lệch lãi suất đồng yên đảo chiều",
+      "news": [{ "id": "G05-N1", "title": "Nikkei giảm 12,4%, phiên giảm mạnh nhất kể từ năm 1987", "summary": "Chỉ số Nikkei 225 giảm 12,4% trong một phiên khi đồng yên tăng mạnh và nhà đầu tư đóng các vị thế vay yên để đầu tư tài sản khác." }] },
+    { "id": "G06", "date": "2024-09-24", "type": "global_macro", "title": "Trung Quốc công bố gói kích thích kinh tế",
+      "news": [{ "id": "G06-N1", "title": "Ngân hàng Nhân dân Trung Quốc giảm lãi suất và tỷ lệ dự trữ bắt buộc", "summary": "Ngân hàng Nhân dân Trung Quốc công bố gói biện pháp gồm giảm lãi suất, giảm tỷ lệ dự trữ bắt buộc và công cụ hỗ trợ thị trường chứng khoán." }] },
+    { "id": "G07", "date": "2024-11-06", "type": "global_macro", "title": "Kết quả bầu cử Tổng thống Mỹ 2024",
+      "news": [{ "id": "G07-N1", "title": "Ông Donald Trump thắng cử Tổng thống Mỹ", "summary": "Ông Donald Trump thắng cử; đồng USD và lợi suất trái phiếu Mỹ tăng khi thị trường kỳ vọng chính sách thuế quan và tài khóa mở rộng." }] },
+    { "id": "G08", "date": "2025-04-02", "type": "trade", "title": "Mỹ công bố thuế đối ứng, Việt Nam chịu mức 46%", "analog_id": "VN-2025-04",
+      "news": [{ "id": "G08-N1", "title": "Mỹ áp thuế đối ứng với nhiều đối tác thương mại", "summary": "Mỹ công bố thuế nhập khẩu đối ứng với nhiều quốc gia, trong đó hàng hóa Việt Nam chịu mức 46%." }] },
+    { "id": "G09", "date": "2022-10-05", "type": "commodity", "title": "OPEC+ cắt giảm sản lượng dầu",
+      "news": [{ "id": "G09-N1", "title": "OPEC+ cắt giảm mục tiêu sản lượng 2 triệu thùng/ngày", "summary": "Nhóm OPEC+ quyết định cắt giảm mục tiêu sản lượng dầu 2 triệu thùng mỗi ngày, mức cắt lớn nhất kể từ năm 2020." }] },
+    { "id": "G10", "date": "2025-08-26", "type": "policy", "title": "Sửa quy định quản lý kinh doanh vàng, bỏ độc quyền vàng miếng",
+      "news": [{ "id": "G10-N1", "title": "Nghị định 232/2025/NĐ-CP sửa đổi Nghị định 24/2012 về quản lý kinh doanh vàng", "summary": "Chính phủ ban hành nghị định sửa đổi quy định quản lý hoạt động kinh doanh vàng, bỏ cơ chế Nhà nước độc quyền sản xuất vàng miếng, cho phép doanh nghiệp và ngân hàng đủ điều kiện được cấp phép." }] }
+  ]
+}

@@ -3,10 +3,17 @@ import { useEffect, useState } from 'react'
 import { DEFAULT_FACTOR_MODEL } from '../../src/data/factorModel'
 import { ASSET_CLASS_LABELS } from '../../src/shared/catalog'
 import { api } from './api'
-import { Badge, Btn, Card, ErrorBox, fmtPct, Money, Note } from './ui'
+import { Badge, Btn, Card, ErrorBox, fmtPct, Money, Note, useApi } from './ui'
 
 export const FACTOR: Record<string, { label: string; unit: string; origin: string }> = Object.fromEntries(DEFAULT_FACTOR_MODEL.factors.map(f => [f.id, { label: f.label, unit: f.unit, origin: f.origin }]))
 const ORIGIN: Record<string, [string, string]> = { global: ['primary', 'Quốc tế'], local: ['green', 'Trong nước'], exclusive: ['amber', 'Độc quyền TCB'] }
+// Nhãn hiệu chỉnh cạnh xác suất các nhánh: chưa đủ mốc chấm thì ghi rõ xác suất là giả định
+export function CalibrationNote() {
+  const { data } = useApi<{ calibrated: boolean; label: string }>('/api/quality/calibration-label')
+  if (!data) return null
+  return <Badge tone={data.calibrated ? 'green' : 'amber'} title="Sổ dự báo và Agent Chấm điểm">{data.label}</Badge>
+}
+
 export function OriginBadge({ o }: { o?: string }) { if (!o) return null; const a = ORIGIN[o] ?? ['low', o]; return <Badge tone={a[0]}>{a[1]}</Badge> }
 const SIZE: Record<string, string> = { S: 'nhỏ', M: 'vừa', L: 'lớn' }
 const fmtShock = (v: number, unit: string) => `${v > 0 ? '+' : ''}${Math.abs(v) >= 10 ? v.toFixed(0) : v.toFixed(2).replace(/\.?0+$/, '')} ${unit === '%' ? '%' : unit}`
@@ -42,6 +49,7 @@ export function ScenarioPanel({ viewId, scenarios, preview, editable, newsIds, o
   const shown = sel === 'expected' ? { shocks: preview?.expected ?? {}, core: [...new Set(preview?.branches?.flatMap((b: any) => b.core) ?? [])] as string[] } : preview?.branches?.find((b: any) => b.id === sel)
   return (
     <Card title={<span className="flex items-center gap-2">Nhánh kịch bản <Badge tone="primary">thiết kế v2</Badge><span className="text-fgm text-xs font-normal">Thị trường đã phản ánh: {{ none: 'chưa', partial: 'một phần (cú sốc ×0,5)', full: 'toàn bộ (cú sốc ×0)' }[draft.priced_in as string]}</span></span>}>
+      <div className="mb-2"><CalibrationNote /></div>
       <div className="overflow-x-auto"><table className="t">
         <thead><tr><th>Nhánh</th><th className="num">Xác suất</th><th>Chế độ</th><th>Yếu tố lõi (cỡ trong thư viện CIO)</th><th>Lập luận, nguồn</th></tr></thead>
         <tbody>{draft.branches.map((b: any, i: number) => (
@@ -100,8 +108,11 @@ export function FamilyScenarioCard({ s }: { s: any }) {
           {classes.map(([k, v]) => <div key={k} className="flex justify-between text-[12.5px] py-0.5 border-b border-[#1e2537]"><span>{ACL[k] ?? k}</span><Money v={v} short /></div>)}
           {s.loan_cost_annual !== 0 && <div className="flex justify-between text-[12.5px] py-0.5"><span>Chi phí lãi vay VND thả nổi thay đổi/năm</span><Money v={s.loan_cost_annual} short /></div>}
           {s.model_based_share > 0.05 && <div className="mt-2"><Badge tone="amber">{Math.round(s.model_based_share * 100)}% tác động đến từ tài sản định giá theo mô hình (BĐS, CP chưa niêm yết)</Badge></div>}
+          {s.assumption_share_3m > 0.05 && <div className="mt-1"><Badge tone="amber">{Math.round(s.assumption_share_3m * 100)}% tác động kỳ vọng đến từ tham số giả định, chưa ước lượng</Badge></div>}
+          {s.credit_jump && <div className="mt-1 text-[12px] text-fgm">Trái phiếu DN bất động sản (<Money v={s.credit_jump.exposure} short />): nhánh căng thẳng có thêm khả năng sự kiện tín dụng {Math.round(s.credit_jump.q[1] * 100)}% trong 3 tháng, tổn thất {Math.round(s.credit_jump.lgd * 100)}% (giả định).</div>}
         </div>
       </div>
+      {s.assumption_flag && <Note tone="warn">{s.assumption_flag}</Note>}
       {s.variance_share_3m && <p className="text-fgm text-xs mt-2">Độ bất định 3 tháng gồm: tương quan còn lại {Math.round(s.variance_share_3m.residual * 100)}% · cỡ cú sốc lõi {Math.round(s.variance_share_3m.core * 100)}% · rủi ro riêng từng mã {Math.round(s.variance_share_3m.idio * 100)}%.</p>}
       <p className="text-fgm text-xs mt-1">Dải phản ánh xác suất các nhánh, độ bất định của cỡ cú sốc, cách cú sốc lan truyền theo độ dài kỳ hạn và rủi ro riêng từng mã ({s.model_version}). Trong mỗi nhánh giả định phân phối chuẩn nên đuôi có thể mỏng hơn thực tế: P5 là mốc tham khảo, không phải tổn thất tối đa. Tính tất định, không dùng AI, tính lại được từ ảnh chụp. Nội bộ – không phải dự báo hay khuyến nghị.</p>
     </Card>

@@ -105,6 +105,11 @@ describe('Giá thật do Claude đẩy lên', () => {
     ] })
     const r = await h.ok('ADM1', 'POST', '/api/external/import')
     expect(r.prices.length).toBe(1)
+    // Giá do AI lấy chưa được dùng cho tới khi người xác nhận
+    const pending = await h.ok('CIO1', 'GET', '/api/families/DEMO-F01')
+    expect(pending.positions.find((p: any) => p.instrument_id === 'MBB').price).toBe(before.positions.find((p: any) => p.instrument_id === 'MBB').price)
+    expect((await h.call('RM1', 'POST', `/api/prices/snapshots/${r.prices[0]}/confirm`, { decision: 'confirm', note: 'Đã đối chiếu giá với TCBS và Vietcombank' })).status).toBe(403)
+    await h.ok('CIO1', 'POST', `/api/prices/snapshots/${r.prices[0]}/confirm`, { decision: 'confirm', note: 'Đã đối chiếu giá với TCBS và Vietcombank' })
     const after = await h.ok('CIO1', 'GET', '/api/families/DEMO-F01')
     const mbb = after.positions.find((p: any) => p.instrument_id === 'MBB')
     expect(mbb.price).toBe('26150')

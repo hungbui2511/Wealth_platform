@@ -27,6 +27,13 @@ export const TABLES: Record<string, string[]> = {
   rm_notes: ['id', 'family_id', 'user_id'],
   jobs: ['id', 'kind', 'status', 'subject', 'created_at'],
   external_outputs: ['id', 'kind', 'subject', 'status', 'created_at'],
+  forecasts: ['id', 'view_id', 'status', 'created_at'],
+  market_series: ['id', 'key', 'date', 'origin'],
+  golden_runs: ['id', 'golden_id', 'created_at'],
+  canaries: ['id', 'view_id', 'status', 'created_at'],
+  incidents: ['id', 'agent', 'status', 'created_at'],
+  agent_controls: ['id'],
+  run_logs: ['id', 'schedule', 'created_at'],
 }
 
 export type Doc = Record<string, unknown> & { id: string }

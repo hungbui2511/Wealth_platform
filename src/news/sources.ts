@@ -36,4 +36,6 @@ export const PUBLIC_DOMAINS = [
   { domain: 'ecb.europa.eu', name: 'Ngân hàng Trung ương châu Âu' }, { domain: 'ec.europa.eu', name: 'Ủy ban châu Âu, Eurostat' }, { domain: 'bankofengland.co.uk', name: 'Ngân hàng Trung ương Anh' },
   { domain: 'boj.or.jp', name: 'Ngân hàng Trung ương Nhật Bản' }, { domain: 'imf.org', name: 'IMF' }, { domain: 'worldbank.org', name: 'Ngân hàng Thế giới' },
   { domain: 'oecd.org', name: 'OECD' }, { domain: 'bis.org', name: 'Ngân hàng Thanh toán Quốc tế' }, { domain: 'opec.org', name: 'OPEC' },
+  // Số liệu chính thức làm nguồn thứ hai cho sổ dự báo (đợt 2–3 sau phản biện độc lập): thống kê, giá vàng, tỷ giá niêm yết
+  { domain: 'gso.gov.vn', name: 'Tổng cục Thống kê' }, { domain: 'nso.gov.vn', name: 'Cục Thống kê' }, { domain: 'sjc.com.vn', name: 'Công ty Vàng bạc Đá quý Sài Gòn (SJC)' }, { domain: 'vietcombank.com.vn', name: 'Vietcombank (tỷ giá niêm yết)' },
 ]

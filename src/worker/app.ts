@@ -27,6 +27,11 @@ import { importExternal, listExternal, submitExternal } from './services/externa
 import { agentCatalog, agentRunTrace, auditExport, auditList, traceFamily, verifyChain } from './services/trace'
 import type { FamilyImpactResult } from '../engine/apply'
 import type { TimestampField } from '../compliance/controls'
+import { calibrationSummary, forecastFor, reviewMetrics, scheduledQuality, seriesList } from './services/quality'
+import { agentControls, AGENTS, heartbeat, openIncident, setAgentPaused, updateIncident, type IncidentRec } from './services/ops'
+import { canarySummary, createCanary } from './services/canary'
+import { goldenSummary, setGoldenReference, GOLDEN_EVENTS } from './services/golden'
+import { confirmSnapshot, pendingSnapshots } from './services/portfolio'
 
 type Vars = { ctx: AppCtx; operator: boolean }
 export interface AppOptions { now?: () => string; fetchFn?: typeof fetch }
@@ -238,6 +243,32 @@ export function createApp(opts: AppOptions = {}) {
   })
 
   // ----- Kết quả do Claude lập trong phiên làm việc (chế độ external) -----
+  // ----- Chất lượng và vận hành (đợt 2 sau phản biện độc lập) -----
+  app.get('/api/quality', async c => {
+    const ctx = X(c); requireRole(ctx, 'CIO', 'COMPLIANCE', 'ADMIN')
+    const [calibration, review, canaries, golden, controls, incidents, schedules, pending] = await Promise.all([calibrationSummary(ctx), reviewMetrics(ctx), canarySummary(ctx), goldenSummary(ctx), agentControls(ctx), ctx.repo.list<IncidentRec>('incidents', '', [], 'created_at DESC'), heartbeat(ctx), pendingSnapshots(ctx)])
+    return c.json({ calibration, review, canaries, golden, agents: AGENTS, controls, incidents, schedules, pending_prices: pending.map(p => ({ id: p.id, price_date: p.price_date, created_at: p.created_at, points: p.points.filter(x => x.flag === 'external_ai') })) })
+  })
+  // Nhãn hiệu chỉnh cho mọi vai trò (hiển thị cạnh xác suất nhánh): không lộ chi tiết
+  app.get('/api/quality/calibration-label', async c => { const s = await calibrationSummary(X(c)); return c.json({ calibrated: s.calibrated, label: s.label }) })
+  app.get('/api/quality/series', async c => c.json(await seriesList(X(c), c.req.query('key'))))
+  app.get('/api/views/:id/forecast', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'COMPLIANCE', 'ADMIN'); return c.json(await forecastFor(ctx, c.req.param('id'))) })
+  app.post('/api/quality/score', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN'); return c.json(await scheduledQuality(c.env, { now: opts.now })) })
+  app.post('/api/canaries', async c => c.json(await createCanary(X(c), await body(c))))
+  app.get('/api/golden', async c => { requireRole(X(c), 'CIO', 'COMPLIANCE', 'ADMIN'); return c.json({ golden_events: GOLDEN_EVENTS, ...(await goldenSummary(X(c))) }) })
+  app.post('/api/golden/runs/:id/reference', async c => c.json(await setGoldenReference(X(c), c.req.param('id'), (await body<{ reason?: string }>(c)).reason)))
+  // Cảnh báo vận hành ngắn cho trang Tổng quan: lượt chạy theo lịch bị lỡ, agent tạm dừng, giá AI chờ xác nhận, sự cố đang mở
+  app.get('/api/ops/alerts', async c => {
+    const ctx = X(c); requireRole(ctx, 'CIO', 'COMPLIANCE', 'ADMIN')
+    const [hb, controls, pending, inc] = await Promise.all([heartbeat(ctx), agentControls(ctx), pendingSnapshots(ctx), ctx.repo.list<IncidentRec>('incidents', "status = 'OPEN'")])
+    return c.json({ schedules: hb.filter(s => s.status === 'MISSING' || s.status === 'FAILED'), paused: Object.values(controls).filter(x => x.paused).map(x => ({ id: x.id, label: AGENTS[x.id], reason: x.reason })), pending_prices: pending.length, open_incidents: inc.length })
+  })
+  app.post('/api/ops/incidents', async c => c.json(await openIncident(X(c), await body(c))))
+  app.put('/api/ops/incidents/:id', async c => c.json(await updateIncident(X(c), c.req.param('id'), await body(c))))
+  app.post('/api/ops/agents/:agent/pause', async c => c.json(await setAgentPaused(X(c), c.req.param('agent'), true, await body(c))))
+  app.post('/api/ops/agents/:agent/resume', async c => c.json(await setAgentPaused(X(c), c.req.param('agent'), false, await body(c))))
+  app.post('/api/prices/snapshots/:id/confirm', async c => c.json(await confirmSnapshot(X(c), c.req.param('id'), await body(c))))
+
   app.get('/api/external', async c => c.json(await listExternal(X(c))))
   app.post('/api/external/import', async c => { const ctx = X(c); requireRole(ctx, 'CIO', 'ADMIN'); return c.json(await importExternal(c.env, { now: opts.now, fetchFn: opts.fetchFn, accessEmail: ctx.accessEmail, trigger: 'manual' })) })
 

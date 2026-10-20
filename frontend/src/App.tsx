@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { NavLink, Navigate, Route, Routes, useNavigate } from 'react-router-dom'
-import { BookOpen, Bot, ClipboardCheck, Database, FileText, Gauge, Landmark, LibraryBig, LogOut, Newspaper, Radar, ScrollText, Settings, Users } from 'lucide-react'
+import { Activity, BookOpen, Bot, ClipboardCheck, Database, FileText, Gauge, Landmark, LibraryBig, LogOut, Newspaper, Radar, ScrollText, Settings, Users } from 'lucide-react'
 import { api, getUserId, setUserId, stepLabel } from './api'
 import { Badge, Btn, Card, ErrorBox, Loading } from './ui'
 import Home from './pages/Home'
@@ -12,6 +12,7 @@ import ViewDetail from './pages/ViewDetail'
 import Runs, { RunDetail } from './pages/Runs'
 import AgentRun from './pages/AgentRun'
 import PolicyRadar from './pages/PolicyRadar'
+import Quality from './pages/Quality'
 import Releases from './pages/Releases'
 import Config from './pages/Config'
 import Audit from './pages/Audit'
@@ -38,6 +39,7 @@ const NAV: { to: string; label: string; icon: typeof Gauge; roles: string[] }[] 
   { to: '/config', label: 'Cấu hình', icon: Settings, roles: ['CIO', 'COMPLIANCE', 'ADMIN'] },
   { to: '/audit', label: 'Nhật ký', icon: ScrollText, roles: ['CIO', 'COMPLIANCE', 'ADMIN'] },
   { to: '/agents', label: 'Danh mục agent', icon: Bot, roles: ['CIO', 'COMPLIANCE', 'ADMIN'] },
+  { to: '/quality', label: 'Chất lượng, vận hành', icon: Activity, roles: ['CIO', 'COMPLIANCE', 'ADMIN'] },
 ]
 
 function Login({ onLogin }: { onLogin: (u: User) => void }) {
@@ -140,6 +142,7 @@ export default function App() {
                 <Route path="/runs/:id" element={<RunDetail />} />
                 <Route path="/agent-runs/:id" element={<AgentRun />} />
                 <Route path="/radar" element={<PolicyRadar />} />
+                <Route path="/quality" element={<Quality />} />
                 <Route path="/releases" element={<Releases />} />
                 <Route path="/config" element={<Config />} />
                 <Route path="/audit" element={<Audit />} />

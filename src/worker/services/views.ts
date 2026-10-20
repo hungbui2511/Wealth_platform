@@ -10,6 +10,8 @@ import { wrapData, type ModelSet, type PromptSet } from '../../agents/prompts'
 import { MOCK } from '../../data/mock'
 import { SAMPLE_STORE } from '../../data/seed'
 import { assertViewTransition } from '../../engine/states'
+import { recordForecast } from './quality'
+import { assertAgentActive } from './ops'
 import { actor, HttpError, minReason, requireRole, type AppCtx } from '../ctx'
 import type { UnitOfWork } from '../db'
 import { activeConfig, activeRestricted, loadConfigs, loadFactorModel } from './config'
@@ -115,6 +117,7 @@ export async function runCioAgent(ctx: AppCtx, eventId: string, opts: { instruct
     const u = ctx.uow(); u.audit({ actor: actor(ctx), action: 'agent.blocked_restricted', object: e.id, data: { entries: e.hold.entries } }); await u.commit()
     throw new HttpError(409, 'Sự kiện nhắc tới tổ chức trong danh sách hạn chế: chờ Tuân thủ cho phép trước khi chạy agent (BR-27)')
   }
+  if (!opts.external) await assertAgentActive(ctx, 'cio')
   const news = await eventNews(ctx, e)
   const version = await nextViewVersion(ctx, e.id)
   const viewId = `VW-${evNum(e.id)}-v${version}`
@@ -440,6 +443,8 @@ export async function approvalConditions(ctx: AppCtx, v: ViewRec, reason?: strin
   if (lastPre && !anyIndependentPre) missing.push(`(f) Phản biện chưa độc lập: ${lastPre.independence?.reason ?? 'bản ghi không có đánh giá độc lập'}`)
   if (notIndep.length) missing.push(`(f) Lượt phản biện lại chưa độc lập: ${notIndep.map(c => c.id).join(', ')}`)
   if (v.status !== 'PENDING_APPROVAL' && v.status !== 'PENDING_CHALLENGE') missing.push(`Trạng thái hiện tại ${v.status} không cho phép duyệt`)
+  // (g) Bài kiểm tra phản biện có gài lỗi: không bao giờ duyệt được
+  if ((await ctx.repo.list('canaries', 'view_id = ?', [v.id])).length) missing.push('(g) Đây là bài kiểm tra phản biện có gài lỗi (Tuân thủ tạo), không duyệt được')
   return { ok: missing.length === 0, missing }
 }
 
@@ -467,6 +472,8 @@ export async function decide(ctx: AppCtx, viewId: string, body: { action: string
     v.approved_at = now
     const r = await apply(v, uow)
     d.run_id = r.run_id
+    // Sổ dự báo: lưu phân phối dự báo của các nhánh để Agent Chấm điểm đối chiếu với thực tế khi đến hạn
+    await recordForecast(ctx, v, uow, now)
   } else if (action === 'REWORK') v = transition(ctx, v, 'REWORK_REQUESTED', reason)
   else v = transition(ctx, v, 'REJECTED', reason)
   uow.insert('decisions', d as never)
