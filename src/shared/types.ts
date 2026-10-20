@@ -38,6 +38,8 @@ export interface Holding {
   commitment?: { total: Dec; called: Dec; currency: Currency; schedule?: { date: string; amount: Dec }[] }
   // Người thụ hưởng chỉ định (bảo hiểm, tài khoản có chỉ định)
   beneficiaries?: { member_id: string; pct: Dec }[]
+  // Tài sản riêng của người đứng tên (có trước hôn nhân, được thừa kế, tặng riêng): không vào khối tài sản chung vợ chồng
+  separate_property?: boolean
 }
 
 export interface Liability {

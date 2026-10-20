@@ -69,7 +69,7 @@ export interface LeverageRow {
   liability_id: string; name: string; balance_vnd: string
   collateral_vnd: string | null; ltv_now: number | null; ltv_stress: number | null
   ltv_max: number | null; margin_call_ltv: number | null
-  status: 'OK' | 'MARGIN_CALL_NOW' | 'MARGIN_CALL_STRESS' | 'ABOVE_MAX' | 'NOT_LINKED'
+  status: 'OK' | 'MARGIN_CALL_NOW' | 'MARGIN_CALL_STRESS' | 'ABOVE_MAX' | 'ABOVE_MAX_STRESS' | 'NOT_LINKED'
   top_up_vnd: string | null; message: string
 }
 
@@ -92,7 +92,8 @@ export function leverageCheck(f: Family, positions: Position[], book: PriceBook,
     if (mc !== null && ltvNow !== null && ltvNow >= mc) { status = 'MARGIN_CALL_NOW'; topUp = need(coll); message = `Tỷ lệ cho vay hiện tại ${(ltvNow * 100).toFixed(1)}% đã chạm ngưỡng gọi ký quỹ ${(mc * 100).toFixed(0)}%` }
     else if (mc !== null && (ltvStress === null || ltvStress >= mc)) { status = 'MARGIN_CALL_STRESS'; topUp = need(collStress); message = `Nếu lặp lại ${stress?.label ?? 'giai đoạn căng thẳng'}, tỷ lệ cho vay lên ${ltvStress === null ? 'không xác định' : (ltvStress * 100).toFixed(1) + '%'}, vượt ngưỡng gọi ký quỹ ${(mc * 100).toFixed(0)}%` }
     else if (mx !== null && ltvNow !== null && ltvNow > mx) { status = 'ABOVE_MAX'; topUp = need(coll); message = `Tỷ lệ cho vay hiện tại ${(ltvNow * 100).toFixed(1)}% vượt mức tối đa ${(mx * 100).toFixed(0)}%` }
-    else if (mc === null) message = 'Chưa nhập ngưỡng gọi ký quỹ nên chỉ hiển thị tỷ lệ cho vay'
+    else if (mx !== null && (ltvStress === null || ltvStress > mx)) { status = 'ABOVE_MAX_STRESS'; topUp = need(collStress); message = `Nếu lặp lại ${stress?.label ?? 'giai đoạn căng thẳng'}, tỷ lệ cho vay lên ${ltvStress === null ? 'không xác định' : (ltvStress * 100).toFixed(1) + '%'}, vượt mức tối đa ${(mx * 100).toFixed(0)}%: ngân hàng có thể yêu cầu bổ sung tài sản bảo đảm hoặc trả bớt nợ` }
+    else if (mc === null) message = 'Chưa nhập ngưỡng gọi ký quỹ; trong mức cho vay tối đa kể cả khi căng thẳng'
     return { ...base, collateral_vnd: vnd(coll), ltv_now: ltvNow, ltv_stress: ltvStress, status, top_up_vnd: topUp ? vnd(topUp) : null, message }
   })
 }
@@ -163,11 +164,14 @@ export function liquidityLadder(f: Family, instruments: Record<string, Instrumen
     if (!h.commitment) continue
     const eff = accountEffOwn(f, h.account_id), fx = fxRate(book, h.commitment.currency)
     const remaining = Decimal.max(ZERO, D(h.commitment.total).minus(D(h.commitment.called)))
-    const sched = h.commitment.schedule?.length ? h.commitment.schedule : [{ date: book.price_date, amount: remaining.toString() }]
+    // Lịch gọi vốn: bỏ đợt đã qua, tổng không vượt phần cam kết còn lại; không có lịch thì coi như gọi toàn bộ trong tháng đầu
+    const sched = h.commitment.schedule?.length ? h.commitment.schedule.filter(c => monthIndex(c.date) > base) : [{ date: book.price_date, amount: remaining.toString() }]
+    let left = remaining
     for (const c of sched) {
       const k = Math.max(1, monthIndex(c.date) - base)
-      if (k > 12) continue
-      const amt = D(c.amount).times(fx).times(eff)
+      if (k > 12 || left.lte(0)) continue
+      const native = Decimal.min(D(c.amount), left); left = left.minus(native)
+      const amt = native.times(fx).times(eff)
       netByMonth.set(k, (netByMonth.get(k) ?? ZERO).plus(amt))
       out.push({ label: `Gọi vốn cam kết ${instruments[h.instrument_id]?.name ?? h.instrument_id}`, k, amount: vnd(amt), kind: 'capital_call' })
     }
@@ -214,7 +218,7 @@ export interface SuccessionRules {
 export const DEFAULT_SUCCESSION_RULES: SuccessionRules = {
   version: '2026-10-20',
   sources: [
-    'Luật Thuế thu nhập cá nhân số 109/2025/QH15 (hiệu lực 01/07/2026): Điều 3 khoản 9 (thu nhập từ nhận thừa kế, quà tặng là chứng khoán, phần vốn, bất động sản, tài sản phải đăng ký), Điều 4 khoản 1 (miễn thuế bất động sản giữa vợ chồng, cha mẹ và con, ông bà và cháu, anh chị em ruột), Điều 18 (10% trên phần vượt 20 triệu đồng mỗi lần nhận), Điều 26 (cá nhân không cư trú 10%)',
+    'Luật Thuế thu nhập cá nhân số 109/2025/QH15 (hiệu lực 01/07/2026): Điều 3 khoản 9 (thu nhập từ nhận thừa kế, quà tặng là chứng khoán, phần vốn, bất động sản, tài sản phải đăng ký), Điều 4 khoản 1 (miễn thuế chuyển nhượng, nhận thừa kế, quà tặng là bất động sản giữa vợ với chồng; cha mẹ đẻ, cha mẹ nuôi với con; cha mẹ chồng, cha mẹ vợ với con dâu, con rể; ông bà nội, ngoại với cháu; anh chị em ruột), Điều 18 (10% trên phần vượt 20 triệu đồng mỗi lần nhận), Điều 26 (cá nhân không cư trú 10%)',
     'Luật Hôn nhân và gia đình 2014: Điều 33 (tài sản chung vợ chồng), Điều 59 (chia tài sản khi ly hôn), Điều 66 (tài sản chung khi một bên chết)',
     'Bộ luật Dân sự 2015: Điều 651 (hàng thừa kế thứ nhất)',
   ],
@@ -245,6 +249,9 @@ export function successionRulesErrors(r: SuccessionRules): string[] {
   if (typeof r?.marital_common_share !== 'number' || r.marital_common_share < 0 || r.marital_common_share > 1) e.push('marital_common_share phải trong khoảng 0–1')
   if (!Array.isArray(r?.sources) || !r.sources.length) e.push('cần ít nhất một căn cứ pháp lý trong sources')
   if (typeof r?.legal_confirmed !== 'boolean') e.push('legal_confirmed phải là true hoặc false')
+  if (typeof r?.version !== 'string' || !r.version.trim()) e.push('version phải là chuỗi không rỗng')
+  if (typeof t?.entity_shares_taxable !== 'boolean') e.push('inheritance_tax.entity_shares_taxable phải là true hoặc false')
+  if (!Array.isArray(r?.intestate_first_tier) || !r.intestate_first_tier.every(x => ['spouse', 'parent', 'child'].includes(x))) e.push('intestate_first_tier chỉ gồm spouse, parent, child')
   return e
 }
 
@@ -264,40 +271,54 @@ function fxOf(ccy: string, positions: Position[], book?: PriceBook): Decimal | n
   return positions.find(p => p.currency === ccy)?.fx_rate ?? null
 }
 
-export interface MemberAssets { member_id: string; direct: Record<string, Decimal>; via_entity: Decimal; total: Decimal; frozen_sole: Decimal; beneficiary_out: Decimal; liquid: Decimal }
+export interface MemberAssets {
+  member_id: string
+  direct: Record<string, Decimal>    // tài sản chung trong hôn nhân (mặc định), theo loại
+  separate: Record<string, Decimal>  // tài sản riêng (được đánh dấu separate_property), theo loại
+  via_entity: Decimal; total: Decimal; frozen_sole: Decimal; beneficiary_out: Decimal
+}
 
-// Tài sản quy cho một thành viên: phần trực tiếp theo loại tài sản và phần vốn qua pháp nhân
+const LIQUID_CLASS = (cls: string) => { const b = LIQUIDATION[cls as AssetClass]?.bucket; return !!b && b !== 'gt12' && b !== 'm12' }
+const add = (m: Record<string, Decimal>, k: string, v: Decimal) => { m[k] = (m[k] ?? ZERO).plus(v) }
+
+// Giá trị ròng của từng pháp nhân (tài sản qua tài khoản của pháp nhân trừ nợ pháp nhân), sàn 0 riêng từng pháp nhân: trách nhiệm hữu hạn
+function entityNet(f: Family, positions: Position[], book?: PriceBook): Map<string, Decimal> {
+  const gross = new Map<string, Decimal>()
+  for (const p of positions) {
+    const acc = f.accounts.find(a => a.id === p.account_id)
+    for (const o of acc?.owners ?? []) if (o.kind === 'entity') gross.set(o.id, (gross.get(o.id) ?? ZERO).plus(p.value_vnd.times(D(o.pct))))
+  }
+  for (const l of f.liabilities) {
+    if (l.borrower.kind !== 'entity') continue
+    const fx = fxOf(l.currency, positions, book)
+    if (fx) gross.set(l.borrower.id, (gross.get(l.borrower.id) ?? ZERO).minus(D(l.balance).times(fx)))
+  }
+  return new Map([...gross].map(([k, v]) => [k, Decimal.max(ZERO, v)]))
+}
+
+// Tài sản quy cho một thành viên: phần trực tiếp theo loại tài sản (chung / riêng) và phần vốn qua pháp nhân (đã trừ nợ pháp nhân)
 export function memberAssets(f: Family, positions: Position[], memberId: string, book?: PriceBook): MemberAssets {
-  const direct: Record<string, Decimal> = {}
-  let via = ZERO, frozen = ZERO, benef = ZERO, liquid = ZERO
+  const direct: Record<string, Decimal> = {}, separate: Record<string, Decimal> = {}
+  let frozen = ZERO, benef = ZERO
   for (const p of positions) {
     const acc = f.accounts.find(a => a.id === p.account_id)
     if (!acc) continue
     const h = f.holdings.find(x => x.id === p.holding_id)
     for (const o of acc.owners) {
-      if (o.kind === 'member' && o.id === memberId) {
-        const v = p.value_vnd.times(D(o.pct))
-        // Có người thụ hưởng chỉ định: không vào di sản
-        if (h?.beneficiaries?.length) { benef = benef.plus(v); continue }
-        // Chứng chỉ quỹ là chứng khoán: xếp theo quỹ, không theo tài sản bên trong
-        const cls: AssetClass = p.part !== null ? 'FUND' : p.asset_class
-        direct[cls] = (direct[cls] ?? ZERO).plus(v)
-        if (acc.owners.length === 1) frozen = frozen.plus(v)
-        if (LIQUIDATION[cls].bucket !== 'gt12' && LIQUIDATION[cls].bucket !== 'm12') liquid = liquid.plus(v)
-      } else if (o.kind === 'entity') {
-        via = via.plus(p.value_vnd.times(D(o.pct)).times(memberEntityShare(f, o.id, memberId)))
-      }
+      if (o.kind !== 'member' || o.id !== memberId) continue
+      const v = p.value_vnd.times(D(o.pct))
+      // Có người thụ hưởng chỉ định: không vào di sản
+      if (h?.beneficiaries?.length) { benef = benef.plus(v); continue }
+      // Chứng chỉ quỹ là chứng khoán: xếp theo quỹ, không theo tài sản bên trong
+      const cls: AssetClass = p.part !== null ? 'FUND' : p.asset_class
+      add(h?.separate_property ? separate : direct, cls, v)
+      if (acc.owners.length === 1) frozen = frozen.plus(v)
     }
   }
-  // Phần vốn tính trên tài sản ròng của pháp nhân: trừ nợ do pháp nhân đứng tên vay theo tỷ lệ thành viên sở hữu
-  for (const l of f.liabilities) {
-    if (l.borrower.kind !== 'entity') continue
-    const fx = fxOf(l.currency, positions, book)
-    if (fx) via = via.minus(D(l.balance).times(fx).times(memberEntityShare(f, l.borrower.id, memberId)))
-  }
-  via = Decimal.max(ZERO, via)
-  const total = sum(Object.values(direct)).plus(via)
-  return { member_id: memberId, direct, via_entity: via, total, frozen_sole: frozen, beneficiary_out: benef, liquid }
+  let via = ZERO
+  for (const [e, net] of entityNet(f, positions, book)) via = via.plus(net.times(memberEntityShare(f, e, memberId)))
+  const total = sum(Object.values(direct)).plus(sum(Object.values(separate))).plus(via)
+  return { member_id: memberId, direct, separate, via_entity: via, total, frozen_sole: frozen, beneficiary_out: benef }
 }
 
 export interface SuccessionHeir { member_id: string; name: string; relation: string; share: number; receives: string; taxable: string; tax: string; non_resident: boolean }
@@ -318,17 +339,21 @@ const isNonResident = (m: { tax_residency?: string }) => !!m.tax_residency && m.
 
 export function succession(f: Family, positions: Position[], book: PriceBook, rules: SuccessionRules): SuccessionResult {
   const t = rules.inheritance_tax
-  const name = (id: string) => f.members.find(m => m.id === id)?.name ?? id
+  const tier = new Set(rules.intestate_first_tier ?? ['spouse', 'parent', 'child'])
+  const half = rules.marital_common_share
   const gaps: string[] = []
   if (f.members.some(m => m.has_will === undefined)) gaps.push('Chưa ghi nhận thành viên nào đã lập di chúc')
   if (f.members.some(m => m.marital_status === undefined)) gaps.push('Thiếu tình trạng hôn nhân của một số thành viên')
   if (f.members.some(m => m.tax_residency === undefined)) gaps.push('Thiếu nơi cư trú thuế của một số thành viên')
   if (f.members.filter(m => m.generation > 1).some(m => !m.parent_ids?.length)) gaps.push('Thiếu quan hệ cha mẹ – con giữa các thế hệ: người thừa kế được suy theo thế hệ')
+  if (!f.holdings.some(h => h.separate_property !== undefined)) gaps.push('Chưa đánh dấu tài sản riêng của vợ/chồng: mọi tài sản được coi là tài sản chung')
   const liab = liabilityExposure(f, book)
-  const debtOf = (mid: string) => sum(liab.filter(l => f.liabilities.find(x => x.id === l.id)?.borrower.kind === 'member' && f.liabilities.find(x => x.id === l.id)?.borrower.id === mid).map(l => l.balance_vnd))
+  const debtOf = (mid: string) => sum(liab.filter(l => { const d = f.liabilities.find(x => x.id === l.id); return d?.borrower.kind === 'member' && d.borrower.id === mid }).map(l => l.balance_vnd))
+  const assets = new Map(f.members.map(m => [m.id, memberAssets(f, positions, m.id, book)]))
+  const spouseOf = (m: Family['members'][number]) => m.marital_status === 'married' && m.spouse_id ? f.members.find(x => x.id === m.spouse_id) : undefined
   const events: SuccessionEvent[] = []
 
-  // Tính thuế một người nhận: theo loại tài sản; bất động sản trực tiếp được miễn giữa người thân gần; phần vốn qua pháp nhân chịu thuế
+  // Tính thuế một người nhận: theo loại tài sản; bất động sản đứng tên cá nhân được miễn giữa người thân (Điều 4 khoản 1); phần vốn qua pháp nhân chịu thuế
   const taxFor = (gross: Record<string, Decimal>, viaEntity: Decimal, close: boolean) => {
     let taxable = ZERO
     for (const [cls, v] of Object.entries(gross)) {
@@ -341,67 +366,86 @@ export function succession(f: Family, positions: Position[], book: PriceBook, ru
     return { taxable, tax }
   }
 
-  // Sự kiện 1: thành viên thế hệ 1 qua đời
+  // Sự kiện 1: thành viên thế hệ 1 qua đời. Di sản = phần của người mất trong khối tài sản chung (của cả hai vợ chồng) + tài sản riêng
   for (const m of f.members.filter(x => x.generation === 1)) {
-    const a = memberAssets(f, positions, m.id, book)
-    if (a.total.lte(0)) continue
+    const a = assets.get(m.id)!
+    const spouse = spouseOf(m)
+    const s = spouse ? assets.get(spouse.id)! : undefined
+    const estCls: Record<string, Decimal> = {}
+    for (const [k, v] of Object.entries(a.direct)) add(estCls, k, s ? v.times(1 - half) : v)
+    if (s) for (const [k, v] of Object.entries(s.direct)) add(estCls, k, v.times(1 - half))
+    for (const [k, v] of Object.entries(a.separate)) add(estCls, k, v)
+    const estVia = s ? a.via_entity.plus(s.via_entity).times(1 - half) : a.via_entity
+    const estDebt = s ? debtOf(m.id).plus(debtOf(spouse!.id)).times(1 - half) : debtOf(m.id)
+    const estateGross = sum(Object.values(estCls)).plus(estVia)
+    if (estateGross.lte(0)) continue
+    const estate = Decimal.max(ZERO, estateGross.minus(estDebt))
+    const ratio = estate.div(estateGross)
     const findings: SuccessionEvent['findings'] = []
-    const spouse = m.spouse_id ? f.members.find(x => x.id === m.spouse_id) : undefined
-    // Tài sản chung vợ chồng: một nửa thuộc người còn sống, không phải di sản
-    const share = spouse && m.marital_status !== 'divorced' ? 1 - rules.marital_common_share : 1
-    const debt = debtOf(m.id)
-    const estateScale = (x: Decimal) => x.times(share)
-    const estateGross = estateScale(a.total)
-    const estate = Decimal.max(ZERO, estateGross.minus(debt.times(share)))
-    // Người thừa kế theo pháp luật (hàng thứ nhất): vợ/chồng, cha mẹ, con. Thiếu quan hệ thì suy theo thế hệ
-    const children = f.members.filter(x => x.parent_ids?.includes(m.id)).length ? f.members.filter(x => x.parent_ids?.includes(m.id)) : f.members.filter(x => x.generation === 2)
+    // Người thừa kế theo pháp luật (hàng thứ nhất theo bảng quy tắc). Thiếu quan hệ cha mẹ – con thì suy theo thế hệ
+    const own = f.members.filter(x => x.parent_ids?.includes(m.id))
+    const children = own.length ? own : f.members.filter(x => x.generation === 2)
     const parents = f.members.filter(x => m.parent_ids?.includes(x.id))
-    const heirs = [...(spouse ? [{ m: spouse, rel: 'Vợ/chồng' }] : []), ...parents.map(x => ({ m: x, rel: 'Cha/mẹ' })), ...children.map(x => ({ m: x, rel: 'Con' }))]
+    const heirs = [...(spouse && tier.has('spouse') ? [{ m: spouse, rel: 'Vợ/chồng' }] : []), ...(tier.has('parent') ? parents.map(x => ({ m: x, rel: 'Cha/mẹ' })) : []), ...(tier.has('child') ? children.map(x => ({ m: x, rel: 'Con' })) : [])]
     if (m.has_will) findings.push({ level: 'INFO', text: 'Đã có di chúc: phân chia theo di chúc, bảng dưới chỉ minh hoạ chia theo pháp luật' })
     else findings.push({ level: 'YELLOW', text: `${m.has_will === false ? 'Không có' : 'Chưa ghi nhận'} di chúc: di sản chia đều cho hàng thừa kế thứ nhất theo Điều 651 Bộ luật Dân sự` })
+    if (s) findings.push({ level: 'INFO', text: `Đã tách phần của vợ/chồng còn sống (${Math.round(half * 100)}% khối tài sản chung đứng tên cả hai) theo Điều 66 Luật Hôn nhân và gia đình; tài sản riêng đã đánh dấu đi trọn vào di sản` })
+    if (!heirs.length) findings.push({ level: 'YELLOW', text: 'Không xác định được người thừa kế hàng thứ nhất trong dữ liệu gia đình' })
     const n = heirs.length || 1
     const heirRows: SuccessionHeir[] = heirs.map(h => {
-      const ratio = estate.gt(0) && estateGross.gt(0) ? estate.div(estateGross) : ZERO
-      const gross: Record<string, Decimal> = Object.fromEntries(Object.entries(a.direct).map(([k, v]) => [k, estateScale(v).times(ratio).div(n)]))
-      const via = estateScale(a.via_entity).times(ratio).div(n)
-      const { taxable, tax } = taxFor(gross, via, true)
+      const gross: Record<string, Decimal> = Object.fromEntries(Object.entries(estCls).map(([k, v]) => [k, v.times(ratio).div(n)]))
+      const { taxable, tax } = taxFor(gross, estVia.times(ratio).div(n), true)
       return { member_id: h.m.id, name: h.m.name, relation: h.rel, share: 1 / n, receives: vnd(estate.div(n)), taxable: vnd(taxable), tax: vnd(tax), non_resident: isNonResident(h.m) }
     })
     const taxTotal = sum(heirRows.map(r => D(r.tax)))
-    const liquid = estateScale(a.liquid)
+    const liquid = sum(Object.entries(estCls).filter(([k]) => LIQUID_CLASS(k)).map(([, v]) => v))
     if (taxTotal.gt(0) && liquid.lt(taxTotal)) findings.push({ level: 'RED', text: `Thuế ước tính ${vnd(taxTotal)} đồng lớn hơn tài sản thanh khoản trong di sản ${vnd(liquid)} đồng: người thừa kế có thể phải bán tài sản hoặc vay để nộp thuế` })
-    if (a.via_entity.gt(0)) findings.push({ level: 'YELLOW', text: `${vnd(estateScale(a.via_entity))} đồng tài sản nắm qua pháp nhân được chuyển dưới dạng phần vốn: chịu thuế 10% kể cả khi bên trong là bất động sản` })
+    if (estVia.gt(0)) findings.push({ level: 'YELLOW', text: `${vnd(estVia)} đồng tài sản nắm qua pháp nhân được chuyển dưới dạng phần vốn: chịu thuế 10% kể cả khi bên trong là bất động sản` })
     const offshore = f.entities.filter(e => e.jurisdiction && e.jurisdiction !== 'VN' && memberEntityShare(f, e.id, m.id).gt(0))
     if (offshore.length) findings.push({ level: 'YELLOW', text: `Nắm phần vốn qua pháp nhân nước ngoài (${offshore.map(e => `${e.name}, ${e.jurisdiction}`).join('; ')}): thủ tục thừa kế cổ phần theo luật nơi thành lập, cần tư vấn pháp lý nước ngoài` })
-    if (a.frozen_sole.gt(0)) findings.push({ level: 'YELLOW', text: `${vnd(a.frozen_sole)} đồng ở tài khoản đứng tên riêng: cần thủ tục khai nhận di sản trước khi giao dịch` })
+    if (a.frozen_sole.gt(0)) findings.push({ level: 'YELLOW', text: `${vnd(a.frozen_sole)} đồng ở tài khoản đứng tên riêng người mất: cần thủ tục khai nhận di sản trước khi giao dịch` })
     if (a.beneficiary_out.gt(0)) findings.push({ level: 'INFO', text: `${vnd(a.beneficiary_out)} đồng có người thụ hưởng chỉ định, chuyển ngoài di sản` })
     if (heirRows.some(r => r.non_resident)) findings.push({ level: 'YELLOW', text: 'Có người thừa kế cư trú thuế ở nước ngoài: chịu 10% theo Điều 26 và có thể chịu thuế nước sở tại' })
-    if (debt.gt(0)) findings.push({ level: 'INFO', text: `Đã trừ phần nợ ${vnd(debt.times(share))} đồng do thành viên này đứng tên vay` })
+    if (estDebt.gt(0)) findings.push({ level: 'INFO', text: `Đã trừ phần nợ ${vnd(estDebt)} đồng thuộc về di sản` })
     events.push({ event: 'g1_death', member_id: m.id, member_name: m.name, title: `${m.name} qua đời`, estate: vnd(estate), heirs: heirRows, tax_total: vnd(taxTotal), liquid_for_tax: vnd(liquid), findings, basis: rules.sources })
   }
 
   // Sự kiện 2: thành viên thế hệ 2 chuyển cư trú thuế ra nước ngoài
   for (const m of f.members.filter(x => x.generation === 2)) {
     const findings: SuccessionEvent['findings'] = []
-    const a = memberAssets(f, positions, m.id, book)
+    const a = assets.get(m.id)!
     const already = isNonResident(m)
     findings.push({ level: 'YELLOW', text: `${already ? 'Đang' : 'Nếu'} cư trú thuế ngoài Việt Nam: khoản thừa kế, quà tặng nhận từ Việt Nam vẫn chịu 10% (Điều 26) và có thể chịu thuế nước sở tại` })
     if ((m.nationality ?? []).length > 1) findings.push({ level: 'YELLOW', text: `Nhiều quốc tịch (${m.nationality!.join(', ')}): có thể phát sinh nghĩa vụ khai báo tài sản ở nước khác` })
     if (a.via_entity.gt(0)) findings.push({ level: 'INFO', text: `${vnd(a.via_entity)} đồng phần vốn qua pháp nhân: cần rà điều lệ về chuyển nhượng cho người không cư trú` })
-    const expected = f.members.filter(x => x.generation === 1).map(g1 => memberAssets(f, positions, g1.id, book).total).reduce((x, y) => x.plus(y), ZERO).div(Math.max(1, f.members.filter(x => x.generation === 2).length))
+    const expected = f.members.filter(x => x.generation === 1).map(g1 => assets.get(g1.id)!.total).reduce((x, y) => x.plus(y), ZERO).div(Math.max(1, f.members.filter(x => x.generation === 2).length))
     events.push({ event: 'g2_emigration', member_id: m.id, member_name: m.name, title: `${m.name} chuyển cư trú ra nước ngoài`, estate: vnd(expected), heirs: [], tax_total: '0', liquid_for_tax: null, findings, basis: [rules.sources[0]] })
   }
 
-  // Sự kiện 3: ly hôn của thành viên đã kết hôn có tài sản đáng kể
+  // Sự kiện 3: ly hôn — một sự kiện cho mỗi cặp. Tài sản chung chia theo nguyên tắc chia đôi có tính đến công sức đóng góp và lỗi (Điều 59);
+  // phần chuyển giữa hai người ≈ chênh lệch giữa phần đang đứng tên và một nửa khối chung.
+  const done = new Set<string>()
   for (const m of f.members.filter(x => x.marital_status === 'married')) {
-    const a = memberAssets(f, positions, m.id, book)
-    if (a.total.lte(0)) continue
+    const spouse = spouseOf(m)
+    const key = [m.id, spouse?.id ?? ''].sort().join('|')
+    if (done.has(key)) continue
+    done.add(key)
+    const a = assets.get(m.id)!
+    const s = spouse ? assets.get(spouse.id)! : undefined
+    const common = (x: MemberAssets) => sum(Object.values(x.direct)).plus(x.via_entity)
+    const pool = common(a).plus(s ? common(s) : ZERO)
+    if (pool.lte(0)) continue
     const findings: SuccessionEvent['findings'] = []
-    const spouseIn = m.spouse_id && f.members.some(x => x.id === m.spouse_id)
-    const atStake = a.total.times(rules.marital_common_share)
-    findings.push({ level: spouseIn ? 'INFO' : 'YELLOW', text: `Tài sản tạo lập trong hôn nhân được coi là tài sản chung (Điều 33), chia theo Điều 59: tối đa ${vnd(atStake)} đồng có thể chuyển cho ${spouseIn ? 'vợ/chồng trong gia đình' : 'vợ/chồng ngoài phạm vi gia đình quản lý'}` })
-    if (a.via_entity.gt(0)) findings.push({ level: 'YELLOW', text: `Phần vốn qua pháp nhân ${vnd(a.via_entity)} đồng có thể bị chia: kiểm tra quyền kiểm soát pháp nhân sau khi chia` })
-    events.push({ event: 'divorce', member_id: m.id, member_name: m.name, title: `${m.name} ly hôn`, estate: vnd(atStake), heirs: [], tax_total: '0', liquid_for_tax: null, findings, basis: [rules.sources[1]] })
+    const target = pool.times(half)
+    const shift = common(a).minus(target)
+    const from = shift.gte(0) ? m : spouse, to = shift.gte(0) ? spouse : m
+    if (s) findings.push({ level: 'INFO', text: `Khối tài sản chung đứng tên hai người khoảng ${vnd(pool)} đồng; theo nguyên tắc chia đôi có điều chỉnh (Điều 59), khoảng ${vnd(shift.abs())} đồng có thể chuyển từ ${from?.name} sang ${to?.name}. Tỷ lệ thực tế do toà quyết định theo công sức đóng góp và lỗi` })
+    else findings.push({ level: 'YELLOW', text: `Vợ/chồng ngoài phạm vi gia đình quản lý, chưa ghi nhận tài sản của họ: nếu họ không đứng tên tài sản chung đáng kể, khoảng ${vnd(target)} đồng có thể chuyển ra ngoài gia đình (chia đôi có điều chỉnh, Điều 59)` })
+    const via = a.via_entity.plus(s?.via_entity ?? ZERO)
+    if (via.gt(0)) findings.push({ level: 'YELLOW', text: `Phần vốn qua pháp nhân ${vnd(via)} đồng có thể bị chia: kiểm tra quyền kiểm soát pháp nhân sau khi chia` })
+    const sep = sum(Object.values(a.separate)).plus(s ? sum(Object.values(s.separate)) : ZERO)
+    if (sep.gt(0)) findings.push({ level: 'INFO', text: `${vnd(sep)} đồng đã đánh dấu là tài sản riêng, không đưa vào khối chung` })
+    events.push({ event: 'divorce', member_id: m.id, member_name: m.name, title: spouse ? `${m.name} và ${spouse.name} ly hôn` : `${m.name} ly hôn`, estate: vnd(s ? shift.abs() : target), heirs: [], tax_total: '0', liquid_for_tax: null, findings, basis: [rules.sources[1]] })
   }
   return { rules_version: rules.version, legal_confirmed: rules.legal_confirmed, events, data_gaps: gaps, notes: rules.notes }
 }
@@ -412,7 +456,7 @@ export function inheritanceTaxableBase(f: Family, positions: Position[], rules: 
   let x = ZERO
   for (const m of f.members.filter(y => y.generation === 1)) {
     const a = memberAssets(f, positions, m.id)
-    for (const [cls, v] of Object.entries(a.direct)) if (t.taxable_classes.includes(cls as AssetClass) && !t.exempt_classes_close_relatives.includes(cls as AssetClass)) x = x.plus(v)
+    for (const [cls, v] of [...Object.entries(a.direct), ...Object.entries(a.separate)]) if (t.taxable_classes.includes(cls as AssetClass) && !t.exempt_classes_close_relatives.includes(cls as AssetClass)) x = x.plus(v)
     if (t.entity_shares_taxable) x = x.plus(a.via_entity)
   }
   return x

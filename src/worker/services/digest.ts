@@ -42,11 +42,14 @@ export async function rmDigest(ctx: AppCtx, daysRaw = 7) {
     for (const m of matches.filter(x => x.family_id === f.id)) items.push({ kind: 'policy', level: 'INFO', link: '/policy', text: `Văn bản mới khớp gia đình: ${docs.get(m.doc_id)?.title ?? m.doc_id}. ${m.reasons[0] ?? ''}` })
     try {
       const s = await familyStructure(ctx, f.id)
-      for (const l of s.leverage.filter(x => x.status === 'MARGIN_CALL_NOW' || x.status === 'MARGIN_CALL_STRESS' || x.status === 'ABOVE_MAX')) items.push({ kind: 'leverage', level: l.status === 'MARGIN_CALL_NOW' ? 'RED' : 'YELLOW', link: `/families/${f.id}`, text: `${l.name}: ${l.message}` })
+      for (const l of s.leverage.filter(x => ['MARGIN_CALL_NOW', 'MARGIN_CALL_STRESS', 'ABOVE_MAX', 'ABOVE_MAX_STRESS'].includes(x.status))) items.push({ kind: 'leverage', level: l.status === 'MARGIN_CALL_NOW' ? 'RED' : 'YELLOW', link: `/families/${f.id}`, text: `${l.name}: ${l.message}` })
       for (const r of s.ladder.rows.filter(x => x.status !== 'OK')) items.push({ kind: 'liquidity', level: r.status as 'RED' | 'YELLOW', link: `/families/${f.id}`, text: `Thanh khoản khi căng thẳng ${r.label.toLowerCase()}: ${r.status === 'RED' ? 'thiếu' : 'mỏng'} (chênh lệch ${fmtVndShort(r.gap)})` })
       for (const e of s.succession.events) for (const x of e.findings.filter(y => y.level === 'RED')) items.push({ kind: 'succession', level: 'RED', link: `/families/${f.id}`, text: `${e.title}: ${x.text}` })
       if (s.missing.length || s.succession.data_gaps.length) items.push({ kind: 'data', level: 'INFO', link: `/families/${f.id}`, text: `Cần bổ sung dữ liệu: ${[...s.missing, ...s.succession.data_gaps].join('; ')}` })
-    } catch { /* thiếu giá hoặc mô hình: bỏ phần cấu trúc, không chặn bản tin */ }
+    } catch (e) {
+      // Không chặn bản tin, nhưng phải nói rõ phần nào chưa kiểm tra được
+      items.push({ kind: 'data', level: 'YELLOW', link: `/families/${f.id}`, text: `Không tính được đòn bẩy, thanh khoản và kế thừa: ${String((e as Error).message ?? e).slice(0, 200)}` })
+    }
     const net = await familyNetting(ctx, f.id)
     const rank = { RED: 0, YELLOW: 1, INFO: 2 }
     items.sort((a, b) => rank[a.level] - rank[b.level])

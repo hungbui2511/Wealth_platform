@@ -87,6 +87,8 @@ export const horizonMonths = (m: FactorModel) => m.horizon_months?.length === m.
 // Kiểm tra mô hình yếu tố trước khi lưu cấu hình: ma trận tương quan đối xứng, đường chéo 1, hệ số trong [−1, 1],
 // xác định dương (phân rã Cholesky được); biến động dương; xác suất phân vị hợp lệ.
 export function factorModelErrors(m: FactorModel): string[] {
+  const hl = (m as { event_half_life_days?: unknown }).event_half_life_days
+  if (hl !== undefined && !(typeof hl === 'number' && hl >= 1 && hl <= 365)) return ['event_half_life_days phải là số ngày từ 1 đến 365']
   const e: string[] = []
   const n = m.factors?.length ?? 0
   if (!n) return ['Mô hình không có yếu tố nào']
@@ -287,7 +289,7 @@ export interface FamilyScenarioResult {
 
 const round = (x: number) => Math.round(x)
 
-export function familyScenario(f: Family, positions: Position[], book: PriceBook, instruments: Record<string, Instrument>, model: FactorModel, set: ScenarioSet, netWorth: number): FamilyScenarioResult {
+export function familyScenario(f: Family, positions: Position[], book: PriceBook, instruments: Record<string, Instrument>, model: FactorModel, set: ScenarioSet, netWorth: number, opts: { creditJump?: boolean } = {}): FamilyScenarioResult {
   const ids = model.factors.map(x => x.id)
   const prof = (fid: string, h: number) => model.factors.find(x => x.id === fid)!.profile[h]
   const branches = set.branches.map(b => propagate(model, b, set.priced_in))
@@ -300,7 +302,7 @@ export function familyScenario(f: Family, positions: Position[], book: PriceBook
   const byFactor: Record<string, number> = {}, byClass: Record<string, number> = {}
   const posMean = new Map<string, { row: PosLoad; v: number; v12: number }>()
   let loanCost = 0, modelBased = 0, totalAbs = 0, assumed = 0
-  const cj = (model.credit_jump ?? DEFAULT_CREDIT_JUMP).CREDIT_RE
+  const cj = opts.creditJump === false ? undefined : (model.credit_jump ?? DEFAULT_CREDIT_JUMP).CREDIT_RE
   const isReBond = (p: Position) => p.asset_class === 'CORP_BOND' && p.part === null && (model.credit_factor[p.instrument_id] ?? model.credit_factor[p.sector ?? ''] ?? model.credit_factor.DEFAULT) === 'CREDIT_RE'
   const reBondExp = positions.filter(isReBond).reduce((a, p) => a + p.exposure.toNumber(), 0)
   const jumpParts: { w: number; dm: number; bi: number }[][] = model.horizons.map(() => [])

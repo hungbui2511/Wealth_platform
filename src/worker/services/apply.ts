@@ -50,15 +50,16 @@ function runTransition(ctx: AppCtx, r: RunRec, to: string, note?: string): RunRe
 }
 
 // Tính thuần từ ảnh chụp: dùng cho cả lần áp dụng và tính lại (NFR-05)
-export function computeAll(ps: PortfolioSnapshot, snap: SnapshotRecord, view: ViewBody) {
+export function computeAll(ps: PortfolioSnapshot, snap: SnapshotRecord, view: ViewBody, engineVersion: string = ENGINE_VERSION) {
+  const legacy = engineVersion === 'engine-1.0.0'
   const book = bookFromSnapshot(snap)
   return ps.families.map(f => {
     const pos = buildPositions(f, ps.instruments, book)
     const nw = netWorth(f, pos, book)
     const unit = computeFamilyImpact(f.id, pos, nw, view, ps.configs.unit, ps.configs.thresholds.alert)
     const scenario: FamilyScenarioResult | undefined = view.scenarios && ps.configs.factor_model
-      ? familyScenario(f, pos, book, ps.instruments, ps.configs.factor_model, view.scenarios as ScenarioSet, nw.toNumber()) : undefined
-    if (scenario && ps.configs.factor_model) {
+      ? familyScenario(f, pos, book, ps.instruments, ps.configs.factor_model, view.scenarios as ScenarioSet, nw.toNumber(), { creditJump: !legacy }) : undefined
+    if (scenario && ps.configs.factor_model && !legacy) {
       const worst = Math.min(...scenario.ranges.map(r => r.severe))
       const bands = analogBands(pos, ps.instruments, ps.configs.factor_model, book, nw.toNumber(), worst)
       scenario.analog_bands = bands
@@ -232,7 +233,7 @@ export async function recompute(ctx: AppCtx, id: string) {
   const hashOk = (await hashOf(body)) === run.portfolio_snapshot_hash
   const snap = await snapshotById(ctx, run.price_snapshot_id)
   const stored = await ctx.repo.list<FamilyImpactResult>('family_impacts', 'run_id = ?', [id])
-  const fresh = computeAll(body, snap, run.view_body)
+  const fresh = computeAll(body, snap, run.view_body, run.engine_version)
   const rows = fresh.map(f => {
     const s = stored.find(x => x.family_id === f.family.id)
     const sOld = (s as { scenario?: FamilyScenarioResult } | undefined)?.scenario, sNew = (f.result as { scenario?: FamilyScenarioResult }).scenario

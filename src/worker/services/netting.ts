@@ -14,7 +14,8 @@ export const decay = (ageDays: number, halfLife: number) => Math.pow(0.5, Math.m
 async function activeRuns(ctx: AppCtx) {
   const runs = (await ctx.repo.list<RunRec>('application_runs', "status = 'EFFECTIVE'", [], 'created_at')).filter(r => canSeeRun(ctx, r))
   const fm = await loadFactorModel(ctx)
-  const hl = (fm.model as { event_half_life_days?: number }).event_half_life_days ?? DEFAULT_HALF_LIFE_DAYS
+  const raw = (fm.model as { event_half_life_days?: number }).event_half_life_days
+  const hl = typeof raw === 'number' && raw >= 1 && raw <= 365 ? raw : DEFAULT_HALF_LIFE_DAYS
   const now = Date.parse(ctx.now())
   return { runs: runs.map(r => ({ run: r, age_days: (now - Date.parse(r.effective_at ?? r.created_at)) / 864e5 })).map(x => ({ ...x, weight: decay(x.age_days, hl) })), half_life: hl, model: fm.model }
 }
@@ -55,6 +56,7 @@ export async function bookNetting(ctx: AppCtx) {
 
 // Gộp cho một gia đình: tổng tác động kỳ vọng 3 tháng của các sự kiện đang hiệu lực sau khi giảm theo thời gian
 export async function familyNetting(ctx: AppCtx, familyId: string) {
+  requireRole(ctx, 'RM', 'COMPLIANCE')
   assertFamily(ctx, familyId)
   const { runs, half_life } = await activeRuns(ctx)
   const ids = new Set(runs.map(r => r.run.id))

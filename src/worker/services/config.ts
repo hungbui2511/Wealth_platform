@@ -204,9 +204,10 @@ export async function defaultProposal(ctx: AppCtx, kind: ConfigKind): Promise<un
 }
 
 // Cơ sở dữ liệu nạp trước khi có loại cấu hình này thì dùng bảng mặc định (cờ legal_confirmed = false)
-export async function loadSuccessionRules(ctx: AppCtx): Promise<{ id: string | null; rules: SuccessionRules }> {
+export async function loadSuccessionRules(ctx: AppCtx): Promise<{ id: string | null; rules: SuccessionRules; proposed_by: string | null; confirmed_by: string | null; confirmed_at: string | null }> {
   const rows = await ctx.repo.list<ConfigVersion>('config_versions', "kind = 'SUCCESSION_RULES' AND status = 'ACTIVE'", [], 'seq DESC')
-  return rows[0] ? { id: rows[0].id, rules: rows[0].content as SuccessionRules } : { id: null, rules: DEFAULT_SUCCESSION_RULES }
+  const r = rows[0]
+  return r ? { id: r.id, rules: r.content as SuccessionRules, proposed_by: r.proposed_by, confirmed_by: r.confirmed_by ?? null, confirmed_at: r.confirmed_at ?? null } : { id: null, rules: DEFAULT_SUCCESSION_RULES, proposed_by: null, confirmed_by: null, confirmed_at: null }
 }
 
 export interface CalendarEntry { id: string; date: string; title: string; keywords: string[]; origin?: string; source_url?: string }

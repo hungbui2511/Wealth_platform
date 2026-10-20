@@ -36,9 +36,17 @@ describe('Rủi ro (tích hợp)', () => {
     const r = await h.ok('CIO1', 'POST', `/api/views/${viewId}/decision`, { action: 'APPROVE', reason: 'Duyệt nhận định tỷ giá USD tăng mạnh' })
     const res = (await h.ok('CIO1', 'GET', `/api/runs/${r.run_id}/families/DEMO-F01`)).result
     expect(res.scenario.analog_bands.map((b: any) => b.analog_id)).toEqual(['VN-2022', 'VN-2025-04'])
-    const worst = Math.min(...res.scenario.ranges.map((x: any) => x.severe))
-    for (const b of res.scenario.analog_bands) expect(b.beyond_model).toBe(b.total < worst)
-    if (res.scenario.analog_bands.some((b: any) => b.beyond_model)) expect(res.scenario.tail_note).toMatch(/đuôi/)
+    // Giai đoạn 2022 làm DEMO-F01 (có cổ phiếu, quỹ) giảm; dải lịch sử là số âm và có ghi chú khi vượt mốc nặng nhất của mô hình
+    const b22 = res.scenario.analog_bands.find((b: any) => b.analog_id === 'VN-2022')
+    expect(b22.total).toBeLessThan(0)
+    expect(b22.pct).toBeLessThan(0)
+    expect(res.scenario.tail_note === null || /đuôi/.test(res.scenario.tail_note)).toBe(true)
+    expect(Boolean(res.scenario.tail_note)).toBe(res.scenario.analog_bands.some((b: any) => b.beyond_model))
+    // Lần áp dụng mới ghi phiên bản bộ máy mới; tính lại cho cùng kết quả
+    const run = await h.ok('CIO1', 'GET', `/api/runs/${r.run_id}`)
+    expect(run.engine_version ?? run.run?.engine_version).toBe('engine-1.1.0')
+    const rc = await h.ok('CMP1', 'POST', `/api/runs/${r.run_id}/recompute`)
+    expect(rc.all_equal).toBe(true)
   })
 
   it('gộp theo yếu tố: hai sự kiện cùng đẩy một yếu tố bị nêu nguy cơ đếm hai lần; bán rã theo tuổi', async () => {
@@ -65,11 +73,33 @@ describe('Rủi ro (tích hợp)', () => {
     expect(d.families.map((f: any) => f.family_id).sort()).toEqual([...me.families].sort())
     const items = d.families.flatMap((f: any) => f.items)
     expect(items.every((i: any) => ['impact', 'goal', 'policy', 'leverage', 'liquidity', 'succession', 'data'].includes(i.kind))).toBe(true)
-    if (items.some((i: any) => i.kind === 'impact')) expect(d.counts.unseen).toBeGreaterThan(0)
+    // EV-2026-0005 vừa có hiệu lực: mục tác động Đỏ/Vàng (nếu có) chưa được đánh dấu đã xem
+    const impacts = items.filter((i: any) => i.kind === 'impact')
+    expect(d.counts.unseen).toBe(impacts.length)
     expect((await h.call('CIO1', 'GET', '/api/rm/digest')).status).toBe(403)
     // Gia đình RM: kết quả gộp sau bán rã
     const n = await h.ok('RM1', 'GET', `/api/families/${me.families[0]}/netting`)
     expect(n.events).toBe(1)
-    expect((await h.call('RM1', 'GET', `/api/families/DEMO-F99/netting`)).status).toBeGreaterThanOrEqual(403)
+    const other = ['DEMO-F01', 'DEMO-F02', 'DEMO-F03', 'DEMO-F04', 'DEMO-F05', 'DEMO-F06', 'DEMO-F07'].find(id => !me.families.includes(id))!
+    expect((await h.call('RM1', 'GET', `/api/families/${other}/netting`)).status).toBe(403)
+    expect((await h.call('CIO1', 'GET', `/api/families/${me.families[0]}/netting`)).status).toBe(403)
+  })
+})
+
+describe('Phiên bản bộ máy', () => {
+  it('lần áp dụng ghi phiên bản engine-1.0.0 được tính lại không có cú sốc nhảy bậc và dải lịch sử', async () => {
+    const { computeAll } = await import('../src/worker/services/apply')
+    const h = harness()
+    await h.call(null, 'POST', '/api/bootstrap')
+    await h.ok('ADM1', 'POST', '/api/admin/load-sample-events')
+    const v = await h.ok('CIO1', 'POST', '/api/events/EV-2026-0005/run-agent')
+    const r = await h.ok('CIO1', 'POST', `/api/views/${v.id}/decision`, { action: 'APPROVE', reason: 'Duyệt nhận định tỷ giá USD tăng mạnh' })
+    const run = JSON.parse((await h.DB.prepare('SELECT data FROM application_runs WHERE id = ?').bind(r.run_id).first<{ data: string }>())!.data)
+    const ps = JSON.parse((await h.DB.prepare('SELECT data FROM run_snapshots WHERE id = ?').bind(run.portfolio_snapshot_id).first<{ data: string }>())!.data)
+    const snap = JSON.parse((await h.DB.prepare('SELECT data FROM price_snapshots WHERE id = ?').bind(run.price_snapshot_id).first<{ data: string }>())!.data)
+    const oldRes = computeAll(ps, snap, run.view_body, 'engine-1.0.0')
+    const newRes = computeAll(ps, snap, run.view_body)
+    for (const x of oldRes) { const s = (x.result as any).scenario; expect(s.credit_jump).toBeNull(); expect(s.analog_bands).toBeUndefined() }
+    expect(newRes.some(x => (x.result as any).scenario.analog_bands?.length === 2)).toBe(true)
   })
 })

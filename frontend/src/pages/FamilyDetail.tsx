@@ -17,6 +17,7 @@ const axisFmt = (v: number) => fmtVndShort(v).replace(' triệu', 'tr').replace(
 export default function FamilyDetail() {
   const { id } = useParams()
   const [tab, setTab] = useState('overview')
+  const user = useUser()
   const ov = useApi(`/api/families/${id}`)
   if (ov.error) return <ErrorBox error={ov.error} />
   if (!ov.data) return <Loading />
@@ -24,7 +25,7 @@ export default function FamilyDetail() {
   return (
     <>
       <div className="flex flex-wrap items-baseline gap-3"><h1 className="text-xl font-semibold"><span className="mono text-base text-fgm">{f.id}</span> {f.name}</h1><Badge>Chân dung {f.persona}</Badge><Badge>RM {f.rm_id}</Badge></div>
-      <Tabs active={tab} onChange={setTab} tabs={[{ id: 'overview', label: 'Bản đồ tài sản' }, { id: 'impacts', label: 'Tác động sự kiện' }, { id: 'pnl', label: 'Lãi/lỗ' }, { id: 'cashflow', label: 'Dòng tiền' }, { id: 'goals', label: 'Mục tiêu' }, { id: 'structure', label: 'Cấu trúc, kế thừa' }]} />
+      <Tabs active={tab} onChange={setTab} tabs={[{ id: 'overview', label: 'Bản đồ tài sản' }, { id: 'impacts', label: 'Tác động sự kiện' }, { id: 'pnl', label: 'Lãi/lỗ' }, { id: 'cashflow', label: 'Dòng tiền' }, { id: 'goals', label: 'Mục tiêu' }, ...(user.role === 'RM' || user.role === 'COMPLIANCE' ? [{ id: 'structure', label: 'Cấu trúc, kế thừa' }] : [])]} />
       {tab === 'overview' && <Overview d={ov.data} />}
       {tab === 'impacts' && <Impacts familyId={id!} />}
       {tab === 'pnl' && <Pnl familyId={id!} />}
@@ -325,9 +326,9 @@ function Goals({ familyId }: { familyId: string }) {
   )
 }
 
-const REL: Record<string, string> = { OK: 'Trong ngưỡng', MARGIN_CALL_NOW: 'Đang chạm ngưỡng gọi ký quỹ', MARGIN_CALL_STRESS: 'Gọi ký quỹ khi căng thẳng', ABOVE_MAX: 'Vượt tỷ lệ tối đa', NOT_LINKED: 'Chưa gắn tài sản bảo đảm' }
+const REL: Record<string, string> = { OK: 'Trong ngưỡng', MARGIN_CALL_NOW: 'Đang chạm ngưỡng gọi ký quỹ', MARGIN_CALL_STRESS: 'Gọi ký quỹ khi căng thẳng', ABOVE_MAX: 'Vượt tỷ lệ tối đa', ABOVE_MAX_STRESS: 'Vượt tỷ lệ tối đa khi căng thẳng', NOT_LINKED: 'Chưa gắn tài sản bảo đảm' }
 const EV: Record<string, string> = { g1_death: 'Thế hệ 1 qua đời', g2_emigration: 'Thế hệ 2 ra nước ngoài', divorce: 'Ly hôn' }
-const lvTone = (s: string) => s === 'RED' || s === 'MARGIN_CALL_NOW' ? 'red' : s === 'YELLOW' || s === 'MARGIN_CALL_STRESS' || s === 'ABOVE_MAX' ? 'amber' : s === 'NOT_LINKED' || s === 'INFO' ? 'gray' : 'green'
+const lvTone = (s: string) => s === 'RED' || s === 'MARGIN_CALL_NOW' ? 'red' : s === 'YELLOW' || s === 'MARGIN_CALL_STRESS' || s === 'ABOVE_MAX' || s === 'ABOVE_MAX_STRESS' ? 'amber' : s === 'NOT_LINKED' || s === 'INFO' ? 'gray' : 'green'
 
 // Đợt 4: cấu trúc liên thế hệ — đòn bẩy khi căng thẳng, thang thanh khoản, kế thừa
 function Structure({ familyId, family }: { familyId: string; family: any }) {
@@ -367,7 +368,7 @@ function Structure({ familyId, family }: { familyId: string; family: any }) {
       </Card>
 
       <Card title="Kế thừa và sự kiện gia đình">
-        <div className="flex flex-wrap gap-2 items-center mb-2 text-[13px]">Bảng quy tắc phiên bản <span className="mono">{d.rules_version}</span> {d.legal_confirmed ? <Badge tone="green">Pháp chế đã xác nhận</Badge> : <Badge tone="amber">Chờ Pháp chế xác nhận</Badge>}</div>
+        <div className="flex flex-wrap gap-2 items-center mb-2 text-[13px]">Bảng quy tắc phiên bản <span className="mono">{d.rules_version}</span> {d.legal_confirmed ? <Badge tone="green">Đã ghi nhận đối chiếu pháp lý</Badge> : <Badge tone="amber">Chờ đối chiếu pháp lý</Badge>}<span className="text-fgm text-xs">{d.rules_config ? `đề xuất ${d.rules_proposed_by ?? '—'}, xác nhận ${d.rules_confirmed_by ?? 'chưa có'}` : 'bảng mặc định trong mã nguồn, chưa ai xác nhận'}</span></div>
         {d.succession.data_gaps.length > 0 && <Note>Thiếu dữ liệu: {d.succession.data_gaps.join('; ')}.</Note>}
         <div className="space-y-3">{d.succession.events.map((e: any) => <div key={e.event + e.member_id} className="border border-border rounded p-3">
           <div className="flex flex-wrap gap-2 items-baseline"><Badge>{EV[e.event]}</Badge><span className="font-semibold">{e.title}</span>{e.estate && <span className="text-fgm text-[13px]">{e.event === 'g1_death' ? 'Di sản ước tính' : e.event === 'divorce' ? 'Giá trị có thể bị chia' : 'Giá trị thừa kế dự kiến'}: {fmtVndShort(e.estate)}</span>}</div>

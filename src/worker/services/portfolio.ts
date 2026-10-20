@@ -128,6 +128,8 @@ export async function familyOverview(ctx: AppCtx, id: string) {
 
 // Cấu trúc liên thế hệ (đợt 4): đòn bẩy khi căng thẳng, thang thanh khoản, kế thừa, lỗi cấu trúc sở hữu
 export async function familyStructure(ctx: AppCtx, id: string) {
+  // Di chúc, hôn nhân, cư trú thuế, ước tính thừa kế là dữ liệu nhạy cảm: chỉ RM phụ trách và Tuân thủ
+  requireRole(ctx, 'RM', 'COMPLIANCE')
   const [f, instruments, snap, cfg, fm, sr] = await Promise.all([loadFamily(ctx, id), loadInstruments(ctx), currentSnapshot(ctx), loadConfigs(ctx), loadFactorModel(ctx), loadSuccessionRules(ctx)])
   const book = bookFromSnapshot(snap)
   const pos = buildPositions(f, instruments, book)
@@ -141,7 +143,7 @@ export async function familyStructure(ctx: AppCtx, id: string) {
   if (!f.members.some(m => m.birth_year || m.tax_residency || m.marital_status)) missing.push('Chưa nhập thông tin thành viên (năm sinh, cư trú thuế, hôn nhân, quan hệ cha mẹ – con, di chúc)')
   if (f.liabilities.some(l => !l.collateral_holdings?.length && l.collateral)) missing.push('Khoản vay có tài sản bảo đảm chưa gắn vị thế cụ thể')
   return {
-    price_date: book.price_date, factor_model: fm.id, rules_config: sr.id, rules_version: sr.rules.version, legal_confirmed: sr.rules.legal_confirmed,
+    price_date: book.price_date, factor_model: fm.id, rules_config: sr.id, rules_version: sr.rules.version, legal_confirmed: sr.rules.legal_confirmed, rules_proposed_by: sr.proposed_by, rules_confirmed_by: sr.confirmed_by, rules_confirmed_at: sr.confirmed_at,
     ownership_issues: ownershipIssues(f), multi_layer: f.ownerships.some(o => o.owner_entity_id),
     analog_stress: analogs, stress_used: stress ? { analog_id: stress.analog_id, label: stress.label, total: stress.total, pct: stress.pct } : null,
     leverage, ladder, succession: succ, missing,

@@ -122,5 +122,6 @@ export const RUN_STATUS_LABELS: Record<string, string> = {
   WITHDRAWN: 'Đã thu hồi',
 }
 
-export const ENGINE_VERSION = 'engine-1.0.0'
+// 1.1.0: thêm cú sốc nhảy bậc tín dụng BĐS ở nhánh căng thẳng và dải căng thẳng lịch sử; lần áp dụng cũ tính lại theo đúng phiên bản của nó
+export const ENGINE_VERSION = 'engine-1.1.0'
 export const DISCLAIMER_SHOCK = 'Cú sốc giá tức thời giả định theo cấu hình minh họa. Không theo thời gian, không phải dự báo'
