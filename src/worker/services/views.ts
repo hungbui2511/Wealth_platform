@@ -4,7 +4,7 @@ import type { Finding, ImpactLine, ViewBody } from '../../shared/types'
 import { lineKey, validateView, type ViewContext } from '../../shared/schemas'
 import { buildCioGraph, ANALYSTS, type NodeRun } from '../../agents/cioGraph'
 import { keywordView } from '../../agents/keywordView'
-import { citationChecks, diffLines, normalizeLlmFindings, ruleChecks, scenarioRuleChecks, sourceRuleChecks, type RawFinding } from '../../agents/challenger'
+import { citationChecks, diffLines, flipChecks, normalizeLlmFindings, ruleChecks, scenarioRuleChecks, sourceRuleChecks, type RawFinding } from '../../agents/challenger'
 import { callJson } from '../../agents/llm'
 import { wrapData, type ModelSet, type PromptSet } from '../../agents/prompts'
 import { MOCK } from '../../data/mock'
@@ -103,10 +103,13 @@ export interface ExternalCio {
   meta?: { model?: string; session?: string; note?: string; prepared_at?: string }
 }
 export function externalLabel(meta?: ExternalCio['meta']) { return `Claude – phiên làm việc (${meta?.model ?? 'gói subscription'})` }
-function mapSources(v: unknown, news: NewsItem[]): unknown {
-  const byUrl = new Map(news.map(n => [n.url, n.id]))
+// So khớp đường dẫn không phân biệt http/https, "www." và dấu "/" cuối (một số tin RSS lưu bằng http://)
+export const urlKey = (u: string) => String(u ?? '').trim().replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/+$/, '').toLowerCase()
+export function mapSources(v: unknown, news: NewsItem[]): unknown {
+  const byUrl = new Map(news.map(n => [urlKey(n.url), n.id]))
+  const ids = new Set(news.map(n => n.id))
   return JSON.parse(JSON.stringify(v ?? null), (k, val) => k === 'source_ids' && Array.isArray(val)
-    ? val.map((s: string) => byUrl.get(s) ?? (/^\{\{SRC(\d+)\}\}$/.test(s) ? news[Number(s.slice(5, -2)) - 1]?.id ?? s : s))
+    ? val.map((s: string) => ids.has(s) ? s : byUrl.get(urlKey(s)) ?? (/^\{\{SRC(\d+)\}\}$/.test(s) ? news[Number(s.slice(5, -2)) - 1]?.id ?? s : s))
     : val)
 }
 
@@ -232,6 +235,13 @@ export async function retryPreChallenge(ctx: AppCtx, viewId: string): Promise<Vi
   return runPreChallenge(ctx, viewId)
 }
 
+// Nhận định 7 ngày gần nhất của sự kiện khác (đã duyệt hoặc đang chờ duyệt), mới nhất trước: dùng cho kiểm tra đổi chiều
+async function recentForFlip(ctx: AppCtx, v: ViewRec) {
+  const since = new Date(Date.parse(v.created_at) - 7 * 864e5).toISOString()
+  const rows = await ctx.repo.list<ViewRec>('views', "status IN ('APPROVED','PENDING_APPROVAL','SUPERSEDED') AND event_id != ? AND json_extract(data, '$.created_at') >= ? AND json_extract(data, '$.created_at') < ?", [v.event_id, since, v.created_at], "json_extract(data, '$.created_at') DESC")
+  return rows.map(x => ({ view_id: x.id, created_at: x.created_at, impacts: x.body.impacts.map(l => ({ scope: l.scope, target: l.target, level: l.level })) }))
+}
+
 async function recentApproved(ctx: AppCtx, excludeEvent: string) {
   const rows = await ctx.repo.list<ViewRec>('views', "status IN ('APPROVED','SUPERSEDED') AND event_id != ?", [excludeEvent], 'id DESC')
   return rows.slice(0, 5).map(v => ({ view_id: v.id, summary: v.body.summary, impacts: v.body.impacts.filter(l => l.level !== 0).map(l => ({ scope: l.scope, asset_class: l.asset_class, target: l.target, level: l.level })) }))
@@ -262,6 +272,7 @@ export async function runPreChallenge(ctx: AppCtx, viewId: string, external?: { 
   rule.push(...await policyCitationFindings(ctx, e, news))
   rule.push(...scenarioRuleChecks(v.body, v.body.scenarios ? (await loadFactorModel(ctx)).model as never : null))
   rule.push(...sourceRuleChecks(v.body, news))
+  rule.push(...flipChecks(v.body, await recentForFlip(ctx, v)))
   const recent = await recentApproved(ctx, e.id)
   // BR-05: chỉ đầu ra cuối, tiêu đề và tóm tắt tin, danh mục, ≤ 5 nhận định đã duyệt, kết quả quy tắc
   const pkg = { view: v.body, news: news.map(n => ({ id: n.id, title: n.title, summary: n.summary })), catalog: { asset_classes: ASSET_CLASSES, sectors: SECTORS, fx: FX_CURRENCIES }, recent_approved: recent, rule_results: rule }
@@ -270,7 +281,8 @@ export async function runPreChallenge(ctx: AppCtx, viewId: string, external?: { 
   let llmRaw: unknown[] = [], counter = '', model = `mock (${models.content.challenger.model})`
   let independence = independenceOf(ctx.agentMode, models.content.cio.model, models.content.challenger.model)
   if (external) {
-    llmRaw = external.findings ?? []; counter = external.counter_scenario ?? ''; model = external.model
+    // Phản biện độc lập nhận danh sách tin kèm đường dẫn nên thường dẫn nguồn bằng URL: đổi sang mã tin của sự kiện trước khi kiểm tra
+    llmRaw = (mapSources(external.findings ?? [], news) as unknown[]) ?? []; counter = external.counter_scenario ?? ''; model = external.model
     independence = external.separate ? independenceOf('external_challenge', external.separate.cio_model, model, { cio: external.separate.cio_session, challenger: external.separate.session }) : independenceOf('external_same', '', '')
   } else if (ctx.agentMode !== 'live') {
     const m = news.every(n => n.simulated) ? MOCK.challenger[mockKey(e)] : undefined
@@ -369,6 +381,7 @@ export async function runReChallenge(ctx: AppCtx, viewId: string, external?: { f
   const rule = ruleChecks(v.body, vctx, keys)
   rule.push(...scenarioRuleChecks(v.body, v.body.scenarios ? (await loadFactorModel(ctx)).model as never : null, keys))
   rule.push(...sourceRuleChecks(v.body, news, keys))
+  rule.push(...flipChecks(v.body, await recentForFlip(ctx, v), keys))
   const recent = await recentApproved(ctx, e.id)
   const edits = v.cio_edits.filter(x => keys.has(x.key))
   const pkg = { view: v.body, changed_lines: [...keys], diff: edits.map(x => ({ key: x.key, kind: x.kind, before: x.before, after: x.after })), cio_notes: edits.map(x => x.note).filter(Boolean), news: news.map(n => ({ id: n.id, title: n.title, summary: n.summary })), catalog: { asset_classes: ASSET_CLASSES, sectors: SECTORS, fx: FX_CURRENCIES }, recent_approved: recent, rule_results: rule }
@@ -376,7 +389,7 @@ export async function runReChallenge(ctx: AppCtx, viewId: string, external?: { f
   const prompts = await activeConfig<PromptSet>(ctx, 'PROMPT')
   let llmRaw: unknown[] = [], model = `mock (${models.content.challenger.model})`
   let independence = independenceOf(ctx.agentMode, models.content.cio.model, models.content.challenger.model)
-  if (external) { llmRaw = external.findings ?? []; model = external.model; independence = independenceOf('external_challenge', external.cio_model, model, { cio: external.cio_session, challenger: external.session }) }
+  if (external) { llmRaw = (mapSources(external.findings ?? [], news) as unknown[]) ?? []; model = external.model; independence = independenceOf('external_challenge', external.cio_model, model, { cio: external.cio_session, challenger: external.session }) }
   else if (ctx.agentMode !== 'live') llmRaw = news.every(n => n.simulated) ? [...keys].flatMap(k => MOCK.challenger[mockKey(e)]?.re_challenge?.[k] ?? []) : []
   else { await ctx.progress?.('challenger_re'); const r = await callChallenger(ctx, v.id, 're_challenge', () => callJson(ctx.env, models.content.challenger, prompts.content.challenger.re_challenge, wrapData('gói phản biện lại', pkg), ctx.fetchFn)); llmRaw = (r.json as { findings?: unknown[] }).findings ?? []; model = r.model }
   const norm = normalizeLlmFindings(llmRaw.map(f => ({ ...(f as object), stage: 're_challenge' })), vctx.newsIds)

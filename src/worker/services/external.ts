@@ -175,13 +175,20 @@ export async function importExternal(env: Env, opts: { now?: () => string; fetch
     if (ev.hold?.status === 'PENDING') { report.waiting.push({ id: r.id, reason: `${ev.id} chờ Tuân thủ cho phép (BR-27)` }); continue }
     const views = await ctx.repo.list<ViewRec>('views', 'event_id = ?', [ev.id])
     const waiting = (await ctx.repo.list<JobRec>('jobs', "status = 'WAITING_EXTERNAL' AND kind = 'cio_run' AND subject = ?", [ev.id]))[0]
-    if (views.length && !waiting && !r.data?.rework) { await mark(ctx, r, { status: 'REJECTED', error: `${ev.id} đã có nhận định; muốn lập phiên bản mới thì CIO yêu cầu Làm lại` }); report.rejected.push({ id: r.id, reason: 'đã có nhận định' }); continue }
+    // Nhận định lỗi schema (AGENT_ERROR) không tính: agent được gửi lại bản sửa mà không cần CIO yêu cầu Làm lại
+    if (views.some(x => x.status !== 'AGENT_ERROR') && !waiting && !r.data?.rework) { await mark(ctx, r, { status: 'REJECTED', error: `${ev.id} đã có nhận định; muốn lập phiên bản mới thì CIO yêu cầu Làm lại` }); report.rejected.push({ id: r.id, reason: 'đã có nhận định' }); continue }
     if (!await claim(ctx, r)) continue
     try {
       const ext: ExternalCio = { view: r.data.view, nodes: r.data.nodes, challenger: r.data.challenger, meta: r.data.meta }
       if (!ext.view || !Array.isArray(ext.view.impacts)) throw new HttpError(422, 'Thiếu view.impacts')
       const v = await runCioAgent(ctx, ev.id, { skipRole: true, external: ext, ...(waiting?.params.instructions ? { instructions: waiting.params.instructions } : {}) })
-      await mark(ctx, r, { status: 'IMPORTED', result: { event_id: ev.id, view_id: v.id, view_status: v.status, ...(v.errors?.length ? { errors: v.errors } : {}) } })
+      // Nhận định sinh ra nhưng lỗi schema: bản ghi bị tính là từ chối (để tỷ lệ lỗi phản ánh đúng) và agent gửi lại bản sửa
+      if (v.status === 'AGENT_ERROR') {
+        await mark(ctx, r, { status: 'REJECTED', error: `Nhận định ${v.id} lỗi schema: ${(v.errors ?? []).join('; ').slice(0, 800)}`, result: { event_id: ev.id, view_id: v.id, view_status: v.status, errors: v.errors ?? [] } })
+        report.rejected.push({ id: r.id, reason: `nhận định ${v.id} lỗi schema` })
+        continue
+      }
+      await mark(ctx, r, { status: 'IMPORTED', result: { event_id: ev.id, view_id: v.id, view_status: v.status } })
       await completeWaiting(ctx, 'cio_run', ev.id, { view_id: v.id, status: v.status })
       report.views.push({ view_id: v.id, status: v.status })
     } catch (e) { await mark(ctx, r, { status: 'REJECTED', error: String((e as Error).message ?? e).slice(0, 1000) }); report.rejected.push({ id: r.id, reason: String((e as Error).message ?? e).slice(0, 200) }) }

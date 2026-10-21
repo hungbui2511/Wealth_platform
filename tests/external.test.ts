@@ -78,7 +78,16 @@ describe('Nhập kết quả Claude', () => {
     const v = view(U3); v.impacts = v.impacts.filter((l: any) => l.target !== 'GOLD')
     await push('cio_view', job.subject, { view: v, meta: { model: 'Claude Opus 5.5' } })
     const imp = await h.ok('ADM1', 'POST', '/api/external/import')
-    expect(imp.views[0].status).toBe('AGENT_ERROR')
+    // Nhận định lỗi schema: bản ghi bị tính là từ chối (không còn che lỗi bằng IMPORTED), yêu cầu Claude vẫn chờ để gửi lại bản sửa
+    expect(imp.views).toHaveLength(0)
+    expect(imp.rejected.some((x: any) => /lỗi schema/.test(x.reason))).toBe(true)
+    const rec = (await h.ok('ADM1', 'GET', '/api/external')).find((x: any) => x.kind === 'cio_view' && x.status === 'REJECTED')
+    expect(rec.result.view_status).toBe('AGENT_ERROR')
+    expect((await h.ok('CIO1', 'GET', '/api/jobs?active=1')).some((j: any) => j.id === job.id)).toBe(true)
+    // Bản sửa được nhận mà không cần CIO yêu cầu Làm lại
+    await push('cio_view', job.subject, { view: view(U3), meta: { model: 'Claude Opus 5.5' } })
+    const imp2 = await h.ok('ADM1', 'POST', '/api/external/import')
+    expect(imp2.views[0].status).not.toBe('AGENT_ERROR')
     const a = await h.ok('CMP1', 'GET', '/api/audit?action=external.imported')
     expect(a.length).toBeGreaterThan(0)
   })

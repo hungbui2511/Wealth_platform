@@ -40,6 +40,24 @@ export function scenarioRuleChecks(view: ViewBody, model: FactorModel | null, on
   return out
 }
 
+// Đổi chiều so với nhận định gần đây (đánh giá độc lập 21/10: cổ phiếu VN +1/−1/+1 trong ba ngày): dòng loại tài sản đổi dấu so với
+// nhận định gần nhất trong 7 ngày (đã duyệt hoặc đang chờ duyệt) mà lý do không nêu vì sao đổi thì nêu phát hiện mức Trung bình.
+const FLIP_WORDS = ['so với', 'đảo chiều', 'đổi chiều', 'đổi hướng', 'ngược với', 'thay đổi so', 'trước đó', 'hôm trước', 'nhận định trước']
+export function flipChecks(view: ViewBody, prior: { view_id: string; created_at: string; impacts: { scope: string; target: string; level: number }[] }[], onlyKeys?: Set<string>): RawFinding[] {
+  const out: RawFinding[] = []
+  for (const l of view.impacts) {
+    if (l.scope !== 'asset_class' || l.level === 0) continue
+    const key = `asset_class:${l.asset_class ?? l.target}:${l.target}`
+    if (onlyKeys && !onlyKeys.has(key)) continue
+    const p = prior.map(v => ({ v, line: v.impacts.find(x => x.scope === 'asset_class' && x.target === l.target) })).find(x => x.line && x.line.level !== 0)
+    if (!p || Math.sign(p.line!.level) === Math.sign(l.level)) continue
+    const text = (l.rationale ?? '').normalize('NFC').toLowerCase()
+    if (FLIP_WORDS.some(w => text.includes(w))) continue
+    out.push({ check: 'inconsistency_with_past_view', severity: 'medium', target: key, issue: `Mức ${l.level > 0 ? '+' : ''}${l.level} ngược chiều với ${p.line!.level > 0 ? '+' : ''}${p.line!.level} ở ${p.v.view_id} (${p.v.created_at.slice(0, 10)}) mà lý do không giải thích vì sao đổi`, suggestion: 'Nêu rõ diễn biến mới nào làm đổi chiều so với nhận định trước, hoặc giữ mức 0 nếu chưa đủ căn cứ' })
+  }
+  return out
+}
+
 // Quy tắc hai nguồn (đợt 3): dòng có mức từ ±2 phải có ít nhất một nguồn chính thức (T1) hoặc hai nguồn độc lập (khác miền gốc).
 // Nguồn trang tra cứu thứ cấp (T4) không tính. Tin nghiên cứu độc quyền không có đường dẫn công khai thì bỏ qua quy tắc này.
 export function sourceRuleChecks(view: ViewBody, news: { id: string; url?: string; origin?: string }[], onlyKeys?: Set<string>): RawFinding[] {

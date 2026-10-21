@@ -186,3 +186,29 @@ WHERE json_extract(data,'$.event_id') IS NULL AND json_extract(data,'$.ingested_
 **Nguồn quốc tế**: khi Tuân thủ đã nạp danh sách nguồn mới, được đưa tin trực tiếp từ Reuters, AP, Bloomberg, CNBC, MarketWatch, FT,
 WSJ, BBC, Nikkei Asia và trang chính thức (Fed, ECB, BoJ, BLS, BEA, EIA, IMF, OPEC, CME FedWatch). Chỉ ghi tiêu đề, đường dẫn và tóm
 tắt do agent viết (≤ 3 câu), không chép nguyên văn bài báo.
+
+## Hiệu chỉnh sau đánh giá độc lập (21/10/2026)
+
+Đánh giá độc lập 10 ngày đầu (`claude/agent-eval-2026-10-21.md` trong project) cho thấy nhận định quá "an toàn": không dòng nào ở
+mức ±2, 77,5% dòng bằng 0, mọi nhận định có 3 nhánh với xác suất gần giống nhau, cổ phiếu VN đảo chiều +1/−1/+1 trong ba ngày.
+
+**Thang mức**: 0 nghĩa là không có kênh truyền dẫn đáng kể, không phải "chưa chắc". Dùng ±1 cho tác động rõ hướng nhưng nhỏ hoặc gián
+tiếp; ±2 khi có cú sốc lớn với nguồn chính thức hoặc hai báo khác nhau (ví dụ lãi suất điều hành đổi, tỷ giá trung tâm nhảy mạnh,
+giá dầu biến động trên 5%); ±3 chỉ cho cú sốc hệ thống. Độ tin cậy thấp thì hạ `confidence`, không hạ mức về 0.
+
+**Nhánh kịch bản**: các nhánh phải khác nhau ở yếu tố lõi hoặc chiều, không chỉ ở cỡ cú sốc; xác suất phản ánh mức chắc chắn thật
+(không mặc định 45/25/30). Mỗi nhánh nêu một tín hiệu theo dõi để biết nhánh đó đang xảy ra.
+
+**Đổi chiều**: khi một dòng loại tài sản ngược dấu với nhận định trong 7 ngày gần nhất, `rationale` phải nêu "so với VW-…" và diễn
+biến mới nào làm đổi chiều. Hệ thống tự nêu phát hiện mức Trung bình nếu thiếu.
+
+**Văn bản pháp luật**: trước khi lập sự kiện, đọc `policy_documents` 14 ngày gần nhất (title, url, kind, status, ai_assessment). Văn bản
+có tác động thị trường (vàng, thuế, tín dụng, ngoại hối, bất động sản) thì đưa tin về văn bản đó vào sự kiện liên quan và nhắc trong
+`rationale` của dòng bị ảnh hưởng.
+
+**Phản biện**: lượt chạy phản biện **mọi** nhận định đang ở PENDING_APPROVAL hoặc PENDING_CHALLENGE chưa có bản phản biện độc lập
+(`challenges` của nhận định không có bản ghi nào có `independence.independent = true`), không chỉ nhận định vừa soạn. Phản biện chỉ
+nhận nhận định và tin, không được biết nhận định nào là bài kiểm tra.
+
+**Nhận định lỗi schema**: bản ghi `cio_view` sinh ra nhận định AGENT_ERROR giờ bị đánh dấu REJECTED kèm lỗi. Đọc lỗi, sửa và gửi lại
+bản ghi mới cho cùng sự kiện (không cần CIO yêu cầu Làm lại).
