@@ -1,3 +1,4 @@
+import { DEFAULT_NEWS_SOURCES } from '../src/news/sources'
 // Lấy tin tự động (RSS) và lập sự kiện từ hộp tin mới; nhận định mô phỏng theo từ khóa ở chế độ mock.
 import { beforeAll, describe, expect, it } from 'vitest'
 import { harness } from './support/harness'
@@ -46,8 +47,8 @@ describe('Đọc RSS và phân loại tin', () => {
 describe('Lấy tin tự động vào hộp tin mới, lập sự kiện, chạy Agent CIO (mock)', () => {
   const fetchFn = (async (input: RequestInfo | URL) => {
     const url = String(input instanceof URL ? input.href : typeof input === 'string' ? input : input.url)
-    if (url.startsWith('https://vnexpress.net/')) return new Response(RSS, { status: 200 })
-    if (url.startsWith('https://vneconomy.vn/')) return new Response(RSS_OUTSIDE, { status: 200 })
+    if (url === 'https://vnexpress.net/rss/kinh-doanh.rss') return new Response(RSS, { status: 200 })
+    if (url === 'https://vneconomy.vn/chung-khoan.rss') return new Response(RSS_OUTSIDE, { status: 200 })
     return new Response('lỗi', { status: 503 })
   }) as typeof fetch
   const h = harness({ fetchFn })
@@ -60,7 +61,8 @@ describe('Lấy tin tự động vào hộp tin mới, lập sự kiện, chạy
     expect(r.irrelevant).toBe(1)
     expect(r.too_old).toBe(1)
     expect(r.rejected).toBe(1)
-    expect(r.errors.length).toBe(7)
+    // Mọi nguồn khác trả lỗi 503 và được ghi lại
+    expect(r.errors.length).toBe(DEFAULT_NEWS_SOURCES.length - 2)
     const inbox = await h.ok('CIO1', 'GET', '/api/news/inbox')
     expect(inbox.length).toBe(2)
     const rate = inbox.find((n: any) => n.title.startsWith('NHNN'))

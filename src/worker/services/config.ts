@@ -2,7 +2,7 @@
 import { DEFAULT_ASSUMPTIONS, DEFAULT_BANNED_PHRASES, DEFAULT_THRESHOLDS, DEFAULT_UNIT_TABLE } from '../../shared/catalog'
 import { SEED } from '../../data/seed'
 import { DEFAULT_MODELS, DEFAULT_PROMPTS } from '../../agents/prompts'
-import { DEFAULT_NEWS_SOURCES, PUBLIC_DOMAINS } from '../../news/sources'
+import { DEFAULT_NEWS_SOURCES, PUBLIC_DOMAINS, RETIRED_NEWS_SOURCES } from '../../news/sources'
 import { DEFAULT_FACTOR_MODEL } from '../../data/factorModel'
 import DEFAULT_CALENDAR from '../../../data/calendar.json'
 import { DEFAULT_SUCCESSION_RULES, successionRulesErrors, type SuccessionRules } from '../../engine/structure'
@@ -184,7 +184,7 @@ export async function defaultProposal(ctx: AppCtx, kind: ConfigKind): Promise<un
   requireRole(ctx, meta.owner)
   const cur = (await ctx.repo.list<ConfigVersion>('config_versions', "kind = ? AND status = 'ACTIVE'", [kind], 'seq DESC'))[0]?.content
   if (kind === 'NEWS_SOURCES') {
-    const list = [...((cur as { name: string; url: string; origin?: string }[]) ?? [])]
+    const list = [...((cur as { name: string; url: string; origin?: string }[]) ?? [])].filter(x => !RETIRED_NEWS_SOURCES.includes(x.url))
     for (const d of DEFAULT_NEWS_SOURCES) { const i = list.findIndex(x => x.url === d.url); if (i < 0) list.push(d); else if (d.origin && !list[i].origin) list[i] = { ...list[i], origin: d.origin } }
     return list
   }

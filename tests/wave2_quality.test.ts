@@ -38,7 +38,7 @@ describe('Nhịp tim: lần đến hạn gần nhất theo giờ Việt Nam', ()
   it('thứ Ba 20/10/2026 lúc 19:00 giờ VN: lượt 17:22 hôm nay đã quá hạn báo; lượt pháp luật gần nhất là thứ Hai 19/10', () => {
     const now = '2026-10-20T12:00:00Z' // 19:00 giờ VN
     expect(lastDueSlot(SCHEDULES[0], now)!.start).toBe('2026-10-20T10:00:00.000Z')
-    expect(lastDueSlot(SCHEDULES[1], now)!.start).toBe('2026-10-19T00:30:00.000Z')
+    expect(lastDueSlot(SCHEDULES.find(x => x.id === 'legal_scan')!, now)!.start).toBe('2026-10-19T00:30:00.000Z')
   })
 })
 

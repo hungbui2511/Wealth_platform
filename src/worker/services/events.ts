@@ -15,6 +15,8 @@ export interface EventRec {
   timestamps: Partial<Record<TimestampField, string>>
   hold?: { status: 'PENDING' | 'ALLOWED'; entries: { id: string; issuer: string }[]; allowed_by?: string; allowed_at?: string; note?: string }
   policy_doc_id?: string
+  // Tin bổ sung sau khi lập sự kiện (cùng chủ đề, diễn biến mới). material = agent cho rằng đủ để CIO cân nhắc Làm lại
+  updates?: { at: string; by: string; news_ids: string[]; note: string; material: boolean }[]
 }
 
 export interface NewsInput { title: string; source?: string; url?: string; published_at?: string; summary: string; language?: string; simulated?: boolean; policy_change?: unknown }
@@ -91,6 +93,45 @@ export async function getEvent(ctx: AppCtx, id: string): Promise<EventRec> {
 }
 export async function eventNews(ctx: AppCtx, e: EventRec): Promise<NewsItem[]> {
   return (await ctx.repo.list<NewsItem>('news_items', 'event_id = ?', [e.id], 'id'))
+}
+
+export const MAX_EVENT_NEWS = 25
+// Bổ sung tin mới cùng chủ đề vào sự kiện đã có, thay vì bỏ tin hoặc lập sự kiện trùng. Không tự đổi nhận định:
+// nếu diễn biến đủ lớn (material) thì sự kiện được gắn cờ để CIO quyết định có yêu cầu Làm lại hay không.
+export async function addNewsToEvent(ctx: AppCtx, eventId: string, input: { news_ids: string[]; note: string; material?: boolean }) {
+  const ev = await getEvent(ctx, eventId)
+  if (ev.policy_doc_id) throw new HttpError(422, 'Sự kiện chính sách không bổ sung tin theo cách này')
+  const note = String(input.note ?? '').trim()
+  if (note.length < 20) throw new HttpError(422, 'Cần ghi chú ≥ 20 ký tự: diễn biến mới là gì')
+  const ids = [...new Set(input.news_ids ?? [])]
+  if (!ids.length) throw new HttpError(422, 'Chọn ít nhất một tin')
+  if (ev.news_ids.length + ids.length > MAX_EVENT_NEWS) throw new HttpError(422, `Một sự kiện tối đa ${MAX_EVENT_NEWS} tin; diễn biến lớn nên lập sự kiện mới`)
+  const news: NewsItem[] = []
+  for (const id of ids) {
+    const n = await ctx.repo.get<NewsItem>('news_items', id)
+    if (!n) throw new HttpError(404, `Không có tin ${id}`)
+    if (n.event_id) throw new HttpError(409, `Tin ${id} đã thuộc sự kiện ${n.event_id}`)
+    news.push(n)
+  }
+  const cfg = await loadConfigs(ctx)
+  const now = ctx.now()
+  const problems = news.map(n => ({ id: n.id, errors: checkPublicSource(n, cfg.whitelist, now) })).filter(p => p.errors.length)
+  if (problems.length) throw new HttpError(422, 'Có tin không qua kiểm soát nguồn (BR-26)', problems)
+  const hits = restrictedHits(news.flatMap(n => [n.title, n.summary]), activeRestricted(cfg, now))
+  const known = new Set((ev.hold?.entries ?? []).map(e => e.id))
+  const fresh = hits.filter(h => !known.has(h.id))
+  const nev: EventRec = {
+    ...ev, news_ids: [...ev.news_ids, ...news.map(n => n.id)],
+    updates: [...(ev.updates ?? []), { at: now, by: actor(ctx), news_ids: news.map(n => n.id), note: note.slice(0, 500), material: !!input.material }],
+    // Tin mới nhắc tổ chức trong danh sách hạn chế: sự kiện quay lại chờ Tuân thủ cho phép (BR-27)
+    ...(fresh.length ? { hold: { status: 'PENDING' as const, entries: [...(ev.hold?.entries ?? []), ...fresh.map(h => ({ id: h.id, issuer: h.issuer }))] } } : {}),
+  }
+  const u = ctx.uow()
+  for (const n of news) u.update('news_items', { ...n, event_id: ev.id, origin: n.origin ?? classifyOrigin(n) } as never)
+  u.put('events', nev as never)
+  u.audit({ actor: actor(ctx), action: 'event.news_added', object: ev.id, data: { news: news.map(n => ({ id: n.id, url: n.url })), note, material: !!input.material, restricted_hold: fresh.length ? fresh.map(h => h.id) : null } })
+  await u.commit()
+  return nev
 }
 
 // BR-27 (1): Tuân thủ cho phép sự kiện liên quan danh sách hạn chế

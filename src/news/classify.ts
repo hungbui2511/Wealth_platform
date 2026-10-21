@@ -5,17 +5,22 @@ import type { EventType } from '../shared/catalog'
 const norm = (s: string) => s.normalize('NFC').toLowerCase()
 
 export const TYPE_KEYWORDS: Partial<Record<EventType, string[]>> = {
-  monetary_policy: ['lãi suất', 'ngân hàng nhà nước', 'nhnn', 'tín dụng', 'huy động', 'tín phiếu', 'thanh khoản hệ thống', 'cung tiền', 'room tín dụng'],
-  fx: ['tỷ giá', 'usd/vnd', 'đồng usd', 'ngoại tệ', 'đô la', 'chỉ số dxy', 'đồng nhân dân tệ'],
-  commodity: ['giá vàng', 'vàng miếng', 'vàng sjc', 'giá dầu', 'dầu thô', 'giá thép', 'giá cà phê', 'hàng hóa'],
+  monetary_policy: ['lãi suất', 'ngân hàng nhà nước', 'nhnn', 'tín dụng', 'huy động', 'tín phiếu', 'thanh khoản hệ thống', 'cung tiền', 'room tín dụng', 'rate cut', 'rate hike', 'central bank', 'policy rate', 'basis points'],
+  fx: ['tỷ giá', 'usd/vnd', 'đồng usd', 'ngoại tệ', 'đô la', 'chỉ số dxy', 'đồng nhân dân tệ', 'dollar index', 'the dollar', ' yen', ' euro', 'yuan', 'currency'],
+  commodity: ['giá vàng', 'vàng miếng', 'vàng sjc', 'giá dầu', 'dầu thô', 'giá thép', 'giá cà phê', 'hàng hóa', 'gold price', 'oil price', 'crude', 'brent', 'commodit'],
   fiscal_tax: ['thuế', 'ngân sách', 'đầu tư công', 'giải ngân', 'bộ tài chính'],
   sector_regulation: ['dự thảo', 'nghị định', 'thông tư', 'luật', 'quy định mới', 'ủy ban chứng khoán', 'ubcknn', 'siết'],
-  global_macro: ['fed', 'cục dự trữ liên bang', 'kinh tế mỹ', 'trung quốc', 'nâng hạng', 'ftse', 'msci', 'thuế quan', 'lạm phát mỹ', 'ecb', 'federal open market committee', 'fomc', 'monetary policy', 'federal funds', 'interest rate', 'opec', 'kinh tế thế giới'],
+  global_macro: ['fed', 'cục dự trữ liên bang', 'kinh tế mỹ', 'trung quốc', 'nâng hạng', 'ftse', 'msci', 'thuế quan', 'lạm phát mỹ', 'ecb', 'federal open market committee', 'fomc', 'monetary policy', 'federal funds', 'interest rate', 'opec', 'kinh tế thế giới', 'inflation', 'cpi', 'payroll', 'jobless', 'unemployment', 'gdp', 'recession', 'treasury yield', 'bond yield', 'tariff', 'trade war', 'powell', 'lagarde', 'bank of japan', 'boj', 'pboc', 'imf'],
   corporate: ['phát hành', 'cổ tức', 'lợi nhuận', 'kết quả kinh doanh', 'trái phiếu doanh nghiệp', 'sáp nhập', 'mua lại', 'đại hội cổ đông', 'chào bán'],
-  geopolitical: ['xung đột', 'chiến tranh', 'căng thẳng địa chính trị', 'lệnh trừng phạt'],
+  geopolitical: ['xung đột', 'chiến tranh', 'căng thẳng địa chính trị', 'lệnh trừng phạt', 'sanctions', 'ceasefire', 'missile', 'strait of hormuz'],
 }
 // Từ khóa chung về thị trường tài chính: tăng độ liên quan nhưng không quyết định loại sự kiện
-const MARKET = ['chứng khoán', 'cổ phiếu', 'vn-index', 'vnindex', 'trái phiếu', 'bất động sản', 'ngân hàng', 'quỹ', 'khối ngoại', 'thị trường', 'lạm phát', 'gdp', 'xuất khẩu', 'bitcoin', 'tài sản số', 'tài sản mã hóa']
+const MARKET = ['chứng khoán', 'cổ phiếu', 'vn-index', 'vnindex', 'trái phiếu', 'bất động sản', 'ngân hàng', 'quỹ', 'khối ngoại', 'thị trường', 'lạm phát', 'gdp', 'xuất khẩu', 'bitcoin', 'tài sản số', 'tài sản mã hóa',
+  // Tin tiếng Anh (nguồn quốc tế)
+  'stocks', 'stock market', 's&p 500', 'nasdaq', 'dow jones', 'wall street', 'bonds', 'yields', 'credit', 'investors', 'markets', 'economy', 'earnings', 'bank']
+
+// Tin tiếng Việt có dấu; không có ký tự tiếng Việt thì coi là tiếng Anh
+export const detectLanguage = (text: string): 'vi' | 'en' => /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i.test(text) ? 'vi' : 'en'
 
 export interface Classification { relevance: number; suggested_type: EventType; keywords: string[]; tickers: string[] }
 

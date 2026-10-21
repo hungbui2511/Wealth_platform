@@ -43,6 +43,12 @@ export default function ViewDetail() {
         {data.runs.map((r: any) => <Link key={r.id} className="text-primary hover:underline text-sm mono" to={`/runs/${r.id}`}>{r.id} <StatusBadge s={r.status} /></Link>)}
       </div>
       <ErrorBox error={err} />
+      {(data.event.updates ?? []).filter((u: any) => u.at > v.created_at).length > 0 && (
+        <Note tone={(data.event.updates ?? []).some((u: any) => u.at > v.created_at && u.material) ? 'warn' : 'info'}>
+          <b>Có tin mới bổ sung vào sự kiện sau khi soạn nhận định này.</b>{(data.event.updates ?? []).some((u: any) => u.at > v.created_at && u.material) && ' Agent đánh giá diễn biến đủ lớn: CIO cân nhắc yêu cầu Làm lại để có phiên bản mới.'}
+          <ul className="list-disc ml-5 mt-1">{(data.event.updates ?? []).filter((u: any) => u.at > v.created_at).map((u: any, i: number) => <li key={i}>{ts(u.at)}: {u.note} ({u.news_ids.length} tin)</li>)}</ul>
+        </Note>
+      )}
       {v.status === 'AGENT_ERROR' && <ErrorBox error={{ message: 'Đầu ra sai schema sau 2 lần thử lại', details: v.errors }} />}
       {v.analysts_derived && <Note tone="warn">Nhận định được lập trong một bước: bản ghi không gửi kèm đầu ra riêng của 4 nhà phân tích, nên các nút phân tích trong vết chạy chỉ là phần cắt từ nhận định cuối và vòng tranh luận để trống.</Note>}
       {v.removed_restricted.length > 0 && <Note tone="warn">Dòng cấp mã {v.removed_restricted.map((l: any) => l.target).join(', ')} thuộc danh sách hạn chế đã bị loại ở bước kiểm tra schema (BR-27).</Note>}

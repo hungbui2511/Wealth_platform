@@ -1,18 +1,41 @@
 // Nguồn tin công khai mặc định (RSS của báo chính thống). Danh sách có phiên bản trong cấu hình NEWS_SOURCES;
 // mọi miền phải thuộc danh sách nguồn công khai (WHITELIST) do Tuân thủ quản lý (BR-26, BR-28).
 export const DEFAULT_NEWS_SOURCES = [
+  // Trong nước: ngoài chứng khoán, thêm vĩ mô, ngân hàng, thuế, trái phiếu, bất động sản, vàng, năng lượng, tài sản số
+  // (đường dẫn kiểm tra ngày 21/10/2026 từ trang danh mục RSS của từng báo)
   { name: 'VnExpress – Kinh doanh', url: 'https://vnexpress.net/rss/kinh-doanh.rss' },
+  { name: 'VnExpress – Bất động sản', url: 'https://vnexpress.net/rss/bat-dong-san.rss' },
   { name: 'VnEconomy – Chứng khoán', url: 'https://vneconomy.vn/chung-khoan.rss' },
-  { name: 'Báo Đầu tư – Đầu tư tài chính', url: 'https://baodautu.vn/dau-tu-tai-chinh.rss' },
-  { name: 'Báo Đầu tư – Ngân hàng, Bảo hiểm', url: 'https://baodautu.vn/ngan-hang--bao-hiem.rss' },
-  { name: 'Báo Đầu tư – Thị trường địa ốc', url: 'https://baodautu.vn/thi-truong-dia-oc.rss' },
+  { name: 'VnEconomy – Tài chính', url: 'https://vneconomy.vn/tai-chinh.rss' },
+  { name: 'VnEconomy – Bất động sản', url: 'https://vneconomy.vn/dia-oc.rss' },
+  { name: 'VnEconomy – Thị trường', url: 'https://vneconomy.vn/thi-truong.rss' },
   { name: 'Vietstock – Cổ phiếu', url: 'https://vietstock.vn/830/chung-khoan/co-phieu.rss' },
+  { name: 'Vietstock – Chính sách chứng khoán', url: 'https://vietstock.vn/143/chung-khoan/chinh-sach.rss' },
+  { name: 'Vietstock – Thị trường trái phiếu', url: 'https://vietstock.vn/785/chung-khoan/thi-truong-trai-phieu.rss' },
+  { name: 'Vietstock – Trái phiếu doanh nghiệp', url: 'https://vietstock.vn/3118/doanh-nghiep/trai-phieu-doanh-nghiep.rss' },
+  { name: 'Vietstock – Vĩ mô', url: 'https://vietstock.vn/761/kinh-te/vi-mo.rss' },
+  { name: 'Vietstock – Ngân hàng', url: 'https://vietstock.vn/757/tai-chinh/ngan-hang.rss' },
+  { name: 'Vietstock – Thuế và ngân sách', url: 'https://vietstock.vn/758/tai-chinh/thue-va-ngan-sach.rss' },
+  { name: 'Vietstock – Tài sản số', url: 'https://vietstock.vn/16312/tai-chinh/tai-san-so.rss' },
+  { name: 'Vietstock – Thị trường nhà đất', url: 'https://vietstock.vn/4220//bat-dong-san/thi-truong-nha-dat.rss' },
+  { name: 'Vietstock – Vàng và kim loại quý', url: 'https://vietstock.vn/759/hang-hoa/vang-va-kim-loai-quy.rss' },
+  { name: 'Vietstock – Nhiên liệu', url: 'https://vietstock.vn/34/hang-hoa/nhien-lieu.rss' },
   { name: 'Nhân Dân – Chứng khoán', url: 'https://nhandan.vn/rss/chungkhoan-1191.rss' },
   { name: 'VTV – Kinh tế', url: 'https://vtv.vn/rss/kinh-te.rss' },
-  // Tin quốc tế (nguồn công khai): bản tin kinh tế thế giới tiếng Việt và thông cáo gốc của Fed
+  // Quốc tế: bản tin tiếng Việt, thông cáo gốc của ngân hàng trung ương, tin thị trường tiếng Anh
   { name: 'VnEconomy – Kinh tế thế giới', url: 'https://vneconomy.vn/kinh-te-the-gioi.rss', origin: 'global' },
-  { name: 'Federal Reserve – Press releases', url: 'https://www.federalreserve.gov/feeds/press_all.xml', origin: 'global' },
+  { name: 'Vietstock – Tài chính quốc tế', url: 'https://vietstock.vn/772/the-gioi/tai-chinh-quoc-te.rss', origin: 'global' },
+  { name: 'Vietstock – Chứng khoán thế giới', url: 'https://vietstock.vn/773/the-gioi/chung-khoan-the-gioi.rss', origin: 'global' },
+  { name: 'Federal Reserve – Chính sách tiền tệ', url: 'https://www.federalreserve.gov/feeds/press_monetary.xml', origin: 'global' },
+  { name: 'ECB – Thông cáo, phát biểu', url: 'https://www.ecb.europa.eu/rss/press.html', origin: 'global' },
+  { name: 'MarketWatch – Tin chính', url: 'https://feeds.content.dowjones.io/public/rss/mw_topstories', origin: 'global' },
 ] as { name: string; url: string; origin?: 'global' | 'local' }[]
+
+// Nguồn đã gỡ: Báo Đầu tư trả RSS rỗng (0 tin, kiểm tra 21/10/2026); RSS chung của Fed chủ yếu là thông cáo xử phạt ngân hàng Mỹ
+export const RETIRED_NEWS_SOURCES = [
+  'https://baodautu.vn/dau-tu-tai-chinh.rss', 'https://baodautu.vn/ngan-hang--bao-hiem.rss', 'https://baodautu.vn/thi-truong-dia-oc.rss',
+  'https://www.federalreserve.gov/feeds/press_all.xml',
+]
 
 // Miền công khai thật được thêm vào danh sách nguồn công khai mặc định (bên cạnh các miền giả lập của gói tin mẫu)
 export const PUBLIC_DOMAINS = [
@@ -30,7 +53,7 @@ export const PUBLIC_DOMAINS = [
   { domain: 'reuters.com', name: 'Reuters' }, { domain: 'apnews.com', name: 'Associated Press' }, { domain: 'bloomberg.com', name: 'Bloomberg' },
   { domain: 'cnbc.com', name: 'CNBC' }, { domain: 'ft.com', name: 'Financial Times' }, { domain: 'wsj.com', name: 'The Wall Street Journal' },
   { domain: 'bbc.com', name: 'BBC' }, { domain: 'euronews.com', name: 'Euronews' }, { domain: 'aljazeera.com', name: 'Al Jazeera' },
-  { domain: 'scmp.com', name: 'South China Morning Post' }, { domain: 'asia.nikkei.com', name: 'Nikkei Asia' }, { domain: 'finance.yahoo.com', name: 'Yahoo Finance (đăng lại Reuters, AP)' },
+  { domain: 'scmp.com', name: 'South China Morning Post' }, { domain: 'marketwatch.com', name: 'MarketWatch' }, { domain: 'cmegroup.com', name: 'CME Group (FedWatch)' }, { domain: 'asia.nikkei.com', name: 'Nikkei Asia' }, { domain: 'finance.yahoo.com', name: 'Yahoo Finance (đăng lại Reuters, AP)' },
   { domain: 'bls.gov', name: 'Cục Thống kê Lao động Mỹ (CPI, PPI, việc làm)' }, { domain: 'bea.gov', name: 'Cục Phân tích Kinh tế Mỹ (GDP, PCE)' },
   { domain: 'census.gov', name: 'Cục Điều tra Dân số Mỹ (bán lẻ)' }, { domain: 'treasury.gov', name: 'Bộ Tài chính Mỹ' }, { domain: 'eia.gov', name: 'Cơ quan Thông tin Năng lượng Mỹ' },
   { domain: 'ecb.europa.eu', name: 'Ngân hàng Trung ương châu Âu' }, { domain: 'ec.europa.eu', name: 'Ủy ban châu Âu, Eurostat' }, { domain: 'bankofengland.co.uk', name: 'Ngân hàng Trung ương Anh' },

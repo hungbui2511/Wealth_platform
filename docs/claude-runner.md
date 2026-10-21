@@ -167,3 +167,22 @@ cho tới khi Tuân thủ hoặc Quản trị (người khác người tạm d�
 
 **Không đổi**: Claude không đọc dữ liệu gia đình (BR-28). Cấu trúc gia đình, đòn bẩy, thang thanh khoản, kế thừa và bản tin RM
 đều do hệ thống tính bằng quy tắc xác định trên dữ liệu trong ngân hàng.
+
+## Mở rộng độ phủ tin (21/10/2026)
+
+**`event_update`** (subject = mã sự kiện `EV-…`): bổ sung tin mới cùng chủ đề vào sự kiện đã có, thay vì bỏ tin hoặc lập sự kiện trùng.
+`{"news_urls":["…"],"note":"≥ 20 ký tự: diễn biến mới là gì","material":true|false}`. Tin phải được đẩy trước bằng bản ghi `news`
+(hoặc đã có trong Hộp tin, chưa thuộc sự kiện nào). Một sự kiện tối đa 25 tin. `material: true` khi diễn biến đủ để thay đổi mức
+hoặc nhánh kịch bản: trang nhận định hiện cảnh báo để CIO cân nhắc yêu cầu Làm lại. Agent **không** tự đẩy `cio_view` mới cho sự
+kiện đã có nhận định khi CIO chưa yêu cầu Làm lại. Tin mới nhắc tổ chức trong danh sách hạn chế đưa sự kiện về chờ Tuân thủ.
+
+**Hộp tin RSS**: hệ thống tự lấy tin từ khoảng 25 nguồn RSS mỗi 10 phút (cấu hình `NEWS_SOURCES`). Lượt chạy nên đọc tin trong Hộp tin
+48 giờ gần nhất (`SELECT id, json_extract(data,'$.title'), json_extract(data,'$.url'), json_extract(data,'$.published_at') FROM news_items
+WHERE json_extract(data,'$.event_id') IS NULL AND json_extract(data,'$.ingested_at') >= ?`) và dùng chúng khi lập sự kiện bằng đường dẫn
+đã lưu, không cần đẩy lại.
+
+**Lượt buổi sáng** (`run_log` schedule `morning_news`, hạn 09:00 thứ 2–6): diễn biến quốc tế qua đêm và tin Việt Nam đầu ngày.
+
+**Nguồn quốc tế**: khi Tuân thủ đã nạp danh sách nguồn mới, được đưa tin trực tiếp từ Reuters, AP, Bloomberg, CNBC, MarketWatch, FT,
+WSJ, BBC, Nikkei Asia và trang chính thức (Fed, ECB, BoJ, BLS, BEA, EIA, IMF, OPEC, CME FedWatch). Chỉ ghi tiêu đề, đường dẫn và tóm
+tắt do agent viết (≤ 3 câu), không chép nguyên văn bài báo.

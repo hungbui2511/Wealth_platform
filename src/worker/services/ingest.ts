@@ -2,7 +2,7 @@
 // Tin đi qua cùng kiểm soát nguồn công khai (BR-26) như tin dán tay; tin trùng đường dẫn bị bỏ qua.
 // Tin vào "hộp tin mới" (chưa thuộc sự kiện). CIO hoặc Quản trị chọn tin để lập sự kiện; agent chỉ chạy trên sự kiện.
 import { checkPublicSource, restrictedHits } from '../../compliance/controls'
-import { classifyNews, classifyOrigin, type NewsOrigin } from '../../news/classify'
+import { classifyNews, classifyOrigin, detectLanguage, type NewsOrigin } from '../../news/classify'
 import { parseFeed } from '../../news/rss'
 import { HttpError, makeCtx, requireRole, type AppCtx, type Env } from '../ctx'
 import { activeConfig, activeRestricted, loadConfigs } from './config'
@@ -73,7 +73,7 @@ export async function addToInbox(ctx: AppCtx, fresh: IncomingItem[], o: { trigge
     take.forEach((c, i) => {
       const published = c.item.published_at < now ? c.item.published_at : now // chỉ còn trường hợp lệch đồng hồ ≤ 10 phút
       const hit = restrictedHits([c.item.title, c.item.summary], restricted).length > 0
-      const n: InboxItem = { id: ids[i], event_id: null as never, title: c.item.title, source: new URL(c.item.url).hostname, url: c.item.url, published_at: published, ingested_at: now, summary: c.item.summary, language: /federalreserve\.gov/.test(c.item.url) ? 'en' : 'vi', simulated: false, auto: true, origin: classifyOrigin(c.item, c.origin), feed: c.feed, relevance: c.cls.relevance, suggested_type: c.suggested_type ?? c.cls.suggested_type, keywords: c.cls.keywords, tickers: c.cls.tickers, ...(hit ? { restricted_hit: true } : {}), ...(o.trigger === 'claude' ? { by_claude: true } : {}) }
+      const n: InboxItem = { id: ids[i], event_id: null as never, title: c.item.title, source: new URL(c.item.url).hostname, url: c.item.url, published_at: published, ingested_at: now, summary: c.item.summary, language: detectLanguage(`${c.item.title} ${c.item.summary}`), simulated: false, auto: true, origin: classifyOrigin(c.item, c.origin), feed: c.feed, relevance: c.cls.relevance, suggested_type: c.suggested_type ?? c.cls.suggested_type, keywords: c.cls.keywords, tickers: c.cls.tickers, ...(hit ? { restricted_hit: true } : {}), ...(o.trigger === 'claude' ? { by_claude: true } : {}) }
       u.insert('news_items', n as never)
       ids_by_url[c.item.url] = ids[i]
     })

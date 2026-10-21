@@ -8,7 +8,7 @@ export const AGENTS: Record<string, string> = {
 }
 // Loại bản ghi ngoài → agent chịu trách nhiệm
 export const KIND_AGENT: Record<string, string> = {
-  news: 'news', event: 'news', scan_log: 'news', cio_view: 'cio', challenge: 'challenger', policy_doc: 'policy_scan',
+  news: 'news', event: 'news', event_update: 'news', scan_log: 'news', cio_view: 'cio', challenge: 'challenger', policy_doc: 'policy_scan',
   policy_summary: 'policy', prices: 'prices', market_data: 'market_data', golden_view: 'golden',
 }
 
@@ -79,8 +79,9 @@ export interface RunLog { id: string; schedule: string; created_at: string; star
 // Lịch chạy (giờ Việt Nam). Hạn báo: sau giờ này mà chưa có nhật ký lượt chạy thì báo đỏ.
 export const SCHEDULES = [
   { id: 'daily_news', label: 'Quét tin và nhận định (17:22, thứ 2–6)', days: [1, 2, 3, 4, 5], start: '17:00', deadline: '18:30' },
+  { id: 'morning_news', label: 'Quét tin buổi sáng: diễn biến quốc tế qua đêm (7:37, thứ 2–6)', days: [1, 2, 3, 4, 5], start: '07:30', deadline: '09:00', since: '2026-10-22' },
   { id: 'legal_scan', label: 'Rà soát dự thảo pháp luật (7:49, thứ 2 và 5)', days: [1, 4], start: '07:30', deadline: '09:30' },
-] as const
+] as readonly { id: string; label: string; days: readonly number[]; start: string; deadline: string; since?: string }[]
 const VN = 7 * 3600e3
 
 export async function importRunLog(ctx: AppCtx, d: Partial<RunLog>): Promise<RunLog> {
@@ -111,7 +112,9 @@ export async function heartbeat(ctx: AppCtx) {
   const now = ctx.now()
   const logs = await ctx.repo.list<RunLog>('run_logs', '', [], 'created_at DESC')
   return SCHEDULES.map(s => {
-    const slot = lastDueSlot(s, now)
+    // Lịch mới chỉ bắt đầu theo dõi từ ngày since (không báo thiếu cho các ngày trước khi có lịch)
+    const slot0 = lastDueSlot(s, now)
+    const slot = slot0 && s.since && slot0.deadline < s.since ? null : slot0
     const last = logs.find(l => l.schedule === s.id)
     const inSlot = slot ? logs.find(l => l.schedule === s.id && l.created_at >= slot.start) : undefined
     const status = !slot ? 'NOT_DUE' : inSlot ? (inSlot.status === 'ok' ? 'OK' : inSlot.status === 'partial' ? 'PARTIAL' : 'FAILED') : 'MISSING'
